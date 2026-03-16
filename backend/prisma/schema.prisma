@@ -1,0 +1,1437 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum UserRole {
+  // C-Suite
+  CEO
+  CTO
+  CFO
+  BRAND_FACE
+  // Management
+  ADMIN
+  HR
+  PRODUCT_OWNER
+  BRAND_PARTNER
+  // Accounting
+  SR_ACCOUNTANT
+  JR_ACCOUNTANT
+  // Development
+  SR_DEVELOPER
+  JR_DEVELOPER
+  // Design
+  SR_GRAPHIC_DESIGNER
+  JR_GRAPHIC_DESIGNER
+  // Content & Editorial
+  SR_EDITOR
+  JR_EDITOR
+  SR_CONTENT_STRATEGIST
+  JR_CONTENT_STRATEGIST
+  // Script Writing
+  SR_SCRIPT_WRITER
+  JR_SCRIPT_WRITER
+  // Brand Strategy
+  SR_BRAND_STRATEGIST
+  JR_BRAND_STRATEGIST
+  // Operations
+  DRIVER
+  // General
+  GUY
+  OFFICE_BOY
+}
+
+enum UserStatus {
+  ONLINE
+  OFFLINE
+  AWAY
+}
+
+enum ProjectStatus {
+  PLANNING
+  ACTIVE
+  IN_REVIEW
+  COMPLETED
+  ON_HOLD
+}
+
+enum TaskStatus {
+  TODO
+  IN_PROGRESS
+  IN_REVIEW
+  COMPLETED
+}
+
+enum TaskPriority {
+  LOW
+  MEDIUM
+  HIGH
+  URGENT
+}
+
+enum WorkspaceType {
+  DEFAULT
+  ENGINEERING
+  DESIGN
+  CONTENT
+  FINANCE
+  OPERATIONS
+}
+
+enum PaymentStatus {
+  PENDING
+  PAID
+  FAILED
+  CANCELLED
+}
+
+enum ExpenseStatus {
+  DRAFT
+  SUBMITTED
+  APPROVED
+  REJECTED
+  REIMBURSED
+}
+
+enum ExpenseCategory {
+  TRAVEL
+  FOOD
+  EQUIPMENT
+  SOFTWARE
+  OFFICE
+  SHOOT
+  MARKETING
+  FUEL
+  MAINTENANCE
+  OTHER
+}
+
+enum CredentialAccessLevel {
+  ADMIN_ONLY
+  MANAGER_AND_ABOVE
+  TEAM_AND_ABOVE
+  ALL_STAFF
+}
+
+enum InvoiceStatus {
+  DRAFT
+  SENT
+  PAID
+  OVERDUE
+  CANCELLED
+}
+
+model User {
+  id          String     @id @default(uuid())
+  email       String     @unique
+  password    String
+  firstName   String
+  lastName    String
+  role        UserRole   @default(GUY)
+  designation String?    // Job title: "Senior React Developer", "Lead Editor", etc.
+  reportingTo String?    // Manager's userId
+  salary      Float?     // Monthly salary for payroll
+  joinDate    DateTime?  // Date of joining
+  bankDetails Json?      // { accountNo, ifsc, bankName } for payroll
+  emergencyContact Json? // { name, phone, relation }
+  workspaceId String
+  avatar      String?
+  department  String?
+  phone       String?
+  status      UserStatus @default(OFFLINE)
+
+  // Personality & Profile
+  personalityType     String?   // Carl Jung MBTI: INTJ, ENFP, ISTP, etc.
+  personalityTestDate DateTime? // When they took the test
+  personalityTestData Json?     // Full test answers/scores { answers: [], scores: {E/I, S/N, T/F, J/P} }
+  personalityTestTaken Boolean @default(false)
+  skills              String?   // JSON array: ["React", "Node.js", "Figma"]
+  linkedinUrl         String?
+  portfolioUrl        String?
+
+  // HR Password Management
+  passwordResetRequired Boolean  @default(false)
+  passwordLastChanged   DateTime?
+  passwordResetToken    String?
+  passwordResetExpiry   DateTime?
+  passwordHistory       Json?    // Array of last 5 hashed passwords
+  failedLoginAttempts   Int      @default(0)
+  accountLocked         Boolean  @default(false)
+  accountLockedUntil    DateTime?
+
+  // Behavioral Analytics (computed/updated by system)
+  behaviorScore         Float?   @default(0) // 0-100 overall score
+  attendanceRate        Float?   // % of working days present
+  taskCompletionRate    Float?   // % tasks completed on time
+  avgResponseTime       Float?   // Average response time in hours
+  lastActiveAt          DateTime?
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+
+  workspace         Workspace       @relation(fields: [workspaceId], references: [id])
+  projects          Project[]       @relation("ProjectManager")
+  tasks             Task[]          @relation("TaskAssignee")
+  createdTasks      Task[]          @relation("TaskCreator")
+  calendarEvents    CalendarEvent[] @relation("EventCreator")
+  contacts          Contact[]       @relation("ContactCreator")
+  notifications     Notification[]  @relation("UserNotifications")
+  files             File[]          @relation("FileUploader")
+  apiKeys           ApiKey[]        @relation("UserApiKeys")
+  payrolls          Payroll[]       @relation("PayrollEmployee")
+  expenses          Expense[]       @relation("ExpenseSubmitter")
+  approvedExpenses  Expense[]       @relation("ExpenseApprover")
+  credentialsAdded  Credential[]    @relation("CredentialCreator")
+  invoices          Invoice[]       @relation("InvoiceCreator")
+  leaveRequests     LeaveRequest[]  @relation("LeaveEmployee")
+  leaveApprovals    LeaveRequest[]  @relation("LeaveApprover")
+  documents         EmployeeDocument[] @relation("DocumentOwner")
+  docVerifications  EmployeeDocument[] @relation("DocumentVerifier")
+  payrollLogs       PayrollLog[]    @relation("PayrollLogPaidBy")
+  assignedInterviews InterviewRound[] @relation("Interviewer")
+  assignedReviews   JobCandidate[]  @relation("ResumeReviewer")
+  clientsCreated    Client[]        @relation("ClientCreator")
+  leadsAssigned     Lead[]          @relation("LeadAssignee")
+  leadsCreated      Lead[]          @relation("LeadCreator")
+  complaintsFiled    Complaint[]    @relation("ComplaintFiler")
+  complaintsAgainst  Complaint[]    @relation("ComplaintTarget")
+  complaintsAssigned Complaint[]    @relation("ComplaintAssignee")
+  sentEmails         SentEmail[]    @relation("SentEmails")
+  preferences        UserPreference? @relation("UserPreferences")
+  chatBotConversations ChatBotConversation[] @relation("UserChatBotConversations")
+
+  onboardingComplete Boolean  @default(false)
+  dateOfBirth       DateTime?
+  bio               String?
+  resumeUrl         String?
+  secretQuestion    String?
+  secretAnswer      String?  // bcrypt hashed
+  companyEmail      String?  @unique // auto-generated: firstname.lastname@knowai.com
+
+  chatMuted    Boolean   @default(false)
+  chatMutedAt  DateTime?
+  chatMutedBy  String?
+  canvases              Canvas[]        @relation("UserCanvases")
+  goals                 Goal[]          @relation("UserGoals")
+  favorites             UserFavorite[]  @relation("UserFavorites")
+  docs                  Doc[]           @relation("UserDocs")
+  spaces                Space[]         @relation("UserSpaces")
+  timeEntries           TimeEntry[]     @relation("UserTimeEntries")
+  chatRoomsCreated      ChatRoom[]      @relation("ChatRoomCreator")
+  chatRoomMemberships   ChatRoomMember[] @relation("ChatRoomMemberUser")
+  chatMessagesSent      ChatMessage[]   @relation("ChatMessageSender")
+  jobPostingsCreated    JobPosting[]    @relation("JobPostingCreator")
+  complaintTimelineActions ComplaintTimeline[] @relation("ComplaintTimelineActor")
+
+  @@index([workspaceId])
+  @@map("users")
+}
+
+model Workspace {
+  id          String        @id @default(uuid())
+  name        String
+  type        WorkspaceType
+  description String?
+  icon        String?       // Emoji or icon name
+  color       String?       // Hex color for workspace badge
+  leadId      String?       // Workspace lead/owner userId
+  isDefault   Boolean       @default(false)
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+
+  members     User[]
+  projects    Project[]
+  clients     Client[]
+  leads       Lead[]
+  canvases    Canvas[]
+  goals       Goal[]
+  docs        Doc[]
+  spaces      Space[]
+  timeEntries TimeEntry[]
+
+  @@map("workspaces")
+}
+
+// Many-to-many: one user can be in multiple workspaces
+model WorkspaceMember {
+  id          String   @id @default(uuid())
+  userId      String
+  workspaceId String
+  role        String   @default("member") // "owner" | "admin" | "member"
+  joinedAt    DateTime @default(now())
+
+  @@unique([userId, workspaceId])
+  @@map("workspace_members")
+  @@index([userId])
+  @@index([workspaceId])
+}
+
+// Department model for clustering team members
+model Department {
+  id          String   @id @default(uuid())
+  name        String   @unique
+  description String?
+  icon        String?
+  color       String?
+  headId      String?  // Department head userId
+  workspaceId String?  // Which workspace this dept belongs to
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@map("departments")
+  @@index([workspaceId])
+}
+
+model Project {
+  id          String        @id @default(uuid())
+  name        String
+  description String?
+  status      ProjectStatus @default(PLANNING)
+  progress    Int           @default(0)
+  dueDate     DateTime?
+  managerId   String
+  workspaceId String
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+
+  spaceId     String?
+
+  manager   User      @relation("ProjectManager", fields: [managerId], references: [id])
+  workspace Workspace @relation(fields: [workspaceId], references: [id])
+  tasks     Task[]
+  canvases  Canvas[]
+  docs      Doc[]
+  files     File[]    @relation("ProjectFiles")
+  space     Space?    @relation("SpaceProjects", fields: [spaceId], references: [id], onDelete: SetNull)
+  timeEntries TimeEntry[] @relation("ProjectTimeEntries")
+
+  @@index([managerId])
+  @@index([workspaceId])
+  @@index([spaceId])
+  @@map("projects")
+}
+
+model Task {
+  id          String       @id @default(uuid())
+  title       String
+  description String?
+  status      TaskStatus   @default(TODO)
+  priority    TaskPriority @default(MEDIUM)
+  assigneeId  String?
+  projectId   String
+  dueDate     DateTime?
+  createdById String?
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+
+  assignee    User?    @relation("TaskAssignee", fields: [assigneeId], references: [id], onDelete: SetNull)
+  createdBy   User?    @relation("TaskCreator", fields: [createdById], references: [id], onDelete: SetNull)
+  project     Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  blockedBy   TaskDependency[] @relation("BlockedTask")
+  blocking    TaskDependency[] @relation("BlockingTask")
+  timeEntries TimeEntry[] @relation("TaskTimeEntries")
+  leadTasks   LeadTask[]
+
+  @@index([projectId])
+  @@index([assigneeId])
+  @@index([createdById])
+  @@map("tasks")
+}
+
+model TaskDependency {
+  id             String @id @default(uuid())
+  blockedTaskId  String
+  blockingTaskId String
+
+  blockedTask  Task @relation("BlockedTask", fields: [blockedTaskId], references: [id], onDelete: Cascade)
+  blockingTask Task @relation("BlockingTask", fields: [blockingTaskId], references: [id], onDelete: Cascade)
+
+  @@unique([blockedTaskId, blockingTaskId])
+  @@index([blockedTaskId])
+  @@index([blockingTaskId])
+  @@map("task_dependencies")
+}
+
+model CalendarEvent {
+  id           String   @id @default(uuid())
+  title        String
+  description  String?
+  startDate    DateTime
+  endDate      DateTime
+  color        String?
+  calendarType String?
+  createdById  String
+  createdAt    DateTime @default(now())
+
+  createdBy User @relation("EventCreator", fields: [createdById], references: [id])
+
+  @@index([createdById])
+  @@map("calendar_events")
+}
+
+enum ContactLabel {
+  CLIENT
+  PARTNER
+  VENDOR
+  INVESTOR
+  LEAD
+}
+
+model Contact {
+  id          String       @id @default(uuid())
+  name        String
+  email       String
+  phone       String?
+  title       String?
+  company     String?
+  label       ContactLabel @default(CLIENT)
+  avatarColor String?
+  createdById String
+  createdAt   DateTime     @default(now())
+
+  createdBy User @relation("ContactCreator", fields: [createdById], references: [id])
+
+  @@index([createdById])
+  @@map("contacts")
+}
+
+enum NotificationType {
+  TASK_ASSIGNED
+  TASK_COMPLETED
+  TASK_OVERDUE
+  TASK_COMMENT
+  LEAVE_APPROVED
+  LEAVE_REJECTED
+  DOCUMENT_VERIFIED
+  LEAD_ASSIGNED
+  CHAT_MENTION
+  COMPLAINT_FILED
+  COMPLAINT_RESOLVED
+  SYSTEM
+}
+
+// Change requests for sensitive fields (email/username) - requires HR then CTO approval
+model ChangeRequest {
+  id            String   @id @default(uuid())
+  requesterId   String   // User requesting the change
+  fieldName     String   // "email" | "companyEmail" | "firstName" | "lastName"
+  currentValue  String
+  requestedValue String
+  reason        String?
+  status        String   @default("PENDING_HR") // PENDING_HR -> PENDING_CTO -> APPROVED | REJECTED
+  hrApproval    String?  // HR userId who approved/rejected
+  hrApprovalAt  DateTime?
+  hrNote        String?
+  ctoApproval   String?  // CTO userId who approved/rejected
+  ctoApprovalAt DateTime?
+  ctoNote       String?
+  appliedAt     DateTime? // When the change was actually applied
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@map("change_requests")
+  @@index([requesterId])
+  @@index([status])
+}
+
+model Notification {
+  id        String           @id @default(uuid())
+  type      NotificationType
+  title     String
+  message   String
+  read      Boolean          @default(false)
+  userId    String
+  linkUrl   String?
+  metadata  String?          // JSON string for extra data
+  createdAt DateTime         @default(now())
+
+  user User @relation("UserNotifications", fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, read])
+  @@index([userId, createdAt])
+  @@map("notifications")
+}
+
+model File {
+  id           String   @id @default(uuid())
+  name         String
+  size         Int      @default(0)
+  fileType     String?
+  filePath     String?  // Server path: uploads/files/uuid-filename.ext
+  url          String?  // Served URL: /api/files/serve/uuid-filename.ext
+  projectId    String?  // Project scope - nullable for global files
+  folderId     String?
+  isFolder     Boolean  @default(false)
+  uploadedById String
+  createdAt    DateTime @default(now())
+
+  folder     File?    @relation("FileFolder", fields: [folderId], references: [id], onDelete: SetNull)
+  children   File[]   @relation("FileFolder")
+  uploadedBy User     @relation("FileUploader", fields: [uploadedById], references: [id])
+  project    Project? @relation("ProjectFiles", fields: [projectId], references: [id], onDelete: SetNull)
+
+  @@index([uploadedById])
+  @@index([folderId])
+  @@index([projectId])
+  @@map("files")
+}
+
+// ─── HR / PAYROLL ──────────────────────────────────────────────
+
+model Payroll {
+  id            String        @id @default(uuid())
+  employeeId    String
+  month         Int           // 1-12
+  year          Int
+  basicPay      Int           @default(0)
+  hra           Int           @default(0)
+  transport     Int           @default(0)
+  bonus         Int           @default(0)
+  deductions    Int           @default(0)
+  totalPay      Int           @default(0)
+  currency      String        @default("INR")
+  status        PaymentStatus @default(PENDING)
+  paidOn        DateTime?
+  notes         String?
+  workingDays   Int           @default(22)
+  presentDays   Int           @default(0)
+  absentDays    Int           @default(0)
+  leaveDays     Int           @default(0)
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+
+  employee User         @relation("PayrollEmployee", fields: [employeeId], references: [id])
+  logs     PayrollLog[]
+
+  @@unique([employeeId, month, year])
+  @@map("payrolls")
+  @@index([employeeId])
+  @@index([year, month])
+}
+
+// ─── PAYROLL TRANSACTION LOGS ─────────────────────────────────
+
+enum PaymentMode {
+  CASH
+  BANK_TRANSFER
+  UPI
+  CHEQUE
+}
+
+model PayrollLog {
+  id            String      @id @default(uuid())
+  payrollId     String
+  amount        Int
+  mode          PaymentMode
+  bankRef       String?     // bank reference / UTR number
+  purpose       String?     // salary, advance, bonus, reimbursement
+  remarks       String?
+  paidById      String
+  paidAt        DateTime    @default(now())
+  createdAt     DateTime    @default(now())
+
+  payroll  Payroll @relation(fields: [payrollId], references: [id], onDelete: Cascade)
+  paidBy   User    @relation("PayrollLogPaidBy", fields: [paidById], references: [id])
+
+  @@map("payroll_logs")
+  @@index([payrollId])
+  @@index([paidById])
+}
+
+// ─── LEAVE MANAGEMENT ─────────────────────────────────────────
+
+enum LeaveType {
+  PAID
+  UNPAID
+  SICK
+  HALF_DAY
+  WORK_FROM_HOME
+}
+
+enum LeaveStatus {
+  PENDING
+  APPROVED
+  REJECTED
+  CANCELLED
+}
+
+model LeaveRequest {
+  id          String      @id @default(uuid())
+  employeeId  String
+  type        LeaveType
+  status      LeaveStatus @default(PENDING)
+  startDate   DateTime
+  endDate     DateTime
+  reason      String
+  approverId  String?
+  approverNote String?
+  approvedAt  DateTime?
+  rejectedAt  DateTime?
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+
+  employee User  @relation("LeaveEmployee", fields: [employeeId], references: [id])
+  approver User? @relation("LeaveApprover", fields: [approverId], references: [id], onDelete: SetNull)
+
+  @@map("leave_requests")
+  @@index([employeeId])
+  @@index([approverId])
+  @@index([status])
+  @@index([startDate, endDate])
+}
+
+// ─── EMPLOYEE DOCUMENT MANAGEMENT ─────────────────────────────
+
+enum DocumentType {
+  PASSPORT
+  PAN_CARD
+  AADHAAR
+  PROFILE_PHOTO
+  ID_PROOF
+  OFFER_LETTER
+  BANK_DETAILS
+  RESUME
+  OTHER
+}
+
+enum DocumentStatus {
+  PENDING
+  UNDER_REVIEW
+  VERIFIED
+  REJECTED
+}
+
+model EmployeeDocument {
+  id            String         @id @default(uuid())
+  employeeId    String
+  type          DocumentType
+  fileName      String
+  fileUrl       String?        // storage path
+  fileSize      Int            @default(0)
+  status        DocumentStatus @default(PENDING)
+  verifierId    String?
+  verifiedAt    DateTime?
+  rejectedAt    DateTime?
+  rejectReason  String?
+  notes         String?
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+
+  employee User  @relation("DocumentOwner", fields: [employeeId], references: [id])
+  verifier User? @relation("DocumentVerifier", fields: [verifierId], references: [id])
+
+  @@map("employee_documents")
+  @@index([employeeId])
+  @@index([status])
+  @@index([verifierId])
+}
+
+// ─── HIRING / HIREFLOW ────────────────────────────────────────
+
+enum JobStatus {
+  DRAFT
+  OPEN
+  ON_HOLD
+  CLOSED
+}
+
+enum CandidateStatus {
+  APPLIED
+  RESUME_REVIEW
+  INTERVIEW_ROUND_1
+  PRACTICAL_TASK
+  INTERVIEW_ROUND_2
+  FINAL_INTERVIEW
+  OFFERED
+  HIRED
+  REJECTED
+}
+
+enum InterviewResult {
+  PENDING
+  PASSED
+  FAILED
+}
+
+model JobPosting {
+  id            String    @id @default(uuid())
+  title         String
+  department    String?
+  description   String?
+  requirements  String?   // JSON array of requirements
+  salaryMin     Int?
+  salaryMax     Int?
+  currency      String    @default("INR")
+  location      String?
+  type          String?   // Full-time, Part-time, Contract, Intern
+  status        JobStatus @default(DRAFT)
+  createdById   String
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  createdBy  User             @relation("JobPostingCreator", fields: [createdById], references: [id])
+  candidates JobCandidate[]
+
+  @@map("job_postings")
+  @@index([status])
+  @@index([createdById])
+}
+
+model JobCandidate {
+  id              String          @id @default(uuid())
+  jobId           String
+  name            String
+  email           String
+  emailVerified   Boolean         @default(false)
+  phone           String?
+  whatsappNumber  String?
+  resumeUrl       String?
+  linkedinUrl     String?
+  portfolioUrl    String?
+  coverLetter     String?
+  status          CandidateStatus @default(APPLIED)
+  reviewerId      String?         // assigned resume reviewer
+  reviewNotes     String?
+  practicalTaskUrl String?        // link to practical task
+  practicalSubmission String?     // candidate's submission
+  practicalDeadline DateTime?
+  finalNotes      String?
+  offeredSalary   Int?
+  createdAt       DateTime        @default(now())
+  updatedAt       DateTime        @updatedAt
+
+  job        JobPosting       @relation(fields: [jobId], references: [id], onDelete: Cascade)
+  reviewer   User?            @relation("ResumeReviewer", fields: [reviewerId], references: [id], onDelete: SetNull)
+  interviews InterviewRound[]
+
+  @@map("job_candidates")
+  @@index([jobId])
+  @@index([status])
+  @@index([reviewerId])
+}
+
+model InterviewRound {
+  id            String          @id @default(uuid())
+  candidateId   String
+  roundNumber   Int             // 1, 2, 3 (final)
+  roundName     String          // "Technical Screen", "Practical Review", "CTO & Cofounder Final"
+  interviewerId String
+  scheduledAt   DateTime?
+  completedAt   DateTime?
+  result        InterviewResult @default(PENDING)
+  feedback      String?
+  score         Int?            // 1-10
+  createdAt     DateTime        @default(now())
+
+  candidate   JobCandidate @relation(fields: [candidateId], references: [id], onDelete: Cascade)
+  interviewer User         @relation("Interviewer", fields: [interviewerId], references: [id])
+
+  @@map("interview_rounds")
+  @@index([candidateId])
+  @@index([interviewerId])
+}
+
+// ─── EXPENSE MANAGEMENT ────────────────────────────────────────
+
+model Expense {
+  id          String          @id @default(uuid())
+  title       String
+  description String?
+  amount      Int             @default(0)
+  currency    String          @default("INR")
+  category    ExpenseCategory @default(OTHER)
+  receipt     String?         // URL or file path
+  status      ExpenseStatus   @default(DRAFT)
+  submitterId String
+  approverId  String?
+  approvedAt  DateTime?
+  rejectedAt  DateTime?
+  rejectNote  String?
+  expenseDate DateTime        @default(now())
+  createdAt   DateTime        @default(now())
+  updatedAt   DateTime        @updatedAt
+
+  submitter User  @relation("ExpenseSubmitter", fields: [submitterId], references: [id])
+  approver  User? @relation("ExpenseApprover", fields: [approverId], references: [id], onDelete: SetNull)
+
+  @@map("expenses")
+  @@index([submitterId])
+  @@index([approverId])
+  @@index([status])
+  @@index([category])
+}
+
+// ─── CREDENTIAL / PASSWORD VAULT ───────────────────────────────
+
+model Credential {
+  id          String                @id @default(uuid())
+  title       String
+  username    String?
+  password    String                // encrypted
+  url         String?
+  category    String?               // "Social Media", "Hosting", "API", "Email", "Banking", "Cloud", "Domain", "Other"
+  notes       String?
+  accessLevel CredentialAccessLevel @default(ADMIN_ONLY)
+  projectId   String?               // Project-scoped password
+  workspaceId String?               // Workspace-scoped
+  createdById String
+  managedById String?               // Manager who controls access
+  createdAt   DateTime              @default(now())
+  updatedAt   DateTime              @updatedAt
+
+  createdBy User @relation("CredentialCreator", fields: [createdById], references: [id])
+  accessGrants CredentialAccess[]
+  accessLogs   CredentialAccessLog[]
+
+  @@map("credentials")
+  @@index([accessLevel])
+  @@index([category])
+  @@index([createdById])
+  @@index([projectId])
+  @@index([workspaceId])
+}
+
+// Who has access to which credential - manager decides
+model CredentialAccess {
+  id           String   @id @default(uuid())
+  credentialId String
+  userId       String
+  grantedById  String   // Manager who granted access
+  canView      Boolean  @default(true)
+  canCopy      Boolean  @default(false)  // Can copy password
+  canEdit      Boolean  @default(false)
+  expiresAt    DateTime? // Optional expiry
+  createdAt    DateTime @default(now())
+
+  credential   Credential @relation(fields: [credentialId], references: [id], onDelete: Cascade)
+
+  @@unique([credentialId, userId])
+  @@map("credential_access")
+  @@index([userId])
+  @@index([credentialId])
+}
+
+// Detailed log: who viewed, who copied, when - for C-level reports
+model CredentialAccessLog {
+  id           String   @id @default(uuid())
+  credentialId String
+  userId       String
+  action       String   // "VIEW_PAGE", "COPY_PASSWORD", "COPY_USERNAME", "EDIT", "SHARE"
+  ipAddress    String?
+  userAgent    String?
+  createdAt    DateTime @default(now())
+
+  credential   Credential @relation(fields: [credentialId], references: [id], onDelete: Cascade)
+
+  @@map("credential_access_logs")
+  @@index([credentialId])
+  @@index([userId])
+  @@index([createdAt])
+  @@index([action])
+}
+
+// Subscription management - track all online service subscriptions
+model Subscription {
+  id              String   @id @default(uuid())
+  name            String   // "Figma", "AWS", "GitHub", "Slack", "Google Workspace"
+  provider        String?  // Service provider name
+  plan            String?  // "Pro", "Business", "Enterprise"
+  cost            Float    // Monthly cost
+  billingCycle    String   @default("MONTHLY") // MONTHLY, QUARTERLY, YEARLY
+  currency        String   @default("INR")
+  startDate       DateTime
+  renewalDate     DateTime?
+  expiryDate      DateTime?
+  autoRenew       Boolean  @default(true)
+  status          String   @default("ACTIVE") // ACTIVE, CANCELLED, EXPIRED, TRIAL
+  category        String?  // "Development", "Design", "Marketing", "Communication", "Cloud", "Other"
+  loginUrl        String?
+  credentialId    String?  // Linked credential for login
+  notes           String?
+  managedById     String   // Manager responsible
+  workspaceId     String?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@map("subscriptions")
+  @@index([status])
+  @@index([managedById])
+  @@index([renewalDate])
+  @@index([category])
+}
+
+// ─── AUDIT ─────────────────────────────────────────────────────
+
+enum AuditAction {
+  CREATE
+  UPDATE
+  DELETE
+  LOGIN
+  LOGOUT
+  EXPORT
+  IMPORT
+}
+
+enum AuditEntity {
+  USER
+  PROJECT
+  TASK
+  FILE
+  CONTACT
+  CALENDAR_EVENT
+  WORKSPACE
+  SETTINGS
+  PAYROLL
+  EXPENSE
+  CREDENTIAL
+}
+
+model AuditLog {
+  id          String       @id @default(uuid())
+  action      AuditAction
+  entity      AuditEntity
+  entityId    String?
+  entityName  String?
+  description String?
+  metadata    String?
+  userId      String?
+  userName    String?
+  workspaceId String
+  ipAddress   String?
+  userAgent   String?
+  createdAt   DateTime     @default(now())
+
+  @@map("audit_logs")
+  @@index([workspaceId, createdAt])
+  @@index([action])
+  @@index([entity])
+  @@index([userId])
+}
+
+model ApiKey {
+  id         String    @id @default(uuid())
+  name       String
+  key        String    @unique
+  scopes     String
+  lastUsedAt DateTime?
+  userId     String
+  createdAt  DateTime  @default(now())
+  expiresAt  DateTime?
+
+  user User @relation("UserApiKeys", fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("api_keys")
+  @@index([userId])
+  @@index([key])
+}
+
+// ─── INVOICES ───────────────────────────────────────────────
+
+model Invoice {
+  id            String        @id @default(uuid())
+  invoiceNumber String        @unique
+  clientName    String
+  clientEmail   String?
+  clientPhone   String?
+  clientAddress String?
+  items         String        // JSON array: [{description, quantity, rate, amount}]
+  subtotal      Int           @default(0)
+  tax           Int           @default(0)
+  discount      Int           @default(0)
+  total         Int           @default(0)
+  currency      String        @default("INR")
+  status        InvoiceStatus @default(DRAFT)
+  dueDate       DateTime?
+  paidOn        DateTime?
+  notes         String?
+  projectId     String?
+  createdById   String
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+
+  clientId    String?
+  createdBy User    @relation("InvoiceCreator", fields: [createdById], references: [id])
+  client    Client? @relation(fields: [clientId], references: [id], onDelete: SetNull)
+
+  @@map("invoices")
+  @@index([status])
+  @@index([createdById])
+  @@index([clientId])
+}
+
+// ─── CHAT ──────────────────────────────────────────────────
+
+model ChatRoom {
+  id          String   @id @default(uuid())
+  name        String?
+  type        String   // "dm" | "group" | "project" | "department"
+  projectId   String?
+  department  String?
+  createdById String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  createdBy User @relation("ChatRoomCreator", fields: [createdById], references: [id])
+  members  ChatRoomMember[]
+  messages ChatMessage[]
+
+  @@index([createdById])
+  @@index([projectId])
+  @@map("chat_rooms")
+}
+
+model ChatRoomMember {
+  id        String   @id @default(uuid())
+  roomId    String
+  userId    String
+  joinedAt  DateTime @default(now())
+  lastRead  DateTime @default(now())
+
+  room ChatRoom @relation(fields: [roomId], references: [id], onDelete: Cascade)
+  user User     @relation("ChatRoomMemberUser", fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([roomId, userId])
+  @@index([userId])
+  @@map("chat_room_members")
+}
+
+model ChatMessage {
+  id        String   @id @default(uuid())
+  roomId    String
+  senderId  String
+  content   String
+  type      String   @default("text") // "text" | "file" | "system" | "ai"
+  fileName  String?
+  fileSize  Int?
+  fileType  String?
+  fileUrl   String?
+  replyToId String?
+  createdAt DateTime @default(now())
+
+  room    ChatRoom     @relation(fields: [roomId], references: [id], onDelete: Cascade)
+  sender  User         @relation("ChatMessageSender", fields: [senderId], references: [id])
+  replyTo ChatMessage? @relation("MessageReplies", fields: [replyToId], references: [id], onDelete: SetNull)
+  replies ChatMessage[] @relation("MessageReplies")
+
+  @@index([roomId, createdAt])
+  @@index([senderId])
+  @@index([replyToId])
+  @@map("chat_messages")
+}
+
+// ─── CLIENT & LEAD MANAGEMENT ─────────────────────────────────
+
+enum LeadStatus {
+  NEW
+  CONTACTED
+  QUALIFIED
+  PROPOSAL
+  NEGOTIATION
+  WON
+  LOST
+}
+
+model Client {
+  id          String   @id @default(uuid())
+  name        String
+  email       String?
+  phone       String?
+  company     String?
+  address     String?
+  website     String?
+  industry    String?
+  notes       String?
+  workspaceId String
+  createdById String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  workspace Workspace @relation(fields: [workspaceId], references: [id])
+  createdBy User      @relation("ClientCreator", fields: [createdById], references: [id])
+  leads     Lead[]
+  invoices  Invoice[]
+
+  @@index([workspaceId])
+  @@index([createdById])
+  @@map("clients")
+}
+
+model Lead {
+  id           String     @id @default(uuid())
+  title        String
+  value        Float?
+  currency     String     @default("INR")
+  status       LeadStatus @default(NEW)
+  source       String?
+  clientId     String?
+  assigneeId   String?
+  notes        String?
+  nextFollowUp DateTime?
+  workspaceId  String
+  createdById  String
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+
+  client    Client?   @relation(fields: [clientId], references: [id], onDelete: SetNull)
+  assignee  User?     @relation("LeadAssignee", fields: [assigneeId], references: [id], onDelete: SetNull)
+  createdBy User      @relation("LeadCreator", fields: [createdById], references: [id])
+  workspace Workspace @relation(fields: [workspaceId], references: [id])
+  tasks     LeadTask[]
+
+  @@index([workspaceId])
+  @@index([createdById])
+  @@index([assigneeId])
+  @@index([clientId])
+  @@index([status])
+  @@map("leads")
+}
+
+model LeadTask {
+  id     String @id @default(uuid())
+  leadId String
+  taskId String
+
+  lead Lead @relation(fields: [leadId], references: [id], onDelete: Cascade)
+  task Task @relation(fields: [taskId], references: [id], onDelete: Cascade)
+
+  @@unique([leadId, taskId])
+  @@index([leadId])
+  @@index([taskId])
+  @@map("lead_tasks")
+}
+
+// ─── COMPLAINT & ESCALATION ──────────────────────────────────
+
+enum ComplaintStatus {
+  OPEN
+  UNDER_REVIEW
+  ESCALATED
+  RESOLVED
+  DISMISSED
+}
+
+enum ComplaintCategory {
+  HARASSMENT
+  DISCRIMINATION
+  MISCONDUCT
+  POLICY_VIOLATION
+  PERFORMANCE
+  LEAVE_DISPUTE
+  SALARY_DISPUTE
+  WORKPLACE_SAFETY
+  OTHER
+}
+
+enum EscalationLevel {
+  HR
+  PROJECT_MANAGER
+  CEO
+  CTO
+}
+
+model Complaint {
+  id              String            @id @default(uuid())
+  ticketNumber    String            @unique @default(uuid())
+  category        ComplaintCategory
+  subject         String
+  description     String
+  status          ComplaintStatus   @default(OPEN)
+  escalationLevel EscalationLevel   @default(HR)
+  filedById       String
+  againstId       String
+  assignedToId    String?
+  resolution      String?
+  isAnonymous     Boolean           @default(false)
+  workspaceId     String
+  createdAt       DateTime          @default(now())
+  updatedAt       DateTime          @updatedAt
+
+  filedBy    User   @relation("ComplaintFiler", fields: [filedById], references: [id])
+  against    User   @relation("ComplaintTarget", fields: [againstId], references: [id])
+  assignedTo User?  @relation("ComplaintAssignee", fields: [assignedToId], references: [id], onDelete: SetNull)
+  timeline   ComplaintTimeline[]
+
+  @@index([workspaceId, status])
+  @@index([filedById])
+  @@index([againstId])
+  @@index([assignedToId])
+  @@map("complaints")
+}
+
+model ComplaintTimeline {
+  id          String   @id @default(uuid())
+  complaintId String
+  action      String
+  note        String?
+  actorId     String
+  createdAt   DateTime @default(now())
+
+  complaint Complaint @relation(fields: [complaintId], references: [id], onDelete: Cascade)
+  actor     User      @relation("ComplaintTimelineActor", fields: [actorId], references: [id])
+
+  @@index([complaintId])
+  @@index([actorId])
+  @@map("complaint_timeline")
+}
+
+// ─── SENT EMAIL TRACKING ─────────────────────────────────────
+
+model SentEmail {
+  id          String   @id @default(uuid())
+  fromId      String   // user who sent it
+  toEmail     String   // recipient email(s), comma-separated for multiple
+  subject     String
+  body        String   // HTML body
+  status      String   @default("SENT") // SENT, FAILED, BOUNCED
+  type        String   @default("CUSTOM") // CUSTOM, INVOICE, NEWSLETTER, NOTIFICATION
+  relatedId   String?  // invoice ID or other related entity
+  createdAt   DateTime @default(now())
+
+  from User @relation("SentEmails", fields: [fromId], references: [id])
+
+  @@map("sent_emails")
+  @@index([fromId])
+  @@index([createdAt])
+}
+
+// ─── SYSTEM CONFIGURATION ─────────────────────────────────────
+
+model SystemConfig {
+  id        String   @id @default(uuid())
+  key       String   @unique
+  value     String   // JSON string
+  updatedAt DateTime @updatedAt
+  updatedBy String?
+
+  @@map("system_configs")
+  @@index([key])
+}
+
+// ─── USER PREFERENCES ──────────────────────────────────────────
+
+model UserPreference {
+  id              String  @id @default(uuid())
+  userId          String  @unique
+
+  // Dashboard customization per user
+  sidebarOrder      String?  // JSON: sidebar section keys in user's preferred order
+  collapsedGroups   String?  // JSON: collapsed sidebar group names
+  dashboardLayout   String?  // JSON: which widgets to show/hide/reorder per role
+  dashboardWidgets  String?  // JSON: [{id, type, position, size, visible}] — fully customizable grid
+  pinnedPages       String?  // JSON: ["/tasks", "/projects"] — quick nav shortcuts
+  defaultPage       String?  // Landing page after login: "/dashboard" or role-specific
+
+  // Theme & appearance (saved per user)
+  theme             String   @default("light") // light, dark
+  accentColor       String?  // Custom accent override (hex)
+  sidebarStyle      String   @default("full") // full, collapsed, mini
+  compactMode       Boolean  @default(false) // Dense table/card view
+  fontSize          String   @default("medium") // small, medium, large
+
+  // Localization
+  language          String   @default("en")
+  dateFormat        String   @default("DD/MM/YYYY")
+  currency          String   @default("INR")
+  timezone          String   @default("Asia/Kolkata")
+
+  // Notification preferences
+  emailNotifications Boolean @default(true)
+  pushNotifications  Boolean @default(true)
+  weeklyDigest       Boolean @default(true)
+  desktopNotifs      Boolean @default(true)
+  soundEnabled       Boolean @default(true)
+
+  // Data visibility scope (role-enforced + customizable)
+  dataScope         String   @default("own") // own, team, department, all (capped by role max)
+
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  user User @relation("UserPreferences", fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("user_preferences")
+}
+
+// ─── CHATBOT ──────────────────────────────────────────────────
+
+model ChatBotConversation {
+  id        String   @id @default(uuid())
+  userId    String
+  title     String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user     User              @relation("UserChatBotConversations", fields: [userId], references: [id], onDelete: Cascade)
+  messages ChatBotMessage[]
+
+  @@index([userId, createdAt])
+  @@map("chatbot_conversations")
+}
+
+model ChatBotMessage {
+  id             String   @id @default(uuid())
+  conversationId String
+  role           String   // "user" | "assistant" | "system"
+  content        String
+  createdAt      DateTime @default(now())
+
+  conversation ChatBotConversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+
+  @@index([conversationId, createdAt])
+  @@map("chatbot_messages")
+}
+
+// ─── CANVAS / WHITEBOARD ─────────────────────────────────────
+
+model Canvas {
+  id          String   @id @default(uuid())
+  title       String
+  data        String   @default("{}") // JSON string of canvas elements
+  projectId   String?
+  createdById String
+  workspaceId String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  createdBy   User      @relation("UserCanvases", fields: [createdById], references: [id])
+  workspace   Workspace @relation(fields: [workspaceId], references: [id])
+  project     Project?  @relation(fields: [projectId], references: [id], onDelete: SetNull)
+
+  @@map("canvases")
+  @@index([workspaceId])
+  @@index([createdById])
+  @@index([projectId])
+}
+
+// ─── FAVORITES / PINNING ─────────────────────────────────────
+
+model UserFavorite {
+  id         String   @id @default(uuid())
+  userId     String
+  entityType String   // "project" | "task" | "client" | "contact" | "canvas" | "goal"
+  entityId   String
+  entityName String   // cached name for quick display
+  position   Int      @default(0)
+  createdAt  DateTime @default(now())
+
+  user User @relation("UserFavorites", fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, entityType, entityId])
+  @@index([userId, position])
+  @@map("user_favorites")
+}
+
+// ─── GOALS / OKR TRACKING ────────────────────────────────────
+
+model Goal {
+  id            String    @id @default(uuid())
+  title         String
+  description   String?
+  type          String    @default("OBJECTIVE") // OBJECTIVE, KEY_RESULT, TARGET
+  scope         String?   // COMPANY, TEAM, PERSONAL
+  category      String    @default("PROFESSIONAL") // PROFESSIONAL, PERSONAL, HEALTH, WEALTH
+  parentId      String?
+  ownerId       String
+  workspaceId   String
+  startDate     DateTime?
+  endDate       DateTime?
+  progress      Int       @default(0) // 0-100
+  status        String    @default("ON_TRACK") // ON_TRACK, AT_RISK, BEHIND, COMPLETED
+  metricType    String?   // PERCENTAGE, NUMBER, CURRENCY, BOOLEAN
+  metricCurrent Float?    @default(0)
+  metricTarget  Float?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  owner     User      @relation("UserGoals", fields: [ownerId], references: [id])
+  workspace Workspace @relation(fields: [workspaceId], references: [id])
+  parent    Goal?     @relation("GoalChildren", fields: [parentId], references: [id], onDelete: SetNull)
+  children  Goal[]    @relation("GoalChildren")
+
+  @@map("goals")
+  @@index([workspaceId])
+  @@index([ownerId])
+  @@index([parentId])
+  @@index([status])
+  @@index([scope])
+}
+
+// ─── SPACES (PROJECT GROUPINGS) ─────────────────────────────
+
+model Space {
+  id          String   @id @default(uuid())
+  name        String
+  description String?
+  color       String   @default("#3b82f6")
+  icon        String?
+  workspaceId String
+  createdById String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  workspace   Workspace @relation(fields: [workspaceId], references: [id])
+  createdBy   User      @relation("UserSpaces", fields: [createdById], references: [id])
+  projects    Project[] @relation("SpaceProjects")
+
+  @@map("spaces")
+  @@index([workspaceId])
+  @@index([createdById])
+}
+
+// ─── TIME TRACKING ──────────────────────────────────────────
+
+model TimeEntry {
+  id          String    @id @default(uuid())
+  userId      String
+  taskId      String?
+  projectId   String?
+  description String?
+  startTime   DateTime
+  endTime     DateTime?
+  duration    Int?      // minutes
+  billable    Boolean   @default(true)
+  workspaceId String
+  createdAt   DateTime  @default(now())
+
+  user      User      @relation("UserTimeEntries", fields: [userId], references: [id])
+  task      Task?     @relation("TaskTimeEntries", fields: [taskId], references: [id], onDelete: SetNull)
+  project   Project?  @relation("ProjectTimeEntries", fields: [projectId], references: [id], onDelete: SetNull)
+  workspace Workspace @relation(fields: [workspaceId], references: [id])
+
+  @@map("time_entries")
+  @@index([userId])
+  @@index([workspaceId])
+  @@index([taskId])
+  @@index([projectId])
+  @@index([startTime])
+}
+
+// ─── DOCS / WIKI ─────────────────────────────────────────────
+
+model Doc {
+  id          String   @id @default(uuid())
+  title       String
+  content     String   @default("")
+  icon        String?
+  parentId    String?
+  projectId   String?
+  createdById String
+  workspaceId String
+  isPublished Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  createdBy   User      @relation("UserDocs", fields: [createdById], references: [id])
+  workspace   Workspace @relation(fields: [workspaceId], references: [id])
+  project     Project?  @relation(fields: [projectId], references: [id], onDelete: SetNull)
+  parent      Doc?      @relation("DocChildren", fields: [parentId], references: [id], onDelete: SetNull)
+  children    Doc[]     @relation("DocChildren")
+
+  @@map("docs")
+  @@index([workspaceId])
+  @@index([createdById])
+  @@index([parentId])
+  @@index([projectId])
+}

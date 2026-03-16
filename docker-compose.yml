@@ -1,0 +1,60 @@
+version: "3.8"
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: knowai-erp-db
+    restart: unless-stopped
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_DB: knowai_erp
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./backups:/backups
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d knowai_erp"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: knowai-erp-backend
+    restart: unless-stopped
+    ports:
+      - "3001:3001"
+    environment:
+      DATABASE_URL: postgresql://postgres:postgres@postgres:5432/knowai_erp
+      JWT_SECRET: ${JWT_SECRET:-knowai-erp-jwt-secret-key-2026-super-secure}
+      NEXTAUTH_SECRET: ${NEXTAUTH_SECRET:-knowai-erp-nextauth-secret-2026}
+      NEXTAUTH_URL: http://localhost:3001
+      SMTP_HOST: ${SMTP_HOST:-smtp.gmail.com}
+      SMTP_PORT: ${SMTP_PORT:-587}
+      SMTP_USER: ${SMTP_USER:-}
+      SMTP_PASSWORD: ${SMTP_PASSWORD:-}
+      NODE_ENV: ${NODE_ENV:-production}
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: knowai-erp-frontend
+    restart: unless-stopped
+    ports:
+      - "5173:80"
+    environment:
+      VITE_API_URL: ${VITE_API_URL:-http://localhost:3001}
+    depends_on:
+      - backend
+
+volumes:
+  postgres_data:
+    driver: local
