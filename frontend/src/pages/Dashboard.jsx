@@ -21,6 +21,7 @@ import {
   ArrowRight,
 } from 'lucide-react';
 import { dashboardApi } from '../services/api';
+import AccountabilityWidget from '../components/dashboard/AccountabilityWidget';
 import { canSeeWidget, ROLE_LABELS, ROLE_COLORS } from '../utils/roleConfig';
 
 const STAT_CARD_CONFIG = [
@@ -43,11 +44,11 @@ function formatValue(value, format) {
   return value;
 }
 
-function StatCard({ config, value, delta }) {
+function StatCard({ config, value, delta, onClick }) {
   const Icon = config.icon;
   const isUp = delta >= 0;
   return (
-    <div className="stat-card">
+    <div className="stat-card" onClick={onClick} style={{ cursor: onClick ? 'pointer' : 'default', transition: 'transform 0.15s, box-shadow 0.15s' }} onMouseEnter={e => { if(onClick) { e.currentTarget.style.transform='translateY(-2px)'; e.currentTarget.style.boxShadow='var(--kai-shadow)'; }}} onMouseLeave={e => { e.currentTarget.style.transform='none'; e.currentTarget.style.boxShadow='var(--kai-shadow-sm)'; }}>
       <div className="flex-between" style={{ marginBottom: 16 }}>
         <div className="stat-icon" style={{ background: config.bg, color: config.color }}>
           <Icon />
@@ -116,7 +117,7 @@ export default function Dashboard() {
       const d = data.data || data;
 
       setStats({
-        totalTeam: d.totalTeam ?? d.teamCount ?? 0,
+        totalTeam: d.totalTeam ?? d.teamCount ?? d.totalMembers ?? 0,
         activeProjects: d.activeProjects ?? d.projectCount ?? 0,
         openTasks: d.openTasks ?? d.taskCount ?? 0,
         revenue: d.revenue ?? d.totalRevenue ?? 0,
@@ -128,6 +129,11 @@ export default function Dashboard() {
         revenueDelta: d.revenueDelta ?? d.deltas?.revenue ?? null,
         pendingLeavesDelta: d.pendingLeavesDelta ?? d.deltas?.pendingLeaves ?? null,
         expensesThisMonthDelta: d.expensesThisMonthDelta ?? d.deltas?.expenses ?? null,
+        // Task breakdown
+        todayTasks: d.todayTasks || [],
+        backlogTasks: d.backlogTasks || [],
+        upcomingTasks: d.upcomingTasks || [],
+        inProgressTasks: d.inProgressTasks || [],
       });
 
       setRevenueChart(d.revenueChart || d.monthlyRevenue || []);
@@ -260,33 +266,75 @@ export default function Dashboard() {
     );
   }
 
+  // Greeting based on time
+  const hour = new Date().getHours();
+  const greeting = hour < 12 ? 'Good Morning' : hour < 17 ? 'Good Afternoon' : hour < 21 ? 'Good Evening' : 'Good Night';
+  const greetingEmoji = hour < 12 ? '☀️' : hour < 17 ? '🌤️' : hour < 21 ? '🌅' : '🌙';
+  const now = new Date();
+  const timeStr = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+  const dateStr = now.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' });
+
+  const QUOTES = [
+    "Great things never come from comfort zones.",
+    "The only way to do great work is to love what you do.",
+    "Success is not final, failure is not fatal — it is the courage to continue that counts.",
+    "Stay focused, go after your dreams and keep moving toward your goals.",
+    "Your work is going to fill a large part of your life. Make it great.",
+    "Productivity is never an accident. It is always the result of intelligent effort.",
+    "The secret of getting ahead is getting started.",
+  ];
+  const todayQuote = QUOTES[now.getDate() % QUOTES.length];
+
+  // Tasks from dashboard data
+  const todayTasks = stats.todayTasks || [];
+  const backlogTasks = stats.backlogTasks || [];
+  const upcomingTasks = stats.upcomingTasks || [];
+
+  // Navigate map for stat cards
+  const STAT_NAVIGATE = {
+    totalTeam: '/team', activeProjects: '/projects', openTasks: '/tasks',
+    revenue: '/invoices', pendingLeaves: '/leaves', expensesThisMonth: '/expenses',
+  };
+
   return (
     <div>
-      {/* Page Header */}
-      <div className="page-header">
-        <div>
-          <h1>Dashboard</h1>
-          <p style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-            Welcome back to Know AI ERP
-            <span
-              style={{
-                fontSize: 11,
-                fontWeight: 600,
-                color: roleColor,
-                background: `${roleColor}15`,
-                padding: '2px 8px',
-                borderRadius: 4,
-                border: `1px solid ${roleColor}30`,
-              }}
-            >
-              {roleLabel}
-            </span>
-          </p>
-        </div>
-        <div className="page-actions">
-          <button className="kai-btn kai-btn-outline kai-btn-sm" onClick={fetchDashboard}>
-            Refresh
-          </button>
+      {/* Greeting Widget */}
+      <div style={{
+        background: 'linear-gradient(135deg, #146DF7 0%, #0148A7 60%, #05121B 100%)',
+        borderRadius: 16, padding: '28px 32px', marginBottom: 24, color: '#fff', position: 'relative', overflow: 'hidden',
+      }}>
+        <div style={{ position: 'absolute', top: -40, right: -40, width: 200, height: 200, borderRadius: '50%', background: 'rgba(255,255,255,0.05)' }} />
+        <div style={{ position: 'absolute', bottom: -60, right: 100, width: 300, height: 300, borderRadius: '50%', background: 'rgba(255,255,255,0.03)' }} />
+        <div style={{ position: 'relative', zIndex: 1, display: 'flex', justifyContent: 'space-between', flexWrap: 'wrap', gap: 20 }}>
+          <div>
+            <div style={{ fontSize: 28, fontWeight: 800, marginBottom: 4, letterSpacing: -0.5 }}>
+              {greetingEmoji} {greeting}, {user?.firstName || 'there'}!
+            </div>
+            <div style={{ fontSize: 14, opacity: 0.85, marginBottom: 12 }}>
+              {dateStr}
+              <span style={{ margin: '0 8px', opacity: 0.4 }}>|</span>
+              <span style={{ fontFamily: 'monospace', fontWeight: 600 }}>{timeStr}</span>
+              <span style={{ margin: '0 8px', opacity: 0.4 }}>|</span>
+              <span style={{ background: `${roleColor}40`, padding: '2px 10px', borderRadius: 12, fontSize: 12, fontWeight: 700 }}>{roleLabel}</span>
+            </div>
+            <div style={{ fontSize: 13, opacity: 0.7, fontStyle: 'italic', maxWidth: 500, lineHeight: 1.5 }}>
+              "{todayQuote}"
+            </div>
+          </div>
+          <div style={{ display: 'flex', gap: 16, alignItems: 'flex-start', flexWrap: 'wrap' }}>
+            <div onClick={() => navigate('/tasks')} style={{ cursor: 'pointer', background: 'rgba(255,255,255,0.12)', borderRadius: 12, padding: '12px 20px', textAlign: 'center', minWidth: 90, backdropFilter: 'blur(10px)' }}>
+              <div style={{ fontSize: 24, fontWeight: 800 }}>{todayTasks.length || stats.openTasks || 0}</div>
+              <div style={{ fontSize: 11, opacity: 0.8 }}>Today's Tasks</div>
+            </div>
+            <div onClick={() => navigate('/tasks?view=blocked')} style={{ cursor: 'pointer', background: 'rgba(255,255,255,0.12)', borderRadius: 12, padding: '12px 20px', textAlign: 'center', minWidth: 90, backdropFilter: 'blur(10px)' }}>
+              <div style={{ fontSize: 24, fontWeight: 800, color: '#FCD34D' }}>{backlogTasks.length || 0}</div>
+              <div style={{ fontSize: 11, opacity: 0.8 }}>Backlog</div>
+            </div>
+            <div onClick={() => navigate('/calendar')} style={{ cursor: 'pointer', background: 'rgba(255,255,255,0.12)', borderRadius: 12, padding: '12px 20px', textAlign: 'center', minWidth: 90, backdropFilter: 'blur(10px)' }}>
+              <div style={{ fontSize: 24, fontWeight: 800, color: '#86EFAC' }}>{upcomingTasks.length || 0}</div>
+              <div style={{ fontSize: 11, opacity: 0.8 }}>Upcoming</div>
+            </div>
+          </div>
         </div>
       </div>
 
@@ -361,6 +409,7 @@ export default function Dashboard() {
                 config={cfg}
                 value={stats[cfg.key]}
                 delta={stats[`${cfg.key}Delta`]}
+                onClick={() => navigate(STAT_NAVIGATE[cfg.key] || '/dashboard')}
               />
             </Col>
           ))}
@@ -408,6 +457,11 @@ export default function Dashboard() {
           )}
         </Row>
       )}
+
+      {/* Accountability Alerts */}
+      <div style={{ marginBottom: 16 }}>
+        <AccountabilityWidget />
+      </div>
 
       {/* Bottom Row: Activity, Quick Actions, Deadlines */}
       {showBottomRow && (
