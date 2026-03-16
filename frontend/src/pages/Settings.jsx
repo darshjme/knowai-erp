@@ -50,14 +50,29 @@ export default function Settings() {
   const fetchSettings = async () => {
     setLoading(true);
     try {
+      // Fetch profile from /settings
       const { data } = await settingsApi.get();
-      const s = data.settings || data;
-      if (s.profile) setProfile(prev => ({ ...prev, ...s.profile }));
-      if (s.firstName) setProfile(prev => ({ ...prev, firstName: s.firstName, lastName: s.lastName || '', email: s.email || '', phone: s.phone || '', department: s.department || '', timezone: s.timezone || 'UTC' }));
-      if (s.twoFactorEnabled !== undefined) setTwoFactorEnabled(s.twoFactorEnabled);
-      if (s.notifications) setNotifications(prev => ({ ...prev, ...s.notifications }));
-      if (s.theme) setTheme(s.theme);
-      if (s.sidebarStyle) setSidebarStyle(s.sidebarStyle);
+      const s = data?.settings || data;
+      if (s?.profile) setProfile(prev => ({ ...prev, ...s.profile }));
+      if (s?.firstName) setProfile(prev => ({ ...prev, firstName: s.firstName, lastName: s.lastName || '', email: s.email || '', phone: s.phone || '', department: s.department || '', timezone: s.timezone || 'UTC' }));
+      if (s?.twoFactorEnabled !== undefined) setTwoFactorEnabled(s.twoFactorEnabled);
+
+      // Fetch preferences from /settings/preferences
+      try {
+        const prefRes = await settingsApi.getPreferences();
+        const prefs = prefRes.data;
+        if (prefs?.theme) {
+          setTheme(prefs.theme);
+          document.documentElement.setAttribute('data-theme', prefs.theme);
+        }
+        if (prefs?.sidebarStyle) setSidebarStyle(prefs.sidebarStyle);
+        if (prefs?.emailNotifications !== undefined) setNotifications(prev => ({
+          ...prev,
+          email: prefs.emailNotifications,
+          push: prefs.pushNotifications,
+          digest: prefs.weeklyDigest,
+        }));
+      } catch {}
     } catch (err) {
       console.error('Failed to load settings:', err);
     } finally {
@@ -136,10 +151,19 @@ export default function Settings() {
   const handleSaveAppearance = async (newTheme, newSidebar) => {
     const t = newTheme || theme;
     const sb = newSidebar || sidebarStyle;
-    if (newTheme) setTheme(newTheme);
-    if (newSidebar) setSidebarStyle(newSidebar);
+    if (newTheme) {
+      setTheme(t);
+      // Apply theme immediately to DOM
+      document.documentElement.setAttribute('data-theme', t);
+      localStorage.setItem('knowai-theme', t);
+      dispatch({ type: 'UI_SET_THEME', payload: t });
+    }
+    if (newSidebar) {
+      setSidebarStyle(sb);
+      if (sb === 'collapsed') dispatch({ type: 'UI_TOGGLE_SIDEBAR' });
+    }
     try {
-      await settingsApi.update({ section: 'appearance', theme: t, sidebarStyle: sb });
+      await settingsApi.updatePreferences({ theme: t, sidebarStyle: sb });
       showMessage('success', 'Appearance updated');
     } catch (err) {
       showMessage('error', err.response?.data?.error || 'Failed to update appearance');
