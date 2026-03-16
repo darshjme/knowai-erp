@@ -1,0 +1,9 @@
+node_modules/
+.next/
+.pg-data/
+.env
+uploads/files/*
+uploads/documents/*
+uploads/avatars/*
+uploads/resumes/*
+!uploads/**/.gitkeep
