@@ -94,7 +94,7 @@ export async function POST(req: NextRequest) {
     if (!user) return jsonError("Unauthorized", 401);
 
     const body = await req.json();
-    const { title, description, amount, category, receipt, expenseDate } = body;
+    const { title, description, amount, category, receipt, expenseDate, currency } = body;
 
     if (!title || amount === undefined || !category) {
       return jsonError("title, amount, and category are required", 400);
@@ -115,6 +115,7 @@ export async function POST(req: NextRequest) {
         amount,
         category,
         receipt,
+        currency: currency || "INR",
         expenseDate: expenseDate ? new Date(expenseDate) : new Date(),
         submitterId: user.id,
         status: "SUBMITTED",

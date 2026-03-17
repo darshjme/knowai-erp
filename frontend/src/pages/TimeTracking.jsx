@@ -45,6 +45,7 @@ export default function TimeTracking() {
     task: '', project: '', startTime: '', endTime: '', description: '', billable: false,
   });
   const [savingLog, setSavingLog] = useState(false);
+  const [logFormError, setLogFormError] = useState('');
 
   // Weekly summary
   const [weeklySummary, setWeeklySummary] = useState([]);
@@ -132,8 +133,37 @@ export default function TimeTracking() {
     }
   };
 
+  // Compute real-time duration for log form
+  const logFormDuration = (() => {
+    if (!logForm.startTime || !logForm.endTime) return null;
+    const start = new Date(`1970-01-01T${logForm.startTime}`);
+    const end = new Date(`1970-01-01T${logForm.endTime}`);
+    const diffMs = end - start;
+    if (diffMs <= 0) return null;
+    const mins = Math.round(diffMs / 60000);
+    if (mins > 1440) return null; // > 24 hours
+    return mins;
+  })();
+
   const handleLogEntry = async (e) => {
     e.preventDefault();
+    setLogFormError('');
+
+    // Validate endTime > startTime (same calendar day, no cross-midnight)
+    if (logForm.startTime && logForm.endTime) {
+      const start = new Date(`1970-01-01T${logForm.startTime}`);
+      const end = new Date(`1970-01-01T${logForm.endTime}`);
+      if (end <= start) {
+        setLogFormError('End time must be after start time');
+        return;
+      }
+      const diffMinutes = Math.round((end - start) / 60000);
+      if (diffMinutes > 1440) {
+        setLogFormError('Entry cannot exceed 24 hours');
+        return;
+      }
+    }
+
     setSavingLog(true);
     try {
       const duration = logForm.startTime && logForm.endTime
@@ -152,6 +182,7 @@ export default function TimeTracking() {
       });
       setShowLogModal(false);
       setLogForm({ task: '', project: '', startTime: '', endTime: '', description: '', billable: false });
+      setLogFormError('');
       fetchEntries();
       showMsg('success', 'Time entry logged');
     } catch (err) {
@@ -366,6 +397,14 @@ export default function TimeTracking() {
                 </button>
               </div>
               <form onSubmit={handleLogEntry}>
+                {logFormError && (
+                  <div style={{
+                    padding: '10px 14px', borderRadius: 8, marginBottom: 16, fontSize: 13, fontWeight: 500,
+                    background: '#f8d7da', color: '#721c24', display: 'flex', alignItems: 'center', gap: 8,
+                  }}>
+                    <AlertCircle size={16} /> {logFormError}
+                  </div>
+                )}
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, marginBottom: 16 }}>
                   <div>
                     <label className="kai-label">Task</label>
@@ -380,14 +419,22 @@ export default function TimeTracking() {
                   <div>
                     <label className="kai-label">Start Time</label>
                     <input className="kai-input" type="time" value={logForm.startTime}
-                      onChange={e => setLogForm(f => ({ ...f, startTime: e.target.value }))} required />
+                      onChange={e => { setLogForm(f => ({ ...f, startTime: e.target.value })); setLogFormError(''); }} required />
                   </div>
                   <div>
                     <label className="kai-label">End Time</label>
                     <input className="kai-input" type="time" value={logForm.endTime}
-                      onChange={e => setLogForm(f => ({ ...f, endTime: e.target.value }))} required />
+                      onChange={e => { setLogForm(f => ({ ...f, endTime: e.target.value })); setLogFormError(''); }} required />
                   </div>
                 </div>
+                {logFormDuration !== null && (
+                  <div style={{
+                    padding: '8px 14px', borderRadius: 8, marginBottom: 16, fontSize: 13, fontWeight: 600,
+                    background: '#EBF3FE', color: '#146DF7', display: 'flex', alignItems: 'center', gap: 8,
+                  }}>
+                    <Clock size={16} /> Duration: {formatDurationHM(logFormDuration)}
+                  </div>
+                )}
                 <div style={{ marginBottom: 16 }}>
                   <label className="kai-label">Description</label>
                   <textarea className="kai-input" value={logForm.description}

@@ -358,12 +358,15 @@ export async function POST(req: NextRequest) {
 
       // Send notifications for status changes
       if (status) {
-        const changedByName = `${user.firstName ?? ""} ${user.lastName ?? ""}`.trim() || user.email;
-        for (const existing of existingTasks) {
-          if (existing.status !== status) {
-            // Fire and forget notifications
-            notifyTaskStatusChange(existing.id, "", user.id, changedByName, existing.status, status).catch(console.error);
+        try {
+          const changedByName = `${user.firstName ?? ""} ${user.lastName ?? ""}`.trim() || user.email;
+          for (const existing of existingTasks) {
+            if (existing.status !== status) {
+              await notifyTaskStatusChange(existing.id, "", user.id, changedByName, existing.status, status);
+            }
           }
+        } catch (notifErr) {
+          console.error("Failed to send bulk status change notifications:", notifErr);
         }
       }
 
@@ -453,8 +456,12 @@ export async function POST(req: NextRequest) {
 
     // Notify assignee if task is assigned to someone other than the creator
     if (task.assigneeId && task.assigneeId !== user.id) {
-      const assignerName = `${user.firstName ?? ""} ${user.lastName ?? ""}`.trim() || user.email;
-      notifyTaskAssigned(task.id, task.assigneeId, assignerName, task.title).catch(console.error);
+      try {
+        const assignerName = `${user.firstName ?? ""} ${user.lastName ?? ""}`.trim() || user.email;
+        await notifyTaskAssigned(task.id, task.assigneeId, assignerName, task.title);
+      } catch (notifErr) {
+        console.error("Failed to send task assignment notification:", notifErr);
+      }
     }
 
     // Auto-add assignee to project chat room
@@ -547,23 +554,35 @@ export async function PATCH(req: NextRequest) {
 
     // Notify on status change to COMPLETED
     if (status === "COMPLETED" && existing.status !== "COMPLETED") {
-      notifyTaskCompleted(id, {
-        title: task.title,
-        createdById: existing.createdById,
-        assigneeId: task.assigneeId,
-      }).catch(console.error);
+      try {
+        await notifyTaskCompleted(id, {
+          title: task.title,
+          createdById: existing.createdById,
+          assigneeId: task.assigneeId,
+        });
+      } catch (notifErr) {
+        console.error("Failed to send task completion notification:", notifErr);
+      }
     }
 
     // Notify superiors on any status change
     if (status !== undefined && status !== existing.status) {
-      const changedByName = `${user.firstName ?? ""} ${user.lastName ?? ""}`.trim() || user.email;
-      notifyTaskStatusChange(id, task.title, user.id, changedByName, existing.status, status).catch(console.error);
+      try {
+        const changedByName = `${user.firstName ?? ""} ${user.lastName ?? ""}`.trim() || user.email;
+        await notifyTaskStatusChange(id, task.title, user.id, changedByName, existing.status, status);
+      } catch (notifErr) {
+        console.error("Failed to send task status change notification:", notifErr);
+      }
     }
 
     // Notify new assignee on reassignment
     if (assigneeId && assigneeId !== existing.assigneeId && assigneeId !== user.id) {
-      const assignerName = `${user.firstName ?? ""} ${user.lastName ?? ""}`.trim() || user.email;
-      notifyTaskAssigned(id, assigneeId, assignerName, task.title).catch(console.error);
+      try {
+        const assignerName = `${user.firstName ?? ""} ${user.lastName ?? ""}`.trim() || user.email;
+        await notifyTaskAssigned(id, assigneeId, assignerName, task.title);
+      } catch (notifErr) {
+        console.error("Failed to send task reassignment notification:", notifErr);
+      }
     }
 
     // Auto-update project progress when task status changes

@@ -76,6 +76,7 @@ export async function POST(req: NextRequest) {
       notes,
       projectId,
       status,
+      currency,
     } = body;
 
     if (!clientName || !items || total === undefined) {
@@ -127,6 +128,7 @@ export async function POST(req: NextRequest) {
         dueDate: dueDate ? new Date(dueDate) : null,
         notes: notes || null,
         projectId: projectId || null,
+        currency: currency || "INR",
         status: status || "DRAFT",
         createdById: user.id,
       },

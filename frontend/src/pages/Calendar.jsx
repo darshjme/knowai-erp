@@ -438,9 +438,9 @@ export default function Calendar() {
         </div>
       </div>
 
-      <div style={{ display: 'flex', gap: 20, flexWrap: 'wrap' }}>
+      <div style={{ display: 'flex', gap: 20, flexWrap: 'wrap', maxWidth: '100%', overflow: 'hidden' }}>
         {/* Main Calendar */}
-        <div style={{ flex: '1 1 500px', minWidth: 0 }}>
+        <div style={{ flex: '1 1 500px', minWidth: 0, overflow: 'hidden' }}>
           <div className="kai-card">
             {/* Calendar Toolbar */}
             <div className="kai-card-header" style={{ flexWrap: 'wrap', gap: 12 }}>
@@ -468,7 +468,7 @@ export default function Calendar() {
               </div>
             </div>
 
-            <div className="kai-card-body" style={{ padding: 0, overflow: 'hidden' }}>
+            <div className="kai-card-body" style={{ padding: 0, overflow: 'hidden', width: '100%' }}>
               {loading ? (
                 <div style={{ padding: 60, textAlign: 'center', color: 'var(--kai-text-muted)' }}>Loading calendar...</div>
               ) : view === 'month' ? (
@@ -482,7 +482,7 @@ export default function Calendar() {
                     ))}
                   </div>
                   {/* Days grid */}
-                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)' }}>
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', width: '100%', tableLayout: 'fixed' }}>
                     {getMonthDays().map(renderDayCell)}
                   </div>
                 </>
@@ -531,7 +531,7 @@ export default function Calendar() {
         </div>
 
         {/* Upcoming Events Side Panel */}
-        <div style={{ width: 300, flex: '0 0 300px', minWidth: 280 }}>
+        <div style={{ width: 300, flex: '0 1 300px', minWidth: 0 }}>
           <div className="kai-card">
             <div className="kai-card-header">
               <h6 style={{ margin: 0 }}>Upcoming Events</h6>

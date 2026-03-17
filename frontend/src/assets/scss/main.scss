@@ -535,3 +535,11 @@ a { color: var(--kai-primary); text-decoration: none; &:hover { color: var(--kai
   .settings-layout, .time-tracking-layout { flex-direction: column !important; }
   .settings-layout > *:first-child { width: 100% !important; flex: none !important; }
 }
+
+// Prevent horizontal scroll everywhere
+html, body { overflow-x: hidden; max-width: 100vw; }
+.app-content { overflow-x: hidden; max-width: 100%; }
+.app-main { overflow-x: hidden; }
+
+// Kanban columns fit viewport
+.kanban-scroll { overflow-x: auto; -webkit-overflow-scrolling: touch; max-width: 100%; }

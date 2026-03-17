@@ -34,7 +34,7 @@ export default function Invoices() {
   // Invoice form state
   const [form, setForm] = useState({
     invoice_number: '', client_id: '', due_date: '', notes: '',
-    tax_rate: 0, discount: 0,
+    tax_rate: 0, discount: 0, currency: 'INR',
   });
   const [lineItems, setLineItems] = useState([{ ...emptyLineItem }]);
 
@@ -83,7 +83,7 @@ export default function Invoices() {
   };
 
   const openCreate = () => {
-    setForm({ invoice_number: generateInvoiceNumber(), client_id: '', due_date: '', notes: '', tax_rate: 0, discount: 0 });
+    setForm({ invoice_number: generateInvoiceNumber(), client_id: '', due_date: '', notes: '', tax_rate: 0, discount: 0, currency: 'INR' });
     setLineItems([{ ...emptyLineItem }]);
     setShowModal(true);
   };
@@ -108,19 +108,29 @@ export default function Invoices() {
     if (!form.client_id) { toast.warning('Select a client'); return; }
     if (lineItems.every(li => !li.description.trim())) { toast.warning('Add at least one line item'); return; }
 
+    const selectedClient = clients.find(c => String(c.id) === String(form.client_id));
+
     try {
       setSaving(true);
       await invoicesApi.create({
-        ...form,
-        line_items: lineItems.filter(li => li.description.trim()),
-        subtotal, tax: taxAmount, discount: discountAmount, total,
+        invoiceNumber: form.invoice_number,
+        clientName: selectedClient?.name || '',
+        clientEmail: selectedClient?.email || '',
+        items: JSON.stringify(lineItems.filter(li => li.description.trim())),
+        subtotal,
+        tax: taxAmount,
+        discount: discountAmount,
+        total,
+        dueDate: form.due_date || undefined,
+        notes: form.notes,
+        currency: form.currency,
         status: 'DRAFT',
       });
       toast.success('Invoice created');
       setShowModal(false);
       fetchInvoices();
     } catch (err) {
-      toast.error(err.response?.data?.message || 'Failed to create invoice');
+      toast.error(err.response?.data?.error || err.response?.data?.message || 'Failed to create invoice');
     } finally {
       setSaving(false);
     }
@@ -157,7 +167,11 @@ export default function Invoices() {
   };
 
   const formatDate = (d) => d ? new Date(d).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : '-';
-  const formatCurrency = (v) => `$${(parseFloat(v) || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+  const CURRENCY_SYMBOLS = { INR: '\u20B9', USD: '$' };
+  const formatCurrency = (v, currency) => {
+    const sym = CURRENCY_SYMBOLS[currency] || CURRENCY_SYMBOLS[form.currency] || '\u20B9';
+    return `${sym}${(parseFloat(v) || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+  };
 
   return (
     <div>
@@ -246,15 +260,15 @@ export default function Invoices() {
                     <tr key={inv.id}>
                       <td>
                         <span style={{ fontWeight: 700, fontFamily: "'IBM Plex Mono', monospace", fontSize: 13 }}>
-                          {inv.invoice_number || `INV-${inv.id}`}
+                          {inv.invoiceNumber || inv.invoice_number || `INV-${inv.id}`}
                         </span>
                       </td>
-                      <td>{getClientName(inv.client_id) || inv.client_name || '-'}</td>
-                      <td>{formatCurrency(inv.subtotal || inv.amount)}</td>
-                      <td>{formatCurrency(inv.tax || 0)}</td>
-                      <td style={{ fontWeight: 700 }}>{formatCurrency(inv.total || inv.amount)}</td>
+                      <td>{inv.clientName || getClientName(inv.clientId || inv.client_id) || inv.client_name || '-'}</td>
+                      <td>{formatCurrency(inv.subtotal || inv.amount, inv.currency)}</td>
+                      <td>{formatCurrency(inv.tax || 0, inv.currency)}</td>
+                      <td style={{ fontWeight: 700 }}>{formatCurrency(inv.total || inv.amount, inv.currency)}</td>
                       <td><span className={`kai-badge ${st.cls}`}>{st.label}</span></td>
-                      <td style={{ fontSize: 13, color: 'var(--kai-text-muted)' }}>{formatDate(inv.created_at || inv.date)}</td>
+                      <td style={{ fontSize: 13, color: 'var(--kai-text-muted)' }}>{formatDate(inv.createdAt || inv.created_at || inv.date)}</td>
                       <td>
                         <div style={{ display: 'flex', gap: 4 }}>
                           <button className="kai-btn kai-btn-outline kai-btn-sm" onClick={() => setShowPreview(inv)} title="Preview">
@@ -294,14 +308,14 @@ export default function Invoices() {
               <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 32 }}>
                 <div>
                   <div style={{ fontSize: 28, fontWeight: 800, color: '#146DF7', letterSpacing: -1 }}>INVOICE</div>
-                  <div style={{ fontSize: 14, color: '#5B6B76', marginTop: 4 }}>{showPreview.invoice_number || `INV-${showPreview.id}`}</div>
+                  <div style={{ fontSize: 14, color: '#5B6B76', marginTop: 4 }}>{showPreview.invoiceNumber || showPreview.invoice_number || `INV-${showPreview.id}`}</div>
                 </div>
                 <div style={{ textAlign: 'right' }}>
                   <div style={{ fontWeight: 700, fontSize: 16 }}>Know AI</div>
                   <div style={{ fontSize: 12, color: '#5B6B76', lineHeight: 1.8 }}>
                     Enterprise Resource Planning<br />
-                    Date: {formatDate(showPreview.created_at || showPreview.date)}<br />
-                    {showPreview.due_date && <>Due: {formatDate(showPreview.due_date)}</>}
+                    Date: {formatDate(showPreview.createdAt || showPreview.created_at || showPreview.date)}<br />
+                    {(showPreview.dueDate || showPreview.due_date) && <>Due: {formatDate(showPreview.dueDate || showPreview.due_date)}</>}
                   </div>
                 </div>
               </div>
@@ -309,7 +323,7 @@ export default function Invoices() {
               {/* Bill To */}
               <div style={{ marginBottom: 24 }}>
                 <div style={{ fontSize: 10, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 1.2, color: '#5B6B76', marginBottom: 6 }}>Bill To</div>
-                <div style={{ fontSize: 15, fontWeight: 600 }}>{getClientName(showPreview.client_id) || showPreview.client_name || 'Client'}</div>
+                <div style={{ fontSize: 15, fontWeight: 600 }}>{showPreview.clientName || getClientName(showPreview.clientId || showPreview.client_id) || showPreview.client_name || 'Client'}</div>
               </div>
 
               {/* Line Items */}
@@ -323,7 +337,11 @@ export default function Invoices() {
                   </tr>
                 </thead>
                 <tbody>
-                  {(showPreview.line_items || [{ description: showPreview.notes || 'Services', quantity: 1, rate: showPreview.amount || showPreview.total, amount: showPreview.amount || showPreview.total }]).map((item, i) => (
+                  {(() => {
+                    let items = showPreview.items || showPreview.line_items;
+                    if (typeof items === 'string') { try { items = JSON.parse(items); } catch { items = null; } }
+                    return (items && items.length > 0) ? items : [{ description: showPreview.notes || 'Services', quantity: 1, rate: showPreview.amount || showPreview.total, amount: showPreview.amount || showPreview.total }];
+                  })().map((item, i) => (
                     <tr key={i} style={{ borderBottom: '1px solid #E7E7E8' }}>
                       <td style={{ padding: '10px 0', fontSize: 13 }}>{item.description}</td>
                       <td style={{ padding: '10px 0', fontSize: 13, textAlign: 'right' }}>{item.quantity || 1}</td>
@@ -409,6 +427,13 @@ export default function Invoices() {
                 <div>
                   <label className="kai-label">Due Date</label>
                   <input type="date" className="kai-input" value={form.due_date} onChange={e => setForm(f => ({ ...f, due_date: e.target.value }))} />
+                </div>
+                <div>
+                  <label className="kai-label">Currency</label>
+                  <select className="kai-select" value={form.currency} onChange={e => setForm(f => ({ ...f, currency: e.target.value }))}>
+                    <option value="INR">INR (Indian Rupee)</option>
+                    <option value="USD">USD (US Dollar)</option>
+                  </select>
                 </div>
               </div>
 

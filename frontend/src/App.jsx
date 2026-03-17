@@ -50,30 +50,51 @@ import 'react-toastify/dist/ReactToastify.css';
 import 'react-datepicker/dist/react-datepicker.css';
 import './assets/scss/main.scss';
 
-function ProtectedRoute({ children }) {
+function useAuthUser() {
   const dispatch = useDispatch();
   const { isAuthenticated, user } = useSelector((s) => s.auth);
 
-  // Restore session from localStorage on page refresh
   if (!isAuthenticated) {
     const saved = localStorage.getItem('knowai-user');
     if (saved) {
       try {
         const restoredUser = JSON.parse(saved);
         dispatch({ type: 'AUTH_SUCCESS', payload: restoredUser });
-        // Redirect to onboarding if not completed
-        if (restoredUser.onboardingComplete === false) {
-          return <Navigate to="/onboarding" replace />;
-        }
-        return children;
+        return { isAuthenticated: true, user: restoredUser };
       } catch {}
     }
+    return { isAuthenticated: false, user: null };
+  }
+
+  return { isAuthenticated, user };
+}
+
+function ProtectedRoute({ children }) {
+  const { isAuthenticated, user } = useAuthUser();
+
+  if (!isAuthenticated) {
     return <Navigate to="/login" replace />;
   }
 
-  // Redirect authenticated users who haven't completed onboarding
+  // Block ALL routes when onboarding is not complete — force user to /onboarding
   if (user && user.onboardingComplete === false) {
     return <Navigate to="/onboarding" replace />;
+  }
+
+  return children;
+}
+
+function OnboardingRoute({ children }) {
+  const { isAuthenticated, user } = useAuthUser();
+
+  // Must be logged in to access onboarding
+  if (!isAuthenticated) {
+    return <Navigate to="/login" replace />;
+  }
+
+  // If onboarding is already complete, redirect to dashboard
+  if (user && user.onboardingComplete !== false) {
+    return <Navigate to="/dashboard" replace />;
   }
 
   return children;
@@ -84,7 +105,7 @@ function AppRoutes() {
     <Suspense fallback={<Loader />}>
       <Routes>
         <Route path="/login" element={<Login />} />
-        <Route path="/onboarding" element={<Onboarding />} />
+        <Route path="/onboarding" element={<OnboardingRoute><Onboarding /></OnboardingRoute>} />
         <Route path="/" element={<ProtectedRoute><MainLayout /></ProtectedRoute>}>
           <Route index element={<Navigate to="/dashboard" replace />} />
           <Route path="dashboard" element={<Dashboard />} />
@@ -121,6 +142,7 @@ function AppRoutes() {
           <Route path="personality-test" element={<PersonalityTest />} />
           <Route path="admin" element={<AdminPanel />} />
         </Route>
+        <Route path="*" element={<ProtectedRoute><Navigate to="/dashboard" replace /></ProtectedRoute>} />
       </Routes>
     </Suspense>
   );

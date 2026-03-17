@@ -44,6 +44,7 @@ const uiInitial = {
 function uiReducer(state = uiInitial, action) {
   switch (action.type) {
     case 'UI_TOGGLE_SIDEBAR': return { ...state, sidebarCollapsed: !state.sidebarCollapsed };
+    case 'UI_SET_SIDEBAR_COLLAPSED': return { ...state, sidebarCollapsed: !!action.payload };
     case 'UI_TOGGLE_MOBILE_SIDEBAR': return { ...state, sidebarMobileOpen: !state.sidebarMobileOpen };
     case 'UI_CLOSE_MOBILE_SIDEBAR': return { ...state, sidebarMobileOpen: false };
     case 'UI_SET_THEME': localStorage.setItem('knowai-theme', action.payload); return { ...state, theme: action.payload };

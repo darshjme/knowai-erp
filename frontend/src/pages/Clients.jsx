@@ -6,12 +6,12 @@ import { clientsApi } from '../services/api';
 
 const INDUSTRIES = [
   'Technology', 'Finance', 'Healthcare', 'Education', 'Retail',
-  'Manufacturing', 'Real Estate', 'Consulting', 'Marketing', 'Legal', 'Other'
+  'Manufacturing', 'Real Estate', 'Agriculture', 'Media', 'Other'
 ];
 
 const emptyClient = {
   name: '', email: '', phone: '', company: '', address: '',
-  website: '', industry: '', notes: ''
+  website: '', industry: '', contactPerson: '', gstNumber: '', notes: ''
 };
 
 export default function Clients() {
@@ -80,6 +80,8 @@ export default function Clients() {
       address: client.address || '',
       website: client.website || '',
       industry: client.industry || '',
+      contactPerson: client.contactPerson || '',
+      gstNumber: client.gstNumber || '',
       notes: client.notes || '',
     });
     setShowModal(true);
@@ -89,6 +91,9 @@ export default function Clients() {
     e.preventDefault();
     if (!form.name.trim()) { toast.warning('Name is required'); return; }
     if (!form.email.trim()) { toast.warning('Email is required'); return; }
+    if (!form.phone.trim()) { toast.warning('Phone is required'); return; }
+    if (!form.company.trim()) { toast.warning('Company is required'); return; }
+    if (!form.industry) { toast.warning('Industry is required'); return; }
 
     try {
       setSaving(true);
@@ -411,6 +416,8 @@ export default function Clients() {
                 { label: 'Email', value: selectedClient.email },
                 { label: 'Phone', value: selectedClient.phone },
                 { label: 'Industry', value: selectedClient.industry },
+                { label: 'Contact Person', value: selectedClient.contactPerson },
+                { label: 'GST Number', value: selectedClient.gstNumber },
                 { label: 'Address', value: selectedClient.address },
                 { label: 'Website', value: selectedClient.website },
                 { label: 'Notes', value: selectedClient.notes },
@@ -443,20 +450,31 @@ export default function Clients() {
             <form onSubmit={handleSave} style={{ padding: 24 }}>
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 16 }}>
                 <div>
-                  <label className="kai-label">Full Name *</label>
+                  <label className="kai-label">Full Name <span style={{color:'red'}}>*</span></label>
                   <input className="kai-input" value={form.name} onChange={e => setForm({ ...form, name: e.target.value })} placeholder="John Doe" required />
                 </div>
                 <div>
-                  <label className="kai-label">Email *</label>
+                  <label className="kai-label">Email <span style={{color:'red'}}>*</span></label>
                   <input className="kai-input" type="email" value={form.email} onChange={e => setForm({ ...form, email: e.target.value })} placeholder="john@company.com" required />
                 </div>
                 <div>
-                  <label className="kai-label">Phone</label>
-                  <input className="kai-input" value={form.phone} onChange={e => setForm({ ...form, phone: e.target.value })} placeholder="+1 (555) 000-0000" />
+                  <label className="kai-label">Phone <span style={{color:'red'}}>*</span></label>
+                  <input className="kai-input" value={form.phone} onChange={e => setForm({ ...form, phone: e.target.value })} placeholder="+1 (555) 000-0000" required />
                 </div>
                 <div>
-                  <label className="kai-label">Company</label>
-                  <input className="kai-input" value={form.company} onChange={e => setForm({ ...form, company: e.target.value })} placeholder="Acme Inc." />
+                  <label className="kai-label">Company <span style={{color:'red'}}>*</span></label>
+                  <input className="kai-input" value={form.company} onChange={e => setForm({ ...form, company: e.target.value })} placeholder="Acme Inc." required />
+                </div>
+                <div>
+                  <label className="kai-label">Industry <span style={{color:'red'}}>*</span></label>
+                  <select className="kai-select" value={form.industry} onChange={e => setForm({ ...form, industry: e.target.value })} required>
+                    <option value="">Select industry</option>
+                    {INDUSTRIES.map(i => <option key={i} value={i}>{i}</option>)}
+                  </select>
+                </div>
+                <div>
+                  <label className="kai-label">Contact Person</label>
+                  <input className="kai-input" value={form.contactPerson} onChange={e => setForm({ ...form, contactPerson: e.target.value })} placeholder="Primary contact name" />
                 </div>
                 <div style={{ gridColumn: '1 / -1' }}>
                   <label className="kai-label">Address</label>
@@ -467,11 +485,8 @@ export default function Clients() {
                   <input className="kai-input" value={form.website} onChange={e => setForm({ ...form, website: e.target.value })} placeholder="https://example.com" />
                 </div>
                 <div>
-                  <label className="kai-label">Industry</label>
-                  <select className="kai-select" value={form.industry} onChange={e => setForm({ ...form, industry: e.target.value })}>
-                    <option value="">Select industry</option>
-                    {INDUSTRIES.map(i => <option key={i} value={i}>{i}</option>)}
-                  </select>
+                  <label className="kai-label">GST Number</label>
+                  <input className="kai-input" value={form.gstNumber} onChange={e => setForm({ ...form, gstNumber: e.target.value })} placeholder="e.g. 22AAAAA0000A1Z5" />
                 </div>
                 <div style={{ gridColumn: '1 / -1' }}>
                   <label className="kai-label">Notes</label>
