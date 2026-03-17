@@ -6,7 +6,7 @@ import {
   CalendarDays, Receipt, Briefcase, UserPlus, FileText, MessageCircle,
   Mail, BarChart3, Settings, Shield, Clock, Target, FileSearch,
   AlertTriangle, TrendingUp, CreditCard, ChevronLeft, X, HelpCircle, Brain,
-  Lock
+  Lock, Send, GitPullRequest, Film, Layers
 } from 'lucide-react';
 import { ROLE_SIDEBAR_ACCESS, ROLE_LABELS, ROLE_COLORS } from '../../utils/roleConfig';
 
@@ -28,6 +28,8 @@ const NAV_SECTIONS = [
       { label: 'Goals', path: '/goals', icon: Target },
       { label: 'Docs', path: '/docs', icon: FileText },
       { label: 'Files', path: '/files', icon: FileSearch },
+      { label: 'Content Reviews', path: '/video-reviews', icon: Film },
+      { label: 'Content Workspace', path: '/content-workspace', icon: Layers },
     ]
   },
   {
@@ -40,6 +42,8 @@ const NAV_SECTIONS = [
       { label: 'Hiring', path: '/hiring', icon: UserPlus },
       { label: 'Documents', path: '/documents', icon: FileText },
       { label: 'Complaints', path: '/complaints', icon: AlertTriangle },
+      { label: 'Requests', path: '/requests', icon: Send },
+      { label: 'Change Requests', path: '/change-requests', icon: GitPullRequest },
     ]
   },
   {

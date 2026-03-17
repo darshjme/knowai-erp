@@ -246,6 +246,11 @@ model User {
   chatMessagesSent      ChatMessage[]   @relation("ChatMessageSender")
   jobPostingsCreated    JobPosting[]    @relation("JobPostingCreator")
   complaintTimelineActions ComplaintTimeline[] @relation("ComplaintTimelineActor")
+  uploadedVideos    VideoReview[]  @relation("VideoUploader")
+  videoComments     VideoComment[] @relation("VideoCommenter")
+  videoApprovals    VideoApproval[] @relation("VideoApprover")
+  collections       ContentCollection[] @relation("UserCollections")
+  contentAssets     ContentAsset[]      @relation("UserAssets")
 
   @@index([workspaceId])
   @@map("users")
@@ -328,6 +333,7 @@ model Project {
   files     File[]    @relation("ProjectFiles")
   space     Space?    @relation("SpaceProjects", fields: [spaceId], references: [id], onDelete: SetNull)
   timeEntries TimeEntry[] @relation("ProjectTimeEntries")
+  videoReviews VideoReview[]
 
   @@index([managerId])
   @@index([workspaceId])
@@ -432,6 +438,7 @@ enum NotificationType {
   COMPLAINT_FILED
   COMPLAINT_RESOLVED
   SYSTEM
+  ANNOUNCEMENT
 }
 
 // Change requests for sensitive fields (email/username) - requires HR then CTO approval
@@ -1572,4 +1579,156 @@ model Doc {
   @@index([createdById])
   @@index([parentId])
   @@index([projectId])
+}
+
+// ─── Content Review Engine (Video + Script + Graphic) ────────────
+
+enum ReviewContentType {
+  VIDEO
+  SCRIPT
+  GRAPHIC
+  DOCUMENT
+}
+
+enum ReviewSourceType {
+  SERVER_UPLOAD
+  GOOGLE_DRIVE
+  EXTERNAL_LINK
+}
+
+enum VideoStatus {
+  PENDING_REVIEW
+  IN_REVIEW
+  CHANGES_REQUESTED
+  APPROVED
+  REJECTED
+  ARCHIVED
+}
+
+enum ApprovalStatus {
+  APPROVED
+  REJECTED
+  CHANGES_REQUESTED
+}
+
+model VideoReview {
+  id            String            @id @default(cuid())
+  title         String
+  description   String?
+  contentType   ReviewContentType @default(VIDEO)
+  sourceType    ReviewSourceType  @default(SERVER_UPLOAD)
+  fileName      String
+  fileUrl       String            // local path or external URL
+  externalUrl   String?           // Google Drive or other link
+  thumbnailUrl  String?
+  duration      Float?            // seconds (video only)
+  fileSize      Int?              // bytes
+  mimeType      String?
+  status        VideoStatus       @default(PENDING_REVIEW)
+  version       Int               @default(1)
+  parentId      String?           // for revision chain
+  parent        VideoReview?      @relation("VideoVersions", fields: [parentId], references: [id])
+  revisions     VideoReview[]     @relation("VideoVersions")
+  projectId     String?
+  project       Project?          @relation(fields: [projectId], references: [id])
+  uploaderId    String
+  uploader      User              @relation("VideoUploader", fields: [uploaderId], references: [id])
+  assignedTo    String[]          // reviewer user IDs
+  comments      VideoComment[]
+  approvals     VideoApproval[]
+  workspaceId   String
+  purpose       String?           // e.g., "Client deliverable", "Social media post"
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+
+  @@index([uploaderId])
+  @@index([projectId])
+  @@index([workspaceId])
+  @@index([parentId])
+  @@map("video_reviews")
+}
+
+model VideoComment {
+  id          String        @id @default(cuid())
+  videoId     String
+  video       VideoReview   @relation(fields: [videoId], references: [id], onDelete: Cascade)
+  userId      String
+  user        User          @relation("VideoCommenter", fields: [userId], references: [id])
+  content     String
+  timestamp   Float?        // video timestamp in seconds (null = general comment)
+  parentId    String?       // reply thread
+  parent      VideoComment? @relation("CommentReplies", fields: [parentId], references: [id])
+  replies     VideoComment[] @relation("CommentReplies")
+  resolved    Boolean       @default(false)
+  resolvedBy  String?
+  resolvedAt  DateTime?
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+
+  @@index([videoId])
+  @@index([userId])
+  @@index([parentId])
+  @@map("video_comments")
+}
+
+model VideoApproval {
+  id        String         @id @default(cuid())
+  videoId   String
+  video     VideoReview    @relation(fields: [videoId], references: [id], onDelete: Cascade)
+  userId    String
+  user      User           @relation("VideoApprover", fields: [userId], references: [id])
+  status    ApprovalStatus
+  note      String?
+  createdAt DateTime       @default(now())
+
+  @@index([videoId])
+  @@index([userId])
+  @@map("video_approvals")
+}
+
+// ─── Content Workspace (IP Asset Library) ────────────────────────
+
+model ContentCollection {
+  id          String   @id @default(cuid())
+  name        String
+  description String?
+  type        String   // ASSET_PACK, ELEMENT_PACK, VIDEO_PROTOCOL, MOOD_BOARD, EMBEDS
+  icon        String?
+  color       String   @default("#3b82f6")
+  coverUrl    String?
+  createdById String
+  createdBy   User     @relation("UserCollections", fields: [createdById], references: [id])
+  workspaceId String
+  assets      ContentAsset[]
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@map("content_collections")
+  @@index([workspaceId])
+  @@index([createdById])
+}
+
+model ContentAsset {
+  id           String   @id @default(cuid())
+  name         String
+  description  String?
+  fileUrl      String
+  thumbnailUrl String?
+  fileType     String   // IMAGE, SVG, VIDEO, PDF, FIGMA, MIRO, DOCUMENT, OTHER
+  mimeType     String?
+  fileSize     Int?
+  embedUrl     String?  // for Figma, Miro embeds
+  tags         String[]
+  collectionId String
+  collection   ContentCollection @relation(fields: [collectionId], references: [id], onDelete: Cascade)
+  uploadedById String
+  uploadedBy   User     @relation("UserAssets", fields: [uploadedById], references: [id])
+  workspaceId  String
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@map("content_assets")
+  @@index([collectionId])
+  @@index([workspaceId])
+  @@index([uploadedById])
 }

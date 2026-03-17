@@ -1,120 +1,43 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { useDispatch } from 'react-redux';
+import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import { notificationsApi } from '../services/api';
 
 const FILTER_TABS = [
-  { key: 'all', label: 'All' },
-  { key: 'unread', label: 'Unread' },
-  { key: 'tasks', label: 'Tasks' },
-  { key: 'hr', label: 'HR' },
-  { key: 'system', label: 'System' },
+  { key: 'all', label: 'All', icon: 'bi-bell' },
+  { key: 'unread', label: 'Unread', icon: 'bi-envelope' },
+  { key: 'tasks', label: 'Tasks', icon: 'bi-check2-square' },
+  { key: 'projects', label: 'Projects', icon: 'bi-folder' },
+  { key: 'system', label: 'System', icon: 'bi-gear' },
+  { key: 'announcements', label: 'Announcements', icon: 'bi-megaphone' },
 ];
 
 const TYPE_CONFIG = {
-  task: {
-    icon: (
-      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-        <path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/>
-      </svg>
-    ),
-    color: '#146DF7',
-    bg: 'rgba(20, 109, 247, 0.1)',
-  },
-  task_assigned: {
-    icon: (
-      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-        <path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7" r="4"/>
-        <polyline points="17 11 19 13 23 9"/>
-      </svg>
-    ),
-    color: '#146DF7',
-    bg: 'rgba(20, 109, 247, 0.1)',
-  },
-  task_completed: {
-    icon: (
-      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-        <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
-        <polyline points="22 4 12 14.01 9 11.01"/>
-      </svg>
-    ),
-    color: '#16A34A',
-    bg: 'rgba(22, 163, 74, 0.1)',
-  },
-  task_overdue: {
-    icon: (
-      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-        <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
-      </svg>
-    ),
-    color: '#CB3939',
-    bg: 'rgba(203, 57, 57, 0.1)',
-  },
-  hr: {
-    icon: (
-      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-        <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/>
-        <path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>
-      </svg>
-    ),
-    color: '#8B3FE9',
-    bg: 'rgba(139, 63, 233, 0.1)',
-  },
-  leave: {
-    icon: (
-      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-        <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/>
-        <line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/>
-      </svg>
-    ),
-    color: '#EA580C',
-    bg: 'rgba(234, 88, 12, 0.1)',
-  },
-  payroll: {
-    icon: (
-      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-        <line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>
-      </svg>
-    ),
-    color: '#16A34A',
-    bg: 'rgba(22, 163, 74, 0.1)',
-  },
-  system: {
-    icon: (
-      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-        <circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/>
-      </svg>
-    ),
-    color: '#5B6B76',
-    bg: 'rgba(91, 107, 118, 0.1)',
-  },
-  mention: {
-    icon: (
-      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-        <circle cx="12" cy="12" r="4"/><path d="M16 8v5a3 3 0 0 0 6 0v-1a10 10 0 1 0-3.92 7.94"/>
-      </svg>
-    ),
-    color: '#2563EB',
-    bg: 'rgba(37, 99, 235, 0.1)',
-  },
-  comment: {
-    icon: (
-      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-        <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
-      </svg>
-    ),
-    color: '#146DF7',
-    bg: 'rgba(20, 109, 247, 0.1)',
-  },
-  project: {
-    icon: (
-      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-        <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/>
-      </svg>
-    ),
-    color: '#EA580C',
-    bg: 'rgba(234, 88, 12, 0.1)',
-  },
+  task: { icon: 'bi-check2-square', color: '#146DF7', bg: 'rgba(20, 109, 247, 0.1)' },
+  task_assigned: { icon: 'bi-person-check', color: '#146DF7', bg: 'rgba(20, 109, 247, 0.1)' },
+  TASK_ASSIGNED: { icon: 'bi-person-check', color: '#146DF7', bg: 'rgba(20, 109, 247, 0.1)' },
+  task_completed: { icon: 'bi-check-circle', color: '#16A34A', bg: 'rgba(22, 163, 74, 0.1)' },
+  TASK_COMPLETED: { icon: 'bi-check-circle', color: '#16A34A', bg: 'rgba(22, 163, 74, 0.1)' },
+  task_overdue: { icon: 'bi-exclamation-triangle', color: '#CB3939', bg: 'rgba(203, 57, 57, 0.1)' },
+  TASK_OVERDUE: { icon: 'bi-exclamation-triangle', color: '#CB3939', bg: 'rgba(203, 57, 57, 0.1)' },
+  TASK_COMMENT: { icon: 'bi-chat-dots', color: '#146DF7', bg: 'rgba(20, 109, 247, 0.1)' },
+  hr: { icon: 'bi-people', color: '#8B3FE9', bg: 'rgba(139, 63, 233, 0.1)' },
+  leave: { icon: 'bi-calendar-event', color: '#EA580C', bg: 'rgba(234, 88, 12, 0.1)' },
+  LEAVE_APPROVED: { icon: 'bi-calendar-check', color: '#16A34A', bg: 'rgba(22, 163, 74, 0.1)' },
+  LEAVE_REJECTED: { icon: 'bi-calendar-x', color: '#CB3939', bg: 'rgba(203, 57, 57, 0.1)' },
+  payroll: { icon: 'bi-currency-dollar', color: '#16A34A', bg: 'rgba(22, 163, 74, 0.1)' },
+  system: { icon: 'bi-gear', color: '#5B6B76', bg: 'rgba(91, 107, 118, 0.1)' },
+  SYSTEM: { icon: 'bi-gear', color: '#5B6B76', bg: 'rgba(91, 107, 118, 0.1)' },
+  CHAT_MENTION: { icon: 'bi-at', color: '#2563EB', bg: 'rgba(37, 99, 235, 0.1)' },
+  mention: { icon: 'bi-at', color: '#2563EB', bg: 'rgba(37, 99, 235, 0.1)' },
+  comment: { icon: 'bi-chat-dots', color: '#146DF7', bg: 'rgba(20, 109, 247, 0.1)' },
+  project: { icon: 'bi-folder', color: '#EA580C', bg: 'rgba(234, 88, 12, 0.1)' },
+  LEAD_ASSIGNED: { icon: 'bi-person-lines-fill', color: '#7C3AED', bg: 'rgba(124, 58, 237, 0.1)' },
+  DOCUMENT_VERIFIED: { icon: 'bi-file-earmark-check', color: '#16A34A', bg: 'rgba(22, 163, 74, 0.1)' },
+  COMPLAINT_FILED: { icon: 'bi-flag', color: '#CB3939', bg: 'rgba(203, 57, 57, 0.1)' },
+  COMPLAINT_RESOLVED: { icon: 'bi-flag-fill', color: '#16A34A', bg: 'rgba(22, 163, 74, 0.1)' },
+  ANNOUNCEMENT: { icon: 'bi-megaphone', color: '#D97706', bg: 'rgba(217, 119, 6, 0.1)' },
 };
 
 function getTypeConfig(type) {
@@ -122,9 +45,11 @@ function getTypeConfig(type) {
 }
 
 function getTypeCategory(type) {
-  if (['task', 'task_assigned', 'task_completed', 'task_overdue'].includes(type)) return 'tasks';
-  if (['hr', 'leave', 'payroll'].includes(type)) return 'hr';
-  if (['system'].includes(type)) return 'system';
+  if (['task', 'task_assigned', 'task_completed', 'task_overdue', 'TASK_ASSIGNED', 'TASK_COMPLETED', 'TASK_OVERDUE', 'TASK_COMMENT'].includes(type)) return 'tasks';
+  if (['project', 'LEAD_ASSIGNED'].includes(type)) return 'projects';
+  if (['hr', 'leave', 'payroll', 'LEAVE_APPROVED', 'LEAVE_REJECTED'].includes(type)) return 'system';
+  if (['system', 'SYSTEM', 'CHAT_MENTION', 'DOCUMENT_VERIFIED', 'COMPLAINT_FILED', 'COMPLAINT_RESOLVED'].includes(type)) return 'system';
+  if (['ANNOUNCEMENT'].includes(type)) return 'announcements';
   return 'all';
 }
 
@@ -136,12 +61,7 @@ function groupByDate(notifications) {
   const weekAgo = new Date(today);
   weekAgo.setDate(weekAgo.getDate() - 7);
 
-  const groups = {
-    Today: [],
-    Yesterday: [],
-    'This Week': [],
-    Older: [],
-  };
+  const groups = { Today: [], Yesterday: [], 'This Week': [], Older: [] };
 
   notifications.forEach(n => {
     const d = new Date(n.createdAt || n.date || n.timestamp);
@@ -166,10 +86,25 @@ function formatRelativeTime(dateStr) {
   return d.toLocaleDateString([], { month: 'short', day: 'numeric' });
 }
 
+function playNotificationSound() {
+  try {
+    const ctx = new (window.AudioContext || window.webkitAudioContext)();
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+    osc.frequency.value = 800;
+    gain.gain.value = 0.1;
+    osc.start();
+    osc.stop(ctx.currentTime + 0.15);
+  } catch {}
+}
+
 const PAGE_SIZE = 20;
 
 export default function Notifications() {
   const dispatch = useDispatch();
+  const navigate = useNavigate();
 
   const [notifications, setNotifications] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -177,6 +112,7 @@ export default function Notifications() {
   const [page, setPage] = useState(1);
   const [hasMore, setHasMore] = useState(true);
   const [loadingMore, setLoadingMore] = useState(false);
+  const prevCountRef = useRef(0);
 
   useEffect(() => {
     dispatch({ type: 'UI_SET_PAGE_TITLE', payload: 'Notifications' });
@@ -187,17 +123,46 @@ export default function Notifications() {
     fetchNotifications(1, true);
   }, [activeTab]);
 
+  // Poll for new notifications every 30 seconds and play sound
+  useEffect(() => {
+    const interval = setInterval(async () => {
+      try {
+        const res = await notificationsApi.list({ page: 1, limit: 5, read: 'false' });
+        const data = res.data?.notifications || res.data || [];
+        const items = Array.isArray(data) ? data : [];
+        const newCount = items.length;
+        if (newCount > prevCountRef.current && prevCountRef.current !== undefined) {
+          playNotificationSound();
+          // Refresh the list
+          fetchNotifications(1, true);
+        }
+        prevCountRef.current = newCount;
+      } catch {}
+    }, 30000);
+    return () => clearInterval(interval);
+  }, []);
+
   const fetchNotifications = async (pg = 1, reset = false) => {
     try {
       if (reset) setLoading(true);
       else setLoadingMore(true);
 
       const params = { page: pg, limit: PAGE_SIZE };
-      if (activeTab === 'unread') params.unread = true;
-      else if (activeTab !== 'all') params.type = activeTab;
+      if (activeTab === 'unread') params.read = 'false';
+      else if (activeTab !== 'all') {
+        // Map tab to notification types
+        const typeMap = {
+          tasks: 'TASK_ASSIGNED,TASK_COMPLETED,TASK_OVERDUE,TASK_COMMENT',
+          projects: 'LEAD_ASSIGNED',
+          system: 'SYSTEM,CHAT_MENTION,DOCUMENT_VERIFIED,COMPLAINT_FILED,COMPLAINT_RESOLVED,LEAVE_APPROVED,LEAVE_REJECTED',
+          announcements: 'ANNOUNCEMENT',
+        };
+        if (typeMap[activeTab]) params.type = typeMap[activeTab];
+      }
 
       const res = await notificationsApi.list(params);
-      const data = res.data?.notifications || res.data || [];
+      const rd = res.data;
+      const data = rd?.notifications || rd?.data || rd || [];
       const items = Array.isArray(data) ? data : [];
 
       if (reset) {
@@ -208,7 +173,6 @@ export default function Notifications() {
       setHasMore(items.length >= PAGE_SIZE);
       setPage(pg);
 
-      // Sync to redux store
       if (reset && activeTab === 'all') {
         dispatch({ type: 'NOTIFS_SET', payload: items });
       }
@@ -222,19 +186,23 @@ export default function Notifications() {
 
   const handleMarkRead = async (notification) => {
     const nid = notification._id || notification.id;
-    if (notification.read) return;
+    if (notification.read) {
+      // If already read, just navigate
+      if (notification.linkUrl) navigate(notification.linkUrl);
+      return;
+    }
 
-    // Optimistic update
     setNotifications(prev => prev.map(n => (n._id || n.id) === nid ? { ...n, read: true } : n));
     dispatch({ type: 'NOTIFS_MARK_READ', payload: nid });
 
     try {
       await notificationsApi.markRead(nid);
     } catch {
-      // Revert on failure
       setNotifications(prev => prev.map(n => (n._id || n.id) === nid ? { ...n, read: false } : n));
       toast.error('Failed to mark as read');
     }
+
+    if (notification.linkUrl) navigate(notification.linkUrl);
   };
 
   const handleMarkAllRead = async () => {
@@ -244,7 +212,6 @@ export default function Notifications() {
       return;
     }
 
-    // Optimistic
     setNotifications(prev => prev.map(n => ({ ...n, read: true })));
 
     try {
@@ -284,10 +251,7 @@ export default function Notifications() {
             </span>
           )}
           <button className="kai-btn kai-btn-outline" onClick={handleMarkAllRead}>
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-              <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
-              <polyline points="22 4 12 14.01 9 11.01"/>
-            </svg>
+            <i className="bi bi-check2-all" style={{ marginRight: 6 }} />
             Mark All Read
           </button>
         </div>
@@ -311,8 +275,12 @@ export default function Notifications() {
                 background: isActive ? 'var(--kai-primary)' : 'transparent',
                 color: isActive ? '#fff' : 'var(--kai-text-muted)',
                 border: 'none',
+                display: 'flex',
+                alignItems: 'center',
+                gap: 6,
               }}
             >
+              <i className={tab.icon} style={{ fontSize: 13 }} />
               {tab.label}
               {count > 0 && (
                 <span style={{
@@ -321,7 +289,7 @@ export default function Notifications() {
                   background: isActive ? 'rgba(255,255,255,0.25)' : 'var(--kai-bg)',
                   padding: '1px 6px',
                   borderRadius: 'var(--kai-radius-pill)',
-                  marginLeft: 4,
+                  marginLeft: 2,
                 }}>
                   {count}
                 </span>
@@ -335,13 +303,13 @@ export default function Notifications() {
       <div className="kai-card">
         <div className="kai-card-body" style={{ padding: 0 }}>
           {loading ? (
-            <div style={{ padding: 60, textAlign: 'center', color: 'var(--kai-text-muted)' }}>Loading notifications...</div>
+            <div style={{ padding: 60, textAlign: 'center', color: 'var(--kai-text-muted)' }}>
+              <i className="bi bi-arrow-repeat" style={{ fontSize: 24, animation: 'spin 1s linear infinite', display: 'block', marginBottom: 8 }} />
+              Loading notifications...
+            </div>
           ) : filteredNotifications.length === 0 ? (
             <div style={{ padding: 60, textAlign: 'center', color: 'var(--kai-text-muted)' }}>
-              <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="var(--kai-border)" strokeWidth="1.5" style={{ marginBottom: 12 }}>
-                <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/>
-                <path d="M13.73 21a2 2 0 0 1-3.46 0"/>
-              </svg>
+              <i className="bi bi-bell-slash" style={{ fontSize: 48, display: 'block', marginBottom: 12, opacity: 0.3 }} />
               <div style={{ fontSize: 15, fontWeight: 600, marginBottom: 4 }}>No notifications</div>
               <div style={{ fontSize: 13 }}>
                 {activeTab === 'unread' ? 'You have read all your notifications' : 'No notifications to show'}
@@ -371,6 +339,8 @@ export default function Notifications() {
                   const type = notification.type || 'system';
                   const config = getTypeConfig(type);
                   const isUnread = !notification.read;
+                  const isAnnouncement = type === 'ANNOUNCEMENT';
+                  const priority = notification.metadata?.priority || notification.priority;
 
                   return (
                     <div
@@ -381,8 +351,9 @@ export default function Notifications() {
                         gap: 14,
                         padding: '14px 20px',
                         borderBottom: '1px solid var(--kai-border-light)',
-                        cursor: isUnread ? 'pointer' : 'default',
+                        cursor: 'pointer',
                         background: isUnread ? 'rgba(20, 109, 247, 0.02)' : 'transparent',
+                        borderLeft: isUnread ? '3px solid #146DF7' : '3px solid transparent',
                         transition: 'var(--kai-transition)',
                       }}
                       onMouseEnter={e => e.currentTarget.style.background = 'var(--kai-surface-hover)'}
@@ -399,8 +370,9 @@ export default function Notifications() {
                         alignItems: 'center',
                         justifyContent: 'center',
                         flexShrink: 0,
+                        fontSize: 18,
                       }}>
-                        {config.icon}
+                        <i className={config.icon} />
                       </div>
 
                       {/* Content */}
@@ -415,9 +387,9 @@ export default function Notifications() {
                             }}>
                               {notification.title || notification.message || 'Notification'}
                             </div>
-                            {(notification.description || notification.body) && (
+                            {(notification.description || notification.body || notification.message) && (
                               <div style={{ fontSize: 12.5, color: 'var(--kai-text-muted)', lineHeight: 1.4 }}>
-                                {notification.description || notification.body}
+                                {notification.description || notification.body || (notification.title !== notification.message ? notification.message : '')}
                               </div>
                             )}
                           </div>
@@ -432,16 +404,31 @@ export default function Notifications() {
                         </div>
 
                         {/* Tags/metadata */}
-                        <div style={{ display: 'flex', gap: 6, marginTop: 6 }}>
+                        <div style={{ display: 'flex', gap: 6, marginTop: 6, flexWrap: 'wrap' }}>
                           <span className="kai-badge" style={{ background: config.bg, color: config.color, fontSize: 10 }}>
                             {type.replace(/_/g, ' ')}
                           </span>
+                          {isAnnouncement && priority && (
+                            <span className="kai-badge" style={{
+                              fontSize: 10,
+                              background: priority === 'URGENT' ? 'rgba(203, 57, 57, 0.1)' : priority === 'IMPORTANT' ? 'rgba(234, 88, 12, 0.1)' : 'var(--kai-bg)',
+                              color: priority === 'URGENT' ? '#CB3939' : priority === 'IMPORTANT' ? '#EA580C' : 'var(--kai-text-muted)',
+                            }}>
+                              {priority}
+                            </span>
+                          )}
                           {notification.project && (
                             <span className="kai-badge secondary" style={{ fontSize: 10 }}>{notification.project}</span>
                           )}
                           {notification.assignee && (
                             <span className="kai-badge" style={{ fontSize: 10, background: 'var(--kai-bg)', color: 'var(--kai-text-muted)' }}>
                               {notification.assignee}
+                            </span>
+                          )}
+                          {notification.linkUrl && (
+                            <span className="kai-badge" style={{ fontSize: 10, background: 'rgba(20,109,247,0.08)', color: '#146DF7' }}>
+                              <i className="bi bi-box-arrow-up-right" style={{ marginRight: 3, fontSize: 9 }} />
+                              View
                             </span>
                           )}
                         </div>
@@ -463,12 +450,7 @@ export default function Notifications() {
               >
                 {loadingMore ? (
                   <>
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{ animation: 'spin 1s linear infinite' }}>
-                      <line x1="12" y1="2" x2="12" y2="6"/><line x1="12" y1="18" x2="12" y2="22"/>
-                      <line x1="4.93" y1="4.93" x2="7.76" y2="7.76"/><line x1="16.24" y1="16.24" x2="19.07" y2="19.07"/>
-                      <line x1="2" y1="12" x2="6" y2="12"/><line x1="18" y1="12" x2="22" y2="12"/>
-                      <line x1="4.93" y1="19.07" x2="7.76" y2="16.24"/><line x1="16.24" y1="7.76" x2="19.07" y2="4.93"/>
-                    </svg>
+                    <i className="bi bi-arrow-repeat" style={{ animation: 'spin 1s linear infinite', marginRight: 6 }} />
                     Loading...
                   </>
                 ) : (

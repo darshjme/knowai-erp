@@ -186,6 +186,8 @@ export const filesApi = {
 export const notificationsApi = {
   list: (params) => api.get('/notifications', { params }),
   markRead: (id) => api.post('/notifications', { id, read: true }),
+  markAllRead: () => api.patch('/notifications', { action: 'markAllRead' }),
+  announce: (data) => api.post('/notifications', { action: 'announce', ...data }),
 };
 
 // Documents
@@ -326,6 +328,21 @@ export const changeRequestApi = {
   ctoReject: (id, note) => api.post('/change-requests', { action: 'cto_reject', id, note }),
 };
 
+// Video Reviews
+export const videoReviewsApi = {
+  list: (params) => api.get('/video-reviews', { params }),
+  get: (id) => api.get(`/video-reviews?id=${id}`),
+  upload: (data) => api.post('/video-reviews', { action: 'upload', ...data }),
+  comment: (data) => api.post('/video-reviews', { action: 'comment', ...data }),
+  approve: (data) => api.post('/video-reviews', { action: 'approve', ...data }),
+  requestChanges: (data) => api.post('/video-reviews', { action: 'requestChanges', ...data }),
+  reject: (data) => api.post('/video-reviews', { action: 'reject', ...data }),
+  resolve: (commentId) => api.post('/video-reviews', { action: 'resolve', commentId }),
+  revise: (data) => api.post('/video-reviews', { action: 'revise', ...data }),
+  update: (id, data) => api.patch('/video-reviews', { id, ...data }),
+  delete: (id) => api.delete(`/video-reviews?id=${id}`),
+};
+
 // Admin Panel
 export const adminApi = {
   getConfig: () => api.get('/admin/config'),
@@ -333,6 +350,15 @@ export const adminApi = {
   getStats: () => api.get('/admin/stats'),
   testEmail: (config) => api.post('/admin/config', { action: 'test_email', ...config }),
   testStorage: (config) => api.post('/admin/config', { action: 'test_storage', ...config }),
+};
+
+// Content Workspace
+export const contentWorkspaceApi = {
+  list: (params) => api.get('/content-workspace', { params }),
+  createCollection: (data) => api.post('/content-workspace', { action: 'createCollection', ...data }),
+  addAsset: (data) => api.post('/content-workspace', { action: 'addAsset', ...data }),
+  update: (id, data) => api.patch('/content-workspace', { id, ...data }),
+  delete: (id, type) => api.delete(`/content-workspace?id=${id}${type ? `&type=${type}` : ''}`),
 };
 
 export default api;

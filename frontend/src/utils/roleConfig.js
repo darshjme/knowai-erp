@@ -1,8 +1,8 @@
 // Role-based access configuration for Know AI ERP
 // All roles have complaints access (view own + resolved)
 
-const COMMON = ['dashboard', 'calendar', 'chat', 'notifications', 'profile', 'settings', 'expenses', 'leaves', 'complaints', 'personality-test', 'goals'];
-const SENIOR_EXTRA = ['projects', 'analytics', 'time-tracking', 'docs', 'files', 'email', 'passwords', 'subscriptions'];
+const COMMON = ['dashboard', 'calendar', 'chat', 'notifications', 'profile', 'settings', 'expenses', 'leaves', 'complaints', 'personality-test', 'goals', 'requests', 'change-requests', 'content-workspace'];
+const SENIOR_EXTRA = ['projects', 'analytics', 'time-tracking', 'docs', 'files', 'email', 'passwords', 'subscriptions', 'video-reviews', 'content-workspace'];
 const JUNIOR_BASE = ['tasks', 'time-tracking', 'docs', 'files'];
 
 export const ROLE_SIDEBAR_ACCESS = {
@@ -45,11 +45,11 @@ export const ROLE_SIDEBAR_ACCESS = {
   JR_BRAND_STRATEGIST: [...COMMON, ...JUNIOR_BASE, 'clients'],
 
   // Operations
-  DRIVER: ['dashboard', 'tasks', 'calendar', 'chat', 'leaves', 'complaints', 'notifications', 'settings', 'personality-test', 'payroll'],
+  DRIVER: ['dashboard', 'tasks', 'calendar', 'chat', 'leaves', 'complaints', 'notifications', 'settings', 'personality-test', 'payroll', 'requests', 'change-requests'],
 
   // General
   GUY: [...COMMON, 'tasks', 'files'],
-  OFFICE_BOY: ['dashboard', 'tasks', 'calendar', 'chat', 'leaves', 'complaints', 'notifications', 'settings', 'personality-test'],
+  OFFICE_BOY: ['dashboard', 'tasks', 'calendar', 'chat', 'leaves', 'complaints', 'notifications', 'settings', 'personality-test', 'requests', 'change-requests'],
 };
 
 export const ROLE_LABELS = {

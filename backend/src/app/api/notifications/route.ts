@@ -7,7 +7,9 @@ import { getPaginationParams } from "@/lib/pagination";
 // Defines which notification types each role is allowed to see,
 // in addition to the universal types everyone receives.
 
-const UNIVERSAL_TYPES = ["SYSTEM", "CHAT_MENTION"] as const;
+const UNIVERSAL_TYPES = ["SYSTEM", "CHAT_MENTION", "ANNOUNCEMENT"] as const;
+
+const C_LEVEL_AND_ADMIN = ["CEO", "CTO", "CFO", "BRAND_FACE", "ADMIN"];
 
 const ROLE_NOTIFICATION_TYPES: Record<string, readonly string[]> = {
   // CEO: large transaction alerts, hiring approvals, revenue milestones
@@ -220,6 +222,79 @@ export async function DELETE(req: NextRequest) {
     return jsonOk({ success: true, message: "Notification deleted" });
   } catch (error) {
     console.error("Notifications DELETE error:", error);
+    return jsonError("Internal server error", 500);
+  }
+}
+
+// ─── POST: Create announcement / mark read ──────────────────────
+export async function POST(req: NextRequest) {
+  try {
+    const user = await getAuthUser(req);
+    if (!user) return jsonError("Unauthorized", 401);
+
+    const body = await req.json();
+
+    // Legacy: mark single as read (from frontend notificationsApi.markRead)
+    if (body.id && body.read === true) {
+      const existing = await prisma.notification.findFirst({
+        where: { id: body.id, userId: user.id },
+      });
+      if (!existing) return jsonError("Notification not found", 404);
+      const notification = await prisma.notification.update({
+        where: { id: body.id },
+        data: { read: true },
+      });
+      return jsonOk({ success: true, data: notification });
+    }
+
+    // Create system announcement — only C-level and ADMIN
+    if (body.action === "announce") {
+      if (!C_LEVEL_AND_ADMIN.includes(user.role)) {
+        return jsonError("Only C-level executives and admins can create announcements", 403);
+      }
+
+      const { title, message, priority = "NORMAL", linkUrl } = body;
+      if (!title || !message) {
+        return jsonError("Title and message are required for announcements", 400);
+      }
+
+      const validPriorities = ["NORMAL", "IMPORTANT", "URGENT"];
+      if (!validPriorities.includes(priority)) {
+        return jsonError("Priority must be NORMAL, IMPORTANT, or URGENT", 400);
+      }
+
+      // Get all users in the workspace
+      const workspaceUsers = await prisma.user.findMany({
+        where: { workspaceId: user.workspaceId },
+        select: { id: true },
+      });
+
+      if (workspaceUsers.length === 0) {
+        return jsonOk({ success: true, message: "No users in workspace", count: 0 });
+      }
+
+      // Create a notification for every user in the workspace
+      const result = await prisma.notification.createMany({
+        data: workspaceUsers.map((u) => ({
+          userId: u.id,
+          type: "ANNOUNCEMENT" as const,
+          title,
+          message,
+          linkUrl: linkUrl ?? null,
+          metadata: JSON.stringify({ priority, announcedBy: user.id, announcerName: `${user.firstName} ${user.lastName}` }),
+        })),
+      });
+
+      return jsonOk({
+        success: true,
+        message: `Announcement sent to ${result.count} users`,
+        count: result.count,
+      });
+    }
+
+    return jsonError("Invalid action", 400);
+  } catch (error) {
+    console.error("Notifications POST error:", error);
     return jsonError("Internal server error", 500);
   }
 }

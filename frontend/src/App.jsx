@@ -44,6 +44,11 @@ const Goals = lazy(() => import('./pages/Goals'));
 const PasswordManager = lazy(() => import('./pages/PasswordManager'));
 const Subscriptions = lazy(() => import('./pages/Subscriptions'));
 const AdminPanel = lazy(() => import('./pages/AdminPanel'));
+const VideoReviews = lazy(() => import('./pages/VideoReviews'));
+const Requests = lazy(() => import('./pages/Requests'));
+const ChangeRequests = lazy(() => import('./pages/ChangeRequests'));
+const Careers = lazy(() => import('./pages/Careers'));
+const ContentWorkspace = lazy(() => import('./pages/ContentWorkspace'));
 
 import 'bootstrap/dist/css/bootstrap.min.css';
 import 'react-toastify/dist/ReactToastify.css';
@@ -141,7 +146,12 @@ function AppRoutes() {
           <Route path="subscriptions" element={<Subscriptions />} />
           <Route path="personality-test" element={<PersonalityTest />} />
           <Route path="admin" element={<AdminPanel />} />
+          <Route path="video-reviews" element={<VideoReviews />} />
+          <Route path="requests" element={<Requests />} />
+          <Route path="change-requests" element={<ChangeRequests />} />
+          <Route path="content-workspace" element={<ContentWorkspace />} />
         </Route>
+        <Route path="/careers" element={<Careers />} />
         <Route path="*" element={<ProtectedRoute><Navigate to="/dashboard" replace /></ProtectedRoute>} />
       </Routes>
     </Suspense>
