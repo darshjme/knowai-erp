@@ -13,7 +13,7 @@ const ROLE_LEVEL: Record<string, number> = {
   DRIVER: 20, GUY: 15, OFFICE_BOY: 10,
 };
 
-export function getRoleLevel(role: string): number {
+function getRoleLevel(role: string): number {
   return ROLE_LEVEL[role] || 0;
 }
 
