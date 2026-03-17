@@ -288,6 +288,24 @@ export async function POST(req: NextRequest) {
       },
     });
 
+    // Auto-create project chat room
+    try {
+      const chatRoom = await prisma.chatRoom.create({
+        data: {
+          name: project.name,
+          type: "project",
+          projectId: project.id,
+          createdById: user.id,
+        },
+      });
+      // Add project manager as member
+      await prisma.chatRoomMember.create({
+        data: { roomId: chatRoom.id, userId: user.id },
+      });
+    } catch (e) {
+      console.error("Failed to create project chat room:", e);
+    }
+
     return jsonOk({ success: true, data: project }, 201);
   } catch (error) {
     console.error("Projects POST error:", error);
