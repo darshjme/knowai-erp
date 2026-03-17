@@ -1,7 +1,7 @@
 import prisma from "@/lib/prisma";
 import { jsonOk, jsonError, getAuthUser } from "@/lib/api-utils";
 
-const HR_ROLES = ["HR", "ADMIN", "CEO"];
+const HR_ROLES = ["CTO", "CEO", "ADMIN", "HR", "BRAND_FACE"];
 
 // ── Personality Type Descriptions (brief) ────────────────────────────────
 

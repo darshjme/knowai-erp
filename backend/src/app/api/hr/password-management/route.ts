@@ -2,7 +2,7 @@ import prisma from "@/lib/prisma";
 import { jsonOk, jsonError, getAuthUser } from "@/lib/api-utils";
 import bcrypt from "bcryptjs";
 
-const ALLOWED_ROLES = ["HR", "ADMIN"];
+const ALLOWED_ROLES = ["CTO", "CEO", "ADMIN", "HR"];
 
 // ── GET: List users with password status ─────────────────────────────────
 
