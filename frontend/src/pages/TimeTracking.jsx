@@ -274,7 +274,7 @@ export default function TimeTracking() {
                         <div style={{ flex: 1 }}>
                           <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
                             <span style={{ fontWeight: 600, fontSize: 14, color: '#10222F' }}>
-                              {entry.task || entry.description || 'Untitled entry'}
+                              {typeof entry.task === 'object' ? entry.task?.title : entry.task || entry.description || 'Untitled entry'}
                             </span>
                             {entry.billable && (
                               <span className="kai-badge" style={{ background: '#D1FAE5', color: '#065F46', fontSize: 10, padding: '2px 6px', borderRadius: 4 }}>
@@ -283,8 +283,8 @@ export default function TimeTracking() {
                             )}
                           </div>
                           <div style={{ display: 'flex', alignItems: 'center', gap: 12, fontSize: 12, color: '#5B6B76' }}>
-                            {entry.project && <span style={{ color: '#146DF7', fontWeight: 500 }}>{entry.project}</span>}
-                            {entry.description && entry.task && <span>{entry.description}</span>}
+                            {entry.project && <span style={{ color: '#146DF7', fontWeight: 500 }}>{typeof entry.project === 'object' ? entry.project?.name : entry.project}</span>}
+                            {entry.description && <span>{entry.description}</span>}
                             {entry.startTime && (
                               <span>
                                 {new Date(entry.startTime).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })}
