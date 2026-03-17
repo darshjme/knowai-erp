@@ -5,6 +5,7 @@ import { Suspense, lazy } from 'react';
 import store from './store/store';
 import MainLayout from './components/layout/MainLayout';
 import Loader from './components/ui/Loader';
+import ErrorBoundary from './components/ui/ErrorBoundary';
 
 // Auth Pages (eager)
 import Login from './pages/Login';
@@ -127,11 +128,13 @@ function AppRoutes() {
 
 export default function App() {
   return (
-    <Provider store={store}>
-      <BrowserRouter>
-        <AppRoutes />
-        <ToastContainer position="top-right" theme="colored" autoClose={3000} />
-      </BrowserRouter>
-    </Provider>
+    <ErrorBoundary>
+      <Provider store={store}>
+        <BrowserRouter>
+          <AppRoutes />
+          <ToastContainer position="top-right" theme="colored" autoClose={3000} />
+        </BrowserRouter>
+      </Provider>
+    </ErrorBoundary>
   );
 }
