@@ -103,6 +103,14 @@ export default function ProjectDetail() {
     dispatch({ type: 'UI_SET_PAGE_TITLE', payload: project?.name || 'Project Detail' });
   }, [dispatch, project?.name]);
 
+  // Reset state when navigating between projects
+  useEffect(() => {
+    setProject(null);
+    setTasks([]);
+    setActiveTab('overview');
+    setLoading(true);
+  }, [id]);
+
   const fetchProject = useCallback(async () => {
     try {
       setLoading(true);
@@ -158,7 +166,15 @@ export default function ProjectDetail() {
     }
     try {
       setCreatingTask(true);
-      await tasksApi.create({ ...taskForm, projectId: id });
+      await tasksApi.create({
+        title: taskForm.title,
+        description: taskForm.description,
+        assigneeId: taskForm.assignee_id || undefined,
+        priority: taskForm.priority,
+        status: taskForm.status,
+        dueDate: taskForm.due_date || undefined,
+        projectId: id,
+      });
       toast.success('Task created');
       setShowAddTask(false);
       setTaskForm({ title: '', description: '', assignee_id: '', priority: 'MEDIUM', status: 'TODO', due_date: '' });
