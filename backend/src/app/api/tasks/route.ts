@@ -547,6 +547,25 @@ export async function PATCH(req: NextRequest) {
       notifyTaskAssigned(id, assigneeId, assignerName, task.title).catch(console.error);
     }
 
+    // Auto-update project progress when task status changes
+    if (status !== undefined && task.project?.id) {
+      try {
+        const projectTasks = await prisma.task.findMany({
+          where: { projectId: task.project.id },
+          select: { status: true },
+        });
+        const total = projectTasks.length;
+        const completed = projectTasks.filter(t => t.status === "COMPLETED").length;
+        const progress = total > 0 ? Math.round((completed / total) * 100) : 0;
+        await prisma.project.update({
+          where: { id: task.project.id },
+          data: { progress, status: progress >= 100 ? "COMPLETED" : undefined },
+        });
+      } catch (e) {
+        console.error("Failed to update project progress:", e);
+      }
+    }
+
     return jsonOk({ success: true, data: task });
   } catch (error) {
     console.error("Tasks PATCH error:", error);
