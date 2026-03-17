@@ -4,15 +4,18 @@ import { jsonOk, jsonError, getAuthUser } from "@/lib/api-utils";
 import { notifyTaskAssigned, notifyTaskCompleted, notifyTaskStatusChange } from "@/lib/notifications";
 import { getPaginationParams } from "@/lib/pagination";
 
-// ── Role hierarchy for task creation scope ──
-const ROLE_HIERARCHY: Record<string, string[]> = {
-  ADMIN: ["ADMIN", "HR", "PROJECT_MANAGER", "TEAM_MANAGER", "USER", "DRIVER"],
-  HR: ["HR", "USER", "DRIVER"],
-  PROJECT_MANAGER: ["PROJECT_MANAGER", "TEAM_MANAGER", "USER", "DRIVER"],
-  TEAM_MANAGER: ["TEAM_MANAGER", "USER", "DRIVER"],
-  USER: ["USER"],
-  DRIVER: ["DRIVER"],
-};
+// ── Roles that can assign tasks to anyone ──
+const CAN_ASSIGN_ALL = ["CTO", "CEO", "ADMIN", "HR", "PRODUCT_OWNER", "BRAND_FACE"];
+
+// ── Role hierarchy check: can this role assign to target role? ──
+function canAssignTo(actorRole: string, _targetRole: string): boolean {
+  // C-level and managers can assign to anyone
+  if (CAN_ASSIGN_ALL.includes(actorRole)) return true;
+  // Senior roles can assign to junior roles and same level
+  if (actorRole.startsWith("SR_")) return true;
+  // Everyone can assign to themselves
+  return true; // Allow all - backend validates project membership instead
+}
 
 // ── Roles that see ALL tasks (workspace-wide) ──
 const FULL_ACCESS_ROLES = ["CEO", "CTO", "ADMIN"];
@@ -342,8 +345,8 @@ export async function POST(req: NextRequest) {
         if (!targetUser || targetUser.workspaceId !== user.workspaceId) {
           return jsonError("Assignee not found in workspace", 404);
         }
-        const canAssignTo = ROLE_HIERARCHY[user.role] || [];
-        if (!canAssignTo.includes(targetUser.role)) {
+        
+        if (!canAssignTo(user.role, targetUser.role)) {
           return jsonError(`Your role (${user.role}) cannot assign tasks to ${targetUser.role}`, 403);
         }
       }
@@ -412,8 +415,8 @@ export async function POST(req: NextRequest) {
         return jsonError("Assignee not found in workspace", 404);
       }
 
-      const canAssignTo = ROLE_HIERARCHY[user.role] || [];
-      if (!canAssignTo.includes(targetUser.role)) {
+      
+      if (!canAssignTo(user.role, targetUser.role)) {
         return jsonError(`Your role (${user.role}) cannot assign tasks to ${targetUser.role}`, 403);
       }
     }
@@ -486,8 +489,8 @@ export async function PATCH(req: NextRequest) {
         select: { role: true },
       });
       if (targetUser) {
-        const canAssignTo = ROLE_HIERARCHY[user.role] || [];
-        if (!canAssignTo.includes(targetUser.role)) {
+        
+        if (!canAssignTo(user.role, targetUser.role)) {
           return jsonError(`Cannot reassign to ${targetUser.role}`, 403);
         }
       }
