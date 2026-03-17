@@ -65,27 +65,14 @@ export default function TimeTracking() {
 
   const fetchEntries = async () => {
     setLoading(true);
+    setError('');
     try {
-      const res = await timeTrackingApi.list({ period: 'today' });
-      const data = res;
+      const res = await timeTrackingApi.list();
       const items = Array.isArray(res.data) ? res.data : [];
       setEntries(items);
-
-      // Compute weekly summary from entries or use API data
-      if (data.weeklySummary) {
-        setWeeklySummary(data.weeklySummary);
-      } else {
-        // Fetch full week data
-        try {
-          const weekData = await timeTrackingApi.list({ period: 'week' });
-          const weekItems = Array.isArray(weekData.data) ? weekData.data : [];
-          computeWeeklySummary(weekItems);
-        } catch {
-          computeWeeklySummary(items);
-        }
-      }
+      computeWeeklySummary(items);
     } catch (err) {
-      setError(err.response?.data?.error || 'Failed to load time entries');
+      setError(err.message || 'Failed to load time entries');
     } finally {
       setLoading(false);
     }
