@@ -291,6 +291,17 @@ export const employeeAnalyticsApi = {
   getEmployee: (userId) => api.get(`/hr/employee-analytics?userId=${userId}`),
 };
 
+// Resource Requests (password, subscription, tool requests)
+export const requestsApi = {
+  list: (params) => api.get('/requests', { params }),
+  submit: (data) => api.post('/requests', { action: 'submit', ...data }),
+  hrApprove: (id, note) => api.post('/requests', { action: 'hr_approve', id, note }),
+  hrReject: (id, note) => api.post('/requests', { action: 'hr_reject', id, note }),
+  managerApprove: (id, note) => api.post('/requests', { action: 'manager_approve', id, note }),
+  managerReject: (id, note) => api.post('/requests', { action: 'manager_reject', id, note }),
+  provision: (id, note, credentialId) => api.post('/requests', { action: 'provision', id, note, credentialId }),
+};
+
 // HR Password Management
 export const passwordManagementApi = {
   list: () => api.get('/hr/password-management'),

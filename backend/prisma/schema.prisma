@@ -943,6 +943,43 @@ model Subscription {
 
 // ─── AUDIT ─────────────────────────────────────────────────────
 
+// Resource requests (password access, subscriptions, tools) - pipeline: User → HR → Manager approval
+model ResourceRequest {
+  id          String   @id @default(uuid())
+  requesterId String
+  type        String   // PASSWORD_ACCESS, SUBSCRIPTION, TOOL, SOFTWARE, HARDWARE, OTHER
+  title       String   // What they need
+  purpose     String   // Why they need it
+  url         String?  // URL of the tool/subscription
+  cost        Float?   // Monthly/one-time cost
+  currency    String   @default("INR")
+  projectId   String?  // Related project (in their scope)
+  priority    String   @default("MEDIUM") // LOW, MEDIUM, HIGH, URGENT
+  status      String   @default("PENDING_HR") // PENDING_HR → PENDING_MANAGER → APPROVED → REJECTED → PROVISIONED
+  // HR review
+  hrReviewerId   String?
+  hrReviewedAt   DateTime?
+  hrNote         String?
+  // Manager/CTO approval
+  managerReviewerId String?
+  managerReviewedAt DateTime?
+  managerNote       String?
+  // Provisioning
+  provisionedAt  DateTime?
+  provisionedBy  String?
+  provisionNote  String?
+  // Linked credential (after approval, HR creates credential and links it)
+  credentialId   String?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  @@map("resource_requests")
+  @@index([requesterId])
+  @@index([status])
+  @@index([type])
+  @@index([projectId])
+}
+
 enum AuditAction {
   CREATE
   UPDATE
