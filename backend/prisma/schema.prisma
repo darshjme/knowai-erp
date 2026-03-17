@@ -638,15 +638,22 @@ enum JobStatus {
 }
 
 enum CandidateStatus {
-  APPLIED
-  RESUME_REVIEW
-  INTERVIEW_ROUND_1
-  PRACTICAL_TASK
-  INTERVIEW_ROUND_2
-  FINAL_INTERVIEW
-  OFFERED
-  HIRED
-  REJECTED
+  APPLIED             // New application received
+  RESUME_REVIEW       // Resume being reviewed
+  UNDER_REVIEW        // Being evaluated by team
+  SHORTLISTED         // Passed initial screen
+  INTERVIEW_ROUND_1   // First interview scheduled/done
+  PRACTICAL_TASK      // Assignment/test to be sent
+  ASSIGNMENT_SENT     // Assignment sent to candidate
+  ASSIGNMENT_PASSED   // Completed assignment successfully
+  INTERVIEW_ROUND_2   // Second interview
+  FINAL_INTERVIEW     // Final round
+  OFFERED             // Offer extended
+  HIRED               // Accepted and hired
+  REJECTED            // Rejected at any stage
+  NOT_GOOD            // Didn't meet requirements
+  MAYBE               // On hold / potential for future
+  ON_HOLD             // Process paused
 }
 
 enum InterviewResult {
@@ -688,28 +695,100 @@ model JobCandidate {
   phone           String?
   whatsappNumber  String?
   resumeUrl       String?
+  resumeFileName  String?
   linkedinUrl     String?
   portfolioUrl    String?
+  instagramUrl    String?
   coverLetter     String?
+  location        String?
+  experience      String?         // Experience summary
+  education       String?
+  skills          String?         // JSON array of skills
+  customFields    String?         // JSON for extra fields
   status          CandidateStatus @default(APPLIED)
-  reviewerId      String?         // assigned resume reviewer
+  tier            String          @default("UNTIERED") // UNTIERED, INTERN, JUNIOR, SENIOR
+  rating          Float?          // Average star rating (1-5)
+  isDuplicate     Boolean         @default(false)
+  duplicateOfId   String?         // ID of primary candidate if this is a dupe
+  rejectionReason String?
+  rejectionMessage String?
+  sortOrder       Int             @default(0)
+  source          String          @default("MANUAL") // MANUAL, CSV, EXCEL, URL, RESUME, REFERRAL
+  importBatchId   String?
+  reviewerId      String?
   reviewNotes     String?
-  practicalTaskUrl String?        // link to practical task
-  practicalSubmission String?     // candidate's submission
+  practicalTaskUrl String?
+  practicalSubmission String?
   practicalDeadline DateTime?
   finalNotes      String?
   offeredSalary   Int?
+  statusChangedAt DateTime?
+  statusChangedBy String?
   createdAt       DateTime        @default(now())
   updatedAt       DateTime        @updatedAt
 
   job        JobPosting       @relation(fields: [jobId], references: [id], onDelete: Cascade)
   reviewer   User?            @relation("ResumeReviewer", fields: [reviewerId], references: [id], onDelete: SetNull)
   interviews InterviewRound[]
+  comments   CandidateComment[]
+  events     CandidateEvent[]
+  ratings    CandidateRating[]
 
   @@map("job_candidates")
   @@index([jobId])
   @@index([status])
   @@index([reviewerId])
+  @@index([email])
+  @@index([tier])
+  @@index([source])
+}
+
+// Candidate comments with @mentions (from HireFlow)
+model CandidateComment {
+  id          String   @id @default(uuid())
+  candidateId String
+  body        String
+  mentions    String?  // JSON: [{userId, name}]
+  createdBy   String
+  editedAt    DateTime?
+  createdAt   DateTime @default(now())
+
+  candidate JobCandidate @relation(fields: [candidateId], references: [id], onDelete: Cascade)
+
+  @@map("candidate_comments")
+  @@index([candidateId])
+}
+
+// Candidate event audit trail (from HireFlow)
+model CandidateEvent {
+  id          String   @id @default(uuid())
+  candidateId String
+  eventType   String   // status_change, tier_change, comment, created, imported, merged, field_update
+  fromValue   String?
+  toValue     String?
+  createdBy   String
+  createdAt   DateTime @default(now())
+
+  candidate JobCandidate @relation(fields: [candidateId], references: [id], onDelete: Cascade)
+
+  @@map("candidate_events")
+  @@index([candidateId])
+  @@index([eventType])
+}
+
+// Per-user candidate ratings (from HireFlow)
+model CandidateRating {
+  id          String   @id @default(uuid())
+  candidateId String
+  userId      String
+  rating      Int      // 1-5 stars
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  candidate JobCandidate @relation(fields: [candidateId], references: [id], onDelete: Cascade)
+
+  @@unique([candidateId, userId])
+  @@map("candidate_ratings")
 }
 
 model InterviewRound {
