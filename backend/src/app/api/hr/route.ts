@@ -7,8 +7,9 @@ export async function GET(req: NextRequest) {
     const user = await getAuthUser(req);
     if (!user) return jsonError("Unauthorized", 401);
 
-    if (user.role !== "HR" && user.role !== "ADMIN") {
-      return jsonError("Only HR or Admin can access the HR dashboard", 403);
+    const HR_ACCESS = ["CTO", "CEO", "CFO", "ADMIN", "HR", "BRAND_FACE"];
+    if (!HR_ACCESS.includes(user.role)) {
+      return jsonError("Access denied", 403);
     }
 
     const now = new Date();

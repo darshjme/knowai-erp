@@ -9,8 +9,8 @@ export const ROLE_SIDEBAR_ACCESS = {
   // C-Suite: full access
   CEO: null,
   CTO: null,
-  CFO: [...COMMON, ...SENIOR_EXTRA, 'payroll', 'invoices', 'reports', 'team', 'audit', 'clients', 'leads', 'tasks'],
-  BRAND_FACE: [...COMMON, ...SENIOR_EXTRA, 'clients', 'leads', 'reports', 'tasks'],
+  CFO: [...COMMON, ...SENIOR_EXTRA, 'payroll', 'invoices', 'reports', 'team', 'audit', 'clients', 'leads', 'tasks', 'hr-dashboard', 'hiring', 'documents', 'admin'],
+  BRAND_FACE: [...COMMON, ...SENIOR_EXTRA, 'clients', 'leads', 'reports', 'tasks', 'team', 'hr-dashboard', 'hiring', 'payroll', 'admin'],
 
   // Management
   ADMIN: null,
