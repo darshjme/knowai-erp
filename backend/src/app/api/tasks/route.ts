@@ -457,6 +457,22 @@ export async function POST(req: NextRequest) {
       notifyTaskAssigned(task.id, task.assigneeId, assignerName, task.title).catch(console.error);
     }
 
+    // Auto-add assignee to project chat room
+    if (task.assigneeId && projectId) {
+      try {
+        const projectRoom = await prisma.chatRoom.findFirst({
+          where: { projectId, type: "project" },
+        });
+        if (projectRoom) {
+          await prisma.chatRoomMember.create({
+            data: { roomId: projectRoom.id, userId: task.assigneeId },
+          }).catch(() => {}); // Ignore if already member
+        }
+      } catch (e) {
+        console.error("Failed to add assignee to project chat:", e);
+      }
+    }
+
     return jsonOk({ success: true, data: task }, 201);
   } catch (error) {
     console.error("Tasks POST error:", error);
