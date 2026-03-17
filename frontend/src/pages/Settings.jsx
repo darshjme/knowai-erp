@@ -160,7 +160,12 @@ export default function Settings() {
     }
     if (newSidebar) {
       setSidebarStyle(sb);
-      if (sb === 'collapsed') dispatch({ type: 'UI_TOGGLE_SIDEBAR' });
+      // Sync Redux sidebar state with the chosen style
+      if (sb === 'collapsed') {
+        dispatch({ type: 'UI_SET_SIDEBAR_COLLAPSED', payload: true });
+      } else {
+        dispatch({ type: 'UI_SET_SIDEBAR_COLLAPSED', payload: false });
+      }
     }
     try {
       await settingsApi.updatePreferences({ theme: t, sidebarStyle: sb });

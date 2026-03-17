@@ -366,13 +366,13 @@ export default function PasswordManager() {
           {canCreate && <button className="btn btn-sm mt-2" onClick={openCreate} style={{ background: '#146DF7', color: '#fff', border: 'none', borderRadius: 8, padding: '6px 16px' }}>Add First Credential</button>}
         </div>
       ) : (
-        <div className="row g-3">
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 16 }}>
           {credentials.map(cred => {
             const catColor = CATEGORY_COLORS[cred.category] || '#6B7280';
             const grantsCount = cred._grantsCount || cred.accessGrants?.length || 0;
             const lastAccessed = cred._lastAccessed || cred.accessLogs?.[0]?.createdAt;
             return (
-              <div key={cred.id} className="col-12 col-md-6 col-xl-4">
+              <div key={cred.id} style={{ flex: '1 1 320px', maxWidth: '100%', minWidth: 0 }}>
                 <div className="kai-card p-3 h-100" style={{ cursor: 'pointer', transition: 'all 0.15s', border: '1px solid var(--kai-border)' }}
                   onClick={() => openDetail(cred)}
                   onMouseEnter={e => { e.currentTarget.style.borderColor = '#146DF7'; e.currentTarget.style.transform = 'translateY(-1px)'; }}
@@ -415,7 +415,7 @@ export default function PasswordManager() {
       {showDetail && (
         <div style={{ position: 'fixed', inset: 0, zIndex: 1050, display: 'flex' }}>
           <div style={{ flex: 1, background: 'rgba(0,0,0,0.5)' }} onClick={() => setShowDetail(null)} />
-          <div style={{ width: 520, maxWidth: '95vw', background: 'var(--kai-bg)', overflowY: 'auto', boxShadow: '-4px 0 24px rgba(0,0,0,0.2)', padding: 24, display: 'flex', flexDirection: 'column', gap: 20 }}>
+          <div style={{ position: 'fixed', top: 0, right: 0, bottom: 0, width: 520, maxWidth: '95vw', background: 'var(--kai-bg)', overflowY: 'auto', boxShadow: '-4px 0 24px rgba(0,0,0,0.2)', padding: 24, display: 'flex', flexDirection: 'column', gap: 20, zIndex: 1051 }}>
             <div className="d-flex align-items-center justify-content-between">
               <h5 style={{ margin: 0, fontWeight: 700, color: 'var(--kai-text)' }}>{showDetail.title}</h5>
               <div className="d-flex gap-2">

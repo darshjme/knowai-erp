@@ -4,10 +4,24 @@ import { useDispatch } from 'react-redux';
 import { toast } from 'react-toastify';
 import { leavesApi } from '../services/api';
 
-const LEAVE_TYPES = ['Paid Leave', 'Sick Leave', 'WFH', 'Half Day', 'Casual Leave', 'Maternity', 'Paternity'];
+const LEAVE_TYPES = [
+  { value: 'PAID', label: 'Paid Leave' },
+  { value: 'UNPAID', label: 'Unpaid Leave' },
+  { value: 'SICK', label: 'Sick Leave' },
+  { value: 'HALF_DAY', label: 'Half Day' },
+  { value: 'WORK_FROM_HOME', label: 'Work From Home' },
+];
 const TYPE_COLORS = {
-  'Paid Leave': '#146DF7', 'Sick Leave': '#CB3939', 'WFH': '#8B3FE9',
-  'Half Day': '#EA580C', 'Casual Leave': '#16A34A', 'Maternity': '#2563EB', 'Paternity': '#2563EB',
+  'PAID': '#146DF7', 'Paid Leave': '#146DF7',
+  'SICK': '#CB3939', 'Sick Leave': '#CB3939',
+  'WORK_FROM_HOME': '#8B3FE9', 'WFH': '#8B3FE9',
+  'HALF_DAY': '#EA580C', 'Half Day': '#EA580C',
+  'UNPAID': '#16A34A', 'Casual Leave': '#16A34A',
+  'Maternity': '#2563EB', 'Paternity': '#2563EB',
+};
+const typeLabel = (t) => {
+  const found = LEAVE_TYPES.find(lt => lt.value === t);
+  return found ? found.label : t;
 };
 const STATUS_STYLES = {
   PENDING: { bg: '#fff3cd', color: '#856404' },
@@ -32,8 +46,9 @@ export default function Leaves() {
   const [view, setView] = useState('table');
   const [calendarMonth, setCalendarMonth] = useState(new Date().getMonth());
   const [calendarYear, setCalendarYear] = useState(new Date().getFullYear());
+  const [expandedDay, setExpandedDay] = useState(null);
   const [form, setForm] = useState({
-    employeeName: '', type: 'Paid Leave', startDate: '', endDate: '', reason: '',
+    type: 'PAID', startDate: '', endDate: '', reason: '',
   });
 
   useEffect(() => {
@@ -63,20 +78,26 @@ export default function Leaves() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      await leavesApi.create({ ...form, status: 'PENDING' });
+      await leavesApi.create({
+        type: form.type,
+        startDate: form.startDate,
+        endDate: form.endDate,
+        reason: form.reason,
+      });
       toast.success('Leave request submitted');
       setShowModal(false);
-      setForm({ employeeName: '', type: 'Paid Leave', startDate: '', endDate: '', reason: '' });
+      setForm({ type: 'PAID', startDate: '', endDate: '', reason: '' });
       fetchLeaves();
     } catch (err) {
-      toast.error(err.response?.data?.message || 'Failed to submit leave request');
+      toast.error(err.response?.data?.error || err.response?.data?.message || 'Failed to submit leave request');
     }
   };
 
   const handleAction = async (id, status) => {
     try {
-      await leavesApi.update(id, { status });
-      toast.success(`Leave ${status.toLowerCase()}`);
+      const action = status === 'APPROVED' ? 'approve' : 'reject';
+      await leavesApi.update(id, { action });
+      toast.success(`Leave ${action}d`);
       fetchLeaves();
     } catch (err) {
       toast.error(`Failed to ${status.toLowerCase()} leave`);
@@ -98,7 +119,6 @@ export default function Leaves() {
     const date = new Date(calendarYear, calendarMonth, day);
     date.setHours(0, 0, 0, 0);
     return leaves.filter(l => {
-      if (l.status !== 'APPROVED') return false;
       const s = new Date(l.startDate); s.setHours(0, 0, 0, 0);
       const e = new Date(l.endDate); e.setHours(0, 0, 0, 0);
       return date >= s && date <= e;
@@ -176,7 +196,7 @@ export default function Leaves() {
                       <tr key={l._id || l.id} style={{ cursor: 'pointer' }} onClick={() => setSelectedLeave(l)}>
                         <td style={{ fontWeight: 600 }}>{l.employeeName || (l.employee ? `${l.employee.firstName} ${l.employee.lastName}` : '-')}</td>
                         <td>
-                          <span className="kai-badge" style={{ background: `${tc}15`, color: tc }}>{l.type}</span>
+                          <span className="kai-badge" style={{ background: `${tc}15`, color: tc }}>{typeLabel(l.type)}</span>
                         </td>
                         <td>{formatDate(l.startDate)}</td>
                         <td>{formatDate(l.endDate)}</td>
@@ -231,25 +251,59 @@ export default function Leaves() {
               {calendarDays.map((day, i) => {
                 const dayLeaves = leavesOnDay(day);
                 const isCurrentDay = day && new Date().getDate() === day && new Date().getMonth() === calendarMonth && new Date().getFullYear() === calendarYear;
+                const isExpanded = expandedDay === day && day;
                 return (
-                  <div key={i} style={{
-                    minHeight: 80, padding: 6, borderRadius: 6,
-                    background: day ? (isCurrentDay ? 'var(--kai-primary-light)' : 'var(--kai-bg)') : 'transparent',
-                    border: isCurrentDay ? '2px solid var(--kai-primary)' : '1px solid transparent',
+                  <div key={i} onClick={() => day && dayLeaves.length > 0 && setExpandedDay(expandedDay === day ? null : day)} style={{
+                    minHeight: 80, padding: 6, borderRadius: 6, cursor: day && dayLeaves.length > 0 ? 'pointer' : 'default',
+                    background: day ? (isExpanded ? '#EBF3FE' : isCurrentDay ? 'var(--kai-primary-light)' : 'var(--kai-bg)') : 'transparent',
+                    border: isExpanded ? '2px solid var(--kai-primary)' : isCurrentDay ? '2px solid var(--kai-primary)' : '1px solid transparent',
+                    gridColumn: isExpanded ? '1 / -1' : undefined,
                   }}>
                     {day && (
                       <>
-                        <div style={{ fontSize: 13, fontWeight: isCurrentDay ? 700 : 500, color: isCurrentDay ? 'var(--kai-primary)' : 'var(--kai-text)', marginBottom: 4 }}>{day}</div>
-                        {dayLeaves.slice(0, 2).map((l, j) => (
+                        <div style={{ fontSize: 13, fontWeight: isCurrentDay ? 700 : 500, color: isCurrentDay ? 'var(--kai-primary)' : 'var(--kai-text)', marginBottom: 4 }}>
+                          {day}
+                          {dayLeaves.length > 0 && (
+                            <span style={{ marginLeft: 6, fontSize: 10, padding: '1px 6px', borderRadius: 8, background: 'var(--kai-primary)', color: '#fff' }}>
+                              {dayLeaves.length}
+                            </span>
+                          )}
+                        </div>
+                        {!isExpanded && dayLeaves.slice(0, 2).map((l, j) => (
                           <div key={j} style={{
                             fontSize: 10, padding: '2px 4px', borderRadius: 3, marginBottom: 2,
                             background: `${TYPE_COLORS[l.type] || '#146DF7'}15`,
                             color: TYPE_COLORS[l.type] || '#146DF7',
                             whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis',
-                          }}>{l.employeeName || l.employee?.name || 'Employee'}</div>
+                          }}>{l.employeeName || (l.employee ? `${l.employee.firstName} ${l.employee.lastName}` : 'Employee')}</div>
                         ))}
-                        {dayLeaves.length > 2 && (
+                        {!isExpanded && dayLeaves.length > 2 && (
                           <div style={{ fontSize: 10, color: 'var(--kai-text-muted)' }}>+{dayLeaves.length - 2} more</div>
+                        )}
+                        {isExpanded && (
+                          <div style={{ display: 'flex', flexDirection: 'column', gap: 6, marginTop: 6 }}>
+                            {dayLeaves.map((l, j) => {
+                              const tc = TYPE_COLORS[l.type] || '#146DF7';
+                              const st = STATUS_STYLES[l.status] || STATUS_STYLES.PENDING;
+                              return (
+                                <div key={j} style={{
+                                  display: 'flex', alignItems: 'center', gap: 10, padding: '6px 10px',
+                                  background: 'var(--kai-surface)', borderRadius: 6, border: '1px solid var(--kai-border)',
+                                }}>
+                                  <div style={{ flex: 1 }}>
+                                    <div style={{ fontWeight: 600, fontSize: 13, color: 'var(--kai-text)' }}>
+                                      {l.employeeName || (l.employee ? `${l.employee.firstName} ${l.employee.lastName}` : 'Employee')}
+                                    </div>
+                                    <div style={{ fontSize: 11, color: 'var(--kai-text-muted)' }}>
+                                      {l.employee?.department || ''}
+                                    </div>
+                                  </div>
+                                  <span className="kai-badge" style={{ background: `${tc}15`, color: tc, fontSize: 10 }}>{typeLabel(l.type)}</span>
+                                  <span className="kai-badge" style={{ background: st.bg, color: st.color, fontSize: 10 }}>{l.status}</span>
+                                </div>
+                              );
+                            })}
+                          </div>
                         )}
                       </>
                     )}
@@ -273,14 +327,9 @@ export default function Leaves() {
             <form onSubmit={handleSubmit}>
               <div className="kai-card-body" style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
                 <div>
-                  <label className="kai-label">Employee Name *</label>
-                  <input className="kai-input" required placeholder="Your name" value={form.employeeName}
-                    onChange={e => setForm(p => ({ ...p, employeeName: e.target.value }))} />
-                </div>
-                <div>
                   <label className="kai-label">Leave Type *</label>
                   <select className="kai-input" value={form.type} onChange={e => setForm(p => ({ ...p, type: e.target.value }))}>
-                    {LEAVE_TYPES.map(t => <option key={t} value={t}>{t}</option>)}
+                    {LEAVE_TYPES.map(t => <option key={t.value} value={t.value}>{t.label}</option>)}
                   </select>
                 </div>
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
@@ -334,7 +383,7 @@ export default function Leaves() {
                 <div>
                   <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--kai-text-muted)', textTransform: 'uppercase', marginBottom: 4 }}>Type</div>
                   <span className="kai-badge" style={{ background: `${TYPE_COLORS[selectedLeave.type] || '#5B6B76'}15`, color: TYPE_COLORS[selectedLeave.type] || '#5B6B76' }}>
-                    {selectedLeave.type}
+                    {typeLabel(selectedLeave.type)}
                   </span>
                 </div>
                 <div>

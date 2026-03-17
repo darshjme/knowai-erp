@@ -253,12 +253,13 @@ export default function Leads() {
         </div>
       ) : (
         <DragDropContext onDragEnd={handleDragEnd}>
-          <div style={{ display: 'flex', gap: 12, overflowX: 'auto', paddingBottom: 16 }}>
+          <div className="kanban-scroll" style={{ width: '100%', overflowX: 'auto', maxWidth: '100%', WebkitOverflowScrolling: 'touch' }}>
+          <div style={{ display: 'flex', gap: 10, paddingBottom: 16, minWidth: 0 }}>
             {PIPELINE_STAGES.map(stage => {
               const stageLeads = getLeadsByStage(stage.key);
               const stageValue = stageLeads.reduce((s, l) => s + (parseFloat(l.value) || 0), 0);
               return (
-                <div key={stage.key} style={{ minWidth: 280, flex: '1 0 280px' }}>
+                <div key={stage.key} style={{ flex: '1 1 0', minWidth: 140 }}>
                   {/* Column Header */}
                   <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12, padding: '0 4px' }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
@@ -369,6 +370,7 @@ export default function Leads() {
                 </div>
               );
             })}
+          </div>
           </div>
         </DragDropContext>
       )}

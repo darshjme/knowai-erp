@@ -17,12 +17,20 @@ const CATEGORIES = [
 
 const STATUS_MAP = {
   PENDING: { label: 'Pending', cls: 'warning' },
+  SUBMITTED: { label: 'Submitted', cls: 'warning' },
   APPROVED: { label: 'Approved', cls: 'success' },
   REJECTED: { label: 'Rejected', cls: 'danger' },
   REIMBURSED: { label: 'Reimbursed', cls: 'info' },
+  DRAFT: { label: 'Draft', cls: 'secondary' },
 };
 
-const emptyExpense = { title: '', description: '', category: '', amount: '', receipt: null };
+const CURRENCIES = [
+  { value: 'INR', label: 'INR', symbol: '\u20B9' },
+  { value: 'USD', label: 'USD', symbol: '$' },
+];
+const getCurrencySymbol = (code) => CURRENCIES.find(c => c.value === code)?.symbol || '\u20B9';
+
+const emptyExpense = { title: '', description: '', category: '', amount: '', receipt: null, currency: 'INR' };
 
 export default function Expenses() {
   const dispatch = useDispatch();
@@ -64,9 +72,9 @@ export default function Expenses() {
   const stats = {
     totalSubmitted: expenses.reduce((s, e) => s + (parseFloat(e.amount) || 0), 0),
     approved: expenses.filter(e => e.status === 'APPROVED').reduce((s, e) => s + (parseFloat(e.amount) || 0), 0),
-    pending: expenses.filter(e => e.status === 'PENDING').reduce((s, e) => s + (parseFloat(e.amount) || 0), 0),
+    pending: expenses.filter(e => e.status === 'PENDING' || e.status === 'SUBMITTED').reduce((s, e) => s + (parseFloat(e.amount) || 0), 0),
     reimbursed: expenses.filter(e => e.status === 'REIMBURSED').reduce((s, e) => s + (parseFloat(e.amount) || 0), 0),
-    pendingCount: expenses.filter(e => e.status === 'PENDING').length,
+    pendingCount: expenses.filter(e => e.status === 'PENDING' || e.status === 'SUBMITTED').length,
     approvedCount: expenses.filter(e => e.status === 'APPROVED').length,
   };
 
@@ -102,18 +110,17 @@ export default function Expenses() {
         description: form.description,
         category: form.category,
         amount: parseFloat(form.amount),
-        status: 'PENDING',
+        currency: form.currency || 'INR',
       };
 
-      // If there's a receipt file, attempt upload as base64 or multipart
+      // If there's a receipt file, encode as base64 and send as "receipt"
       if (form.receipt) {
         const reader = new FileReader();
         const base64 = await new Promise((resolve) => {
           reader.onload = () => resolve(reader.result);
           reader.readAsDataURL(form.receipt);
         });
-        payload.receipt_url = base64;
-        payload.receipt_name = form.receipt.name;
+        payload.receipt = base64;
       }
 
       await expensesApi.create(payload);
@@ -161,7 +168,10 @@ export default function Expenses() {
   };
 
   const getCategoryInfo = (key) => CATEGORIES.find(c => c.key === key) || CATEGORIES[CATEGORIES.length - 1];
-  const formatCurrency = (v) => `$${(parseFloat(v) || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+  const formatCurrency = (v, currency) => {
+    const sym = getCurrencySymbol(currency || 'INR');
+    return `${sym}${(parseFloat(v) || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+  };
   const formatDate = (d) => d ? new Date(d).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : '-';
 
   const hasActiveFilters = statusFilter || categoryFilter || dateFrom || dateTo;
@@ -299,32 +309,30 @@ export default function Expenses() {
                           <span style={{ fontSize: 13 }}>{cat.label}</span>
                         </div>
                       </td>
-                      <td style={{ fontWeight: 700, fontSize: 14 }}>{formatCurrency(expense.amount)}</td>
+                      <td style={{ fontWeight: 700, fontSize: 14 }}>{formatCurrency(expense.amount, expense.currency)}</td>
                       <td>
-                        {expense.receipt_url || expense.receipt_name ? (
+                        {expense.receipt ? (
                           <button
                             className="kai-btn kai-btn-outline kai-btn-sm"
                             onClick={() => {
-                              if (expense.receipt_url && expense.receipt_url.startsWith('data:')) {
-                                window.open(expense.receipt_url, '_blank');
-                              } else if (expense.receipt_url) {
-                                window.open(expense.receipt_url, '_blank');
+                              if (expense.receipt.startsWith('data:') || expense.receipt.startsWith('http')) {
+                                window.open(expense.receipt, '_blank');
                               }
                             }}
                           >
                             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M13 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V9z"/><polyline points="13 2 13 9 20 9"/></svg>
-                            {expense.receipt_name || 'View'}
+                            View
                           </button>
                         ) : (
                           <span style={{ fontSize: 12, color: 'var(--kai-text-muted)' }}>No receipt</span>
                         )}
                       </td>
                       <td><span className={`kai-badge ${st.cls}`}>{st.label}</span></td>
-                      <td style={{ fontSize: 13 }}>{expense.submitted_by || expense.user_name || '-'}</td>
-                      <td style={{ fontSize: 13, color: 'var(--kai-text-muted)' }}>{formatDate(expense.created_at || expense.date)}</td>
+                      <td style={{ fontSize: 13 }}>{expense.submitter ? `${expense.submitter.firstName} ${expense.submitter.lastName}` : expense.submitted_by || '-'}</td>
+                      <td style={{ fontSize: 13, color: 'var(--kai-text-muted)' }}>{formatDate(expense.createdAt || expense.expenseDate || expense.created_at || expense.date)}</td>
                       <td>
                         <div style={{ display: 'flex', gap: 4 }}>
-                          {expense.status === 'PENDING' && (
+                          {(expense.status === 'PENDING' || expense.status === 'SUBMITTED') && (
                             <>
                               <button className="kai-btn kai-btn-success kai-btn-sm" onClick={() => handleApprove(expense)} title="Approve">
                                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="20 6 9 17 4 12"/></svg>
@@ -383,8 +391,13 @@ export default function Expenses() {
                     </select>
                   </div>
                   <div>
-                    <label className="kai-label">Amount ($) *</label>
-                    <input className="kai-input" type="number" min="0.01" step="0.01" value={form.amount} onChange={e => setForm(f => ({ ...f, amount: e.target.value }))} placeholder="0.00" required />
+                    <label className="kai-label">Amount *</label>
+                    <div style={{ display: 'flex', gap: 8 }}>
+                      <select className="kai-select" value={form.currency} onChange={e => setForm(f => ({ ...f, currency: e.target.value }))} style={{ width: 90, flexShrink: 0 }}>
+                        {CURRENCIES.map(c => <option key={c.value} value={c.value}>{c.symbol} {c.value}</option>)}
+                      </select>
+                      <input className="kai-input" type="number" min="0.01" step="0.01" value={form.amount} onChange={e => setForm(f => ({ ...f, amount: e.target.value }))} placeholder="0.00" required style={{ flex: 1 }} />
+                    </div>
                   </div>
                 </div>
                 <div>
