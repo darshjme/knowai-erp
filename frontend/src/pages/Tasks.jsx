@@ -266,7 +266,7 @@ export default function Tasks() {
     total: totalCount || tasks.length,
     completed: tasks.filter(t => t.status === 'COMPLETED').length,
     inProgress: tasks.filter(t => t.status === 'IN_PROGRESS').length,
-    overdue: tasks.filter(t => isOverdue(t.due_date) && t.status !== 'COMPLETED').length,
+    overdue: tasks.filter(t => isOverdue(t.dueDate || t.due_date) && t.status !== 'COMPLETED').length,
   };
 
   return (
@@ -490,15 +490,19 @@ export default function Tasks() {
               </thead>
               <tbody>
                 {tasks.map((task) => {
-                  const assigneeName = task.assignee_name || task.assignee?.name || '';
-                  const projectName = task.project_name || task.project?.name || '';
-                  const overdue = isOverdue(task.due_date) && task.status !== 'COMPLETED';
-                  const hasBlocker = task.blocked_by || task.dependencies?.length > 0 || task.status === 'BLOCKED';
+                  const assignee = task.assignee;
+                  const assigneeName = assignee ? `${assignee.firstName || ''} ${assignee.lastName || ''}`.trim() : task.assignee_name || '';
+                  const project = task.project;
+                  const projectName = project?.name || task.project_name || '';
+                  const projectId = task.projectId || task.project_id || project?.id;
+                  const assigneeId = task.assigneeId || task.assignee_id || assignee?.id;
+                  const overdue = isOverdue(task.dueDate || task.due_date) && task.status !== 'COMPLETED';
+                  const hasBlocker = task.blockedBy?.length > 0 || task.blocked_by || task.status === 'BLOCKED';
 
                   return (
                     <tr key={task.id}>
                       {/* Checkbox */}
-                      <td>
+                      <td onClick={e => e.stopPropagation()}>
                         <input
                           type="checkbox"
                           checked={selectedTasks.includes(task.id)}
@@ -507,22 +511,25 @@ export default function Tasks() {
                         />
                       </td>
 
-                      {/* Title */}
-                      <td>
+                      {/* Title - clickable to project */}
+                      <td style={{ cursor: 'pointer' }} onClick={() => projectId && navigate(`/projects/${projectId}`)}>
                         <div className="flex-gap-8">
                           {hasBlocker && (
-                            <Link2 size={14} style={{ color: 'var(--kai-danger)', flexShrink: 0 }} title="Has dependencies / Blocked" />
+                            <Link2 size={14} style={{ color: 'var(--kai-danger)', flexShrink: 0 }} title="Blocked" />
                           )}
-                          <span style={{ fontWeight: 600, fontSize: 13 }}>{task.title}</span>
+                          <span style={{ fontWeight: 600, fontSize: 13, color: 'var(--kai-text)' }}>{task.title}</span>
                         </div>
+                        {task.description && (
+                          <div style={{ fontSize: 11, color: 'var(--kai-text-muted)', marginTop: 2, maxWidth: 300 }} className="truncate">{task.description}</div>
+                        )}
                       </td>
 
-                      {/* Project */}
+                      {/* Project - clickable */}
                       <td>
                         {projectName ? (
                           <span
                             style={{ fontSize: 12, color: 'var(--kai-primary)', cursor: 'pointer', fontWeight: 500 }}
-                            onClick={() => task.project_id && navigate(`/projects/${task.project_id}`)}
+                            onClick={() => projectId && navigate(`/projects/${projectId}`)}
                           >
                             {projectName}
                           </span>
@@ -531,17 +538,17 @@ export default function Tasks() {
                         )}
                       </td>
 
-                      {/* Assignee */}
+                      {/* Assignee - clickable to profile */}
                       <td>
                         {assigneeName ? (
-                          <div className="flex-gap-8">
+                          <div className="flex-gap-8" style={{ cursor: 'pointer' }} onClick={() => assigneeId && navigate(`/profile/${assigneeId}`)}>
                             <div
                               className="kai-avatar kai-avatar-sm"
                               style={{ background: getAvatarColor(assigneeName), width: 24, height: 24, fontSize: 10 }}
                             >
                               {getInitials(assigneeName)}
                             </div>
-                            <span style={{ fontSize: 13 }}>{assigneeName}</span>
+                            <span style={{ fontSize: 13, color: 'var(--kai-primary)', fontWeight: 500 }}>{assigneeName}</span>
                           </div>
                         ) : (
                           <span style={{ fontSize: 12, color: 'var(--kai-text-muted)' }}>Unassigned</span>
@@ -599,7 +606,7 @@ export default function Tasks() {
                           }}
                         >
                           <Calendar size={12} />
-                          {formatDate(task.due_date)}
+                          {formatDate(task.dueDate || task.due_date)}
                           {overdue && <AlertTriangle size={12} />}
                         </span>
                       </td>
