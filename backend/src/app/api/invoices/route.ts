@@ -3,8 +3,7 @@ import prisma from "@/lib/prisma";
 import { jsonOk, jsonError, getAuthUser } from "@/lib/api-utils";
 
 // Roles with full access (view + create + update + delete)
-const INVOICES_FULL_ACCESS_ROLES = ["CEO", "CFO", "ADMIN", "ACCOUNTING"];
-// PRODUCT_OWNER can only view
+const INVOICES_FULL_ACCESS_ROLES = ["CTO", "CEO", "CFO", "ADMIN", "SR_ACCOUNTANT", "JR_ACCOUNTANT", "BRAND_FACE"];
 const INVOICES_VIEW_ROLES = [...INVOICES_FULL_ACCESS_ROLES, "PRODUCT_OWNER"];
 
 export async function GET(req: NextRequest) {
