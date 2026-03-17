@@ -106,12 +106,23 @@ export const expensesApi = {
 // Hiring
 export const hiringApi = {
   listJobs: (params) => api.get('/hiring', { params }),
+  getJob: (jobId) => api.get('/hiring', { params: { jobId } }),
+  getCandidates: (jobId, params) => api.get('/hiring', { params: { jobId, candidates: true, ...params } }),
+  getKanban: (jobId) => api.get('/hiring', { params: { jobId, view: 'kanban' } }),
   createJob: (data) => api.post('/hiring', { action: 'createJob', ...data }),
   addCandidate: (data) => api.post('/hiring', { action: 'addCandidate', ...data }),
+  importCandidates: (data) => api.post('/hiring', { action: 'importCandidates', ...data }),
+  changeStatus: (data) => api.post('/hiring', { action: 'changeStatus', ...data }),
+  addComment: (data) => api.post('/hiring', { action: 'addComment', ...data }),
+  rateCandidate: (data) => api.post('/hiring', { action: 'rateCandidate', ...data }),
   advanceCandidate: (data) => api.post('/hiring', { action: 'advanceCandidate', ...data }),
-  addInterview: (data) => api.post('/hiring', { action: 'addInterview', ...data }),
+  rejectCandidate: (data) => api.post('/hiring', { action: 'rejectCandidate', ...data }),
+  offerCandidate: (data) => api.post('/hiring', { action: 'offerCandidate', ...data }),
+  scheduleInterview: (data) => api.post('/hiring', { action: 'scheduleInterview', ...data }),
   update: (id, data) => api.patch('/hiring', { id, ...data }),
-  delete: (id) => api.delete(`/hiring?id=${id}`),
+  updateCandidate: (id, data) => api.patch('/hiring', { id, type: 'candidate', ...data }),
+  deleteJob: (id) => api.delete(`/hiring?id=${id}&type=job`),
+  deleteCandidate: (id) => api.delete(`/hiring?id=${id}&type=candidate`),
 };
 
 // Clients
