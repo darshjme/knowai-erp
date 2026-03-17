@@ -1,9 +1,10 @@
 import { useState, useEffect } from 'react';
 import { useDispatch } from 'react-redux';
-import { settingsApi } from '../services/api';
+import { settingsApi, profileSetupApi } from '../services/api';
 import {
   User, Shield, Bell, Palette, Save, Eye, EyeOff, Smartphone,
-  Sun, Moon, Monitor, PanelLeft, PanelLeftClose, Loader2, Check
+  Sun, Moon, Monitor, PanelLeft, PanelLeftClose, Loader2, Check,
+  MapPin, Globe, Link2, Target, AlertCircle
 } from 'lucide-react';
 
 const TABS = [
@@ -19,6 +20,11 @@ const TIMEZONES = [
   'Asia/Tokyo', 'Asia/Shanghai', 'Asia/Kolkata', 'Australia/Sydney',
 ];
 
+const COUNTRIES = [
+  'India', 'United States', 'United Kingdom', 'Canada', 'Australia',
+  'Germany', 'France', 'Japan', 'Singapore', 'UAE', 'Other',
+];
+
 export default function Settings() {
   const dispatch = useDispatch();
   const [activeTab, setActiveTab] = useState('profile');
@@ -29,6 +35,16 @@ export default function Settings() {
 
   const [profile, setProfile] = useState({
     firstName: '', lastName: '', email: '', phone: '', department: '', timezone: 'UTC',
+    address: '', city: '', state: '', country: '', pincode: '',
+    alternateEmail: '', about: '', dateOfBirth: '',
+    linkedinUrl: '', twitterUrl: '', githubUrl: '', instagramUrl: '', websiteUrl: '',
+    skills: '', companyEmail: '',
+  });
+
+  const [profileStatus, setProfileStatus] = useState({
+    profileComplete: false,
+    completionPercent: 0,
+    daysRemaining: null,
   });
 
   const [passwords, setPasswords] = useState({ current: '', newPass: '', confirm: '' });
@@ -56,6 +72,43 @@ export default function Settings() {
       if (s?.profile) setProfile(prev => ({ ...prev, ...s.profile }));
       if (s?.firstName) setProfile(prev => ({ ...prev, firstName: s.firstName, lastName: s.lastName || '', email: s.email || '', phone: s.phone || '', department: s.department || '', timezone: s.timezone || 'UTC' }));
       if (s?.twoFactorEnabled !== undefined) setTwoFactorEnabled(s.twoFactorEnabled);
+
+      // Fetch profile-setup status for additional fields
+      try {
+        const psRes = await profileSetupApi.getStatus();
+        const psData = psRes.data || psRes;
+        setProfileStatus({
+          profileComplete: psData.profileComplete || false,
+          completionPercent: psData.completionPercent || 0,
+          daysRemaining: psData.daysRemaining,
+        });
+        const p = psData.profile;
+        if (p) {
+          setProfile(prev => ({
+            ...prev,
+            firstName: p.firstName || prev.firstName,
+            lastName: p.lastName || prev.lastName,
+            email: p.email || prev.email,
+            companyEmail: p.companyEmail || prev.companyEmail,
+            phone: p.phone || prev.phone,
+            department: p.department || prev.department,
+            dateOfBirth: p.dateOfBirth ? p.dateOfBirth.split('T')[0] : prev.dateOfBirth,
+            address: p.address || prev.address,
+            city: p.city || prev.city,
+            state: p.state || prev.state,
+            country: p.country || prev.country,
+            pincode: p.pincode || prev.pincode,
+            alternateEmail: p.alternateEmail || prev.alternateEmail,
+            about: p.about || prev.about,
+            skills: p.skills || prev.skills,
+            linkedinUrl: p.linkedinUrl || prev.linkedinUrl,
+            twitterUrl: p.twitterUrl || prev.twitterUrl,
+            githubUrl: p.githubUrl || prev.githubUrl,
+            instagramUrl: p.instagramUrl || prev.instagramUrl,
+            websiteUrl: p.websiteUrl || p.portfolioUrl || prev.websiteUrl,
+          }));
+        }
+      } catch {}
 
       // Fetch preferences from /settings/preferences
       try {
@@ -88,9 +141,43 @@ export default function Settings() {
 
   const handleSaveProfile = async (e) => {
     e.preventDefault();
+
+    // Validate mandatory fields
+    const mandatory = ['firstName', 'lastName', 'phone', 'address', 'city', 'country', 'about', 'alternateEmail'];
+    const missing = mandatory.filter(f => !profile[f] || profile[f].trim() === '');
+    if (missing.length > 0) {
+      showMessage('error', `Please fill all required fields: ${missing.join(', ')}`);
+      return;
+    }
+
+    if (profile.about && profile.about.trim().length < 50) {
+      showMessage('error', 'About/Bio must be at least 50 characters');
+      return;
+    }
+
     setSaving(true);
     try {
-      await settingsApi.update({ section: 'profile', ...profile });
+      // Save to profile-setup API
+      const saveData = { ...profile };
+      delete saveData.email;
+      delete saveData.companyEmail;
+      delete saveData.timezone;
+      await profileSetupApi.save(saveData);
+
+      // Also save to settings API for basic fields
+      await settingsApi.update({ section: 'profile', firstName: profile.firstName, lastName: profile.lastName, phone: profile.phone, department: profile.department, timezone: profile.timezone });
+
+      // Refresh status
+      try {
+        const psRes = await profileSetupApi.getStatus();
+        const psData = psRes.data || psRes;
+        setProfileStatus({
+          profileComplete: psData.profileComplete || false,
+          completionPercent: psData.completionPercent || 0,
+          daysRemaining: psData.daysRemaining,
+        });
+      } catch {}
+
       showMessage('success', 'Profile updated successfully');
     } catch (err) {
       showMessage('error', err.response?.data?.error || 'Failed to update profile');
@@ -153,14 +240,12 @@ export default function Settings() {
     const sb = newSidebar || sidebarStyle;
     if (newTheme) {
       setTheme(t);
-      // Apply theme immediately to DOM
       document.documentElement.setAttribute('data-theme', t);
       localStorage.setItem('knowai-theme', t);
       dispatch({ type: 'UI_SET_THEME', payload: t });
     }
     if (newSidebar) {
       setSidebarStyle(sb);
-      // Sync Redux sidebar state with the chosen style
       if (sb === 'collapsed') {
         dispatch({ type: 'UI_SET_SIDEBAR_COLLAPSED', payload: true });
       } else {
@@ -174,6 +259,19 @@ export default function Settings() {
       showMessage('error', err.response?.data?.error || 'Failed to update appearance');
     }
   };
+
+  const RequiredMark = () => <span style={{ color: '#DC2626', marginLeft: 2 }}>*</span>;
+
+  const SectionHeader = ({ icon: Icon, title, subtitle, optional }) => (
+    <div style={{ marginBottom: 20, marginTop: 8 }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
+        <Icon size={18} style={{ color: '#146DF7' }} />
+        <h4 style={{ fontSize: 15, fontWeight: 600, color: '#10222F', margin: 0 }}>{title}</h4>
+        {optional && <span style={{ fontSize: 11, color: '#5B6B76', fontWeight: 500, background: '#F1F5F9', padding: '2px 8px', borderRadius: 8 }}>Optional</span>}
+      </div>
+      {subtitle && <p style={{ fontSize: 12, color: '#5B6B76', margin: '0 0 0 26px' }}>{subtitle}</p>}
+    </div>
+  );
 
   const ToggleSwitch = ({ checked, onChange, label }) => (
     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '14px 0', borderBottom: '1px solid #E8EBED' }}>
@@ -246,6 +344,12 @@ export default function Settings() {
                 }}>
                   <Icon size={18} />
                   {tab.label}
+                  {tab.key === 'profile' && !profileStatus.profileComplete && (
+                    <span style={{
+                      width: 8, height: 8, borderRadius: '50%', background: '#DC2626',
+                      marginLeft: 'auto', flexShrink: 0,
+                    }} />
+                  )}
                 </button>
               );
             })}
@@ -256,25 +360,73 @@ export default function Settings() {
           {activeTab === 'profile' && (
             <div className="kai-card">
               <div className="kai-card-body">
+                {/* Completion Status Bar */}
+                <div style={{
+                  background: profileStatus.profileComplete ? '#F0FDF4' : '#FFFBEB',
+                  border: `1px solid ${profileStatus.profileComplete ? '#BBF7D0' : '#FDE68A'}`,
+                  borderRadius: 10, padding: '14px 18px', marginBottom: 24,
+                  display: 'flex', alignItems: 'center', gap: 14,
+                }}>
+                  {profileStatus.profileComplete
+                    ? <Check size={20} color="#16A34A" />
+                    : <AlertCircle size={20} color="#D97706" />
+                  }
+                  <div style={{ flex: 1 }}>
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 6 }}>
+                      <span style={{ fontSize: 13, fontWeight: 600, color: profileStatus.profileComplete ? '#166534' : '#92400E' }}>
+                        {profileStatus.profileComplete ? 'Profile Complete' : 'Profile Incomplete'}
+                      </span>
+                      <span style={{ fontSize: 12, fontWeight: 600, color: profileStatus.profileComplete ? '#16A34A' : '#D97706' }}>
+                        {profileStatus.completionPercent}%
+                      </span>
+                    </div>
+                    <div style={{ height: 6, borderRadius: 3, background: profileStatus.profileComplete ? '#DCFCE7' : '#FEF3C7', overflow: 'hidden' }}>
+                      <div style={{
+                        width: `${profileStatus.completionPercent}%`, height: '100%', borderRadius: 3,
+                        background: profileStatus.profileComplete ? '#16A34A' : '#D97706',
+                        transition: 'width 0.3s ease',
+                      }} />
+                    </div>
+                    {profileStatus.daysRemaining !== null && !profileStatus.profileComplete && (
+                      <p style={{ fontSize: 11, color: '#92400E', margin: '6px 0 0 0' }}>
+                        {profileStatus.daysRemaining} day{profileStatus.daysRemaining !== 1 ? 's' : ''} remaining to complete your profile
+                      </p>
+                    )}
+                  </div>
+                </div>
+
                 <h3 style={{ fontSize: 18, fontWeight: 600, color: '#10222F', marginBottom: 4 }}>Profile Information</h3>
-                <p style={{ color: '#5B6B76', fontSize: 13, marginBottom: 24 }}>Update your personal details and contact information</p>
+                <p style={{ color: '#5B6B76', fontSize: 13, marginBottom: 24 }}>Update your personal details and contact information. Fields marked with <span style={{ color: '#DC2626' }}>*</span> are mandatory.</p>
+
                 <form onSubmit={handleSaveProfile}>
-                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 20 }}>
+                  {/* Section 1: Personal Information */}
+                  <SectionHeader icon={User} title="Personal Information" subtitle="Basic info about you" />
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 20, marginBottom: 28 }}>
                     <div>
-                      <label className="kai-label">First Name</label>
+                      <label className="kai-label">First Name<RequiredMark /></label>
                       <input className="kai-input" value={profile.firstName} onChange={e => setProfile(p => ({ ...p, firstName: e.target.value }))} required />
                     </div>
                     <div>
-                      <label className="kai-label">Last Name</label>
+                      <label className="kai-label">Last Name<RequiredMark /></label>
                       <input className="kai-input" value={profile.lastName} onChange={e => setProfile(p => ({ ...p, lastName: e.target.value }))} required />
                     </div>
                     <div>
-                      <label className="kai-label">Email Address</label>
-                      <input className="kai-input" type="email" value={profile.email} onChange={e => setProfile(p => ({ ...p, email: e.target.value }))} required />
+                      <label className="kai-label">Company Email</label>
+                      <input className="kai-input" type="email" value={profile.companyEmail || profile.email} disabled style={{ background: '#F8FAFC', color: '#94A3B8', cursor: 'not-allowed' }} />
+                      <span style={{ fontSize: 11, color: '#94A3B8' }}>Auto-generated @knowai.com email</span>
                     </div>
                     <div>
-                      <label className="kai-label">Phone Number</label>
-                      <input className="kai-input" type="tel" value={profile.phone} onChange={e => setProfile(p => ({ ...p, phone: e.target.value }))} placeholder="+1 (555) 000-0000" />
+                      <label className="kai-label">Alternate Email<RequiredMark /></label>
+                      <input className="kai-input" type="email" value={profile.alternateEmail} onChange={e => setProfile(p => ({ ...p, alternateEmail: e.target.value }))} placeholder="personal@example.com" required />
+                      <span style={{ fontSize: 11, color: '#94A3B8' }}>Personal email for account recovery</span>
+                    </div>
+                    <div>
+                      <label className="kai-label">Phone Number<RequiredMark /></label>
+                      <input className="kai-input" type="tel" value={profile.phone} onChange={e => setProfile(p => ({ ...p, phone: e.target.value }))} placeholder="+91 98765 43210" required />
+                    </div>
+                    <div>
+                      <label className="kai-label">Date of Birth</label>
+                      <input className="kai-input" type="date" value={profile.dateOfBirth} onChange={e => setProfile(p => ({ ...p, dateOfBirth: e.target.value }))} />
                     </div>
                     <div>
                       <label className="kai-label">Department</label>
@@ -287,10 +439,91 @@ export default function Settings() {
                       </select>
                     </div>
                   </div>
-                  <div style={{ marginTop: 24, display: 'flex', justifyContent: 'flex-end' }}>
+
+                  {/* Section 2: Address */}
+                  <SectionHeader icon={MapPin} title="Address" subtitle="Your residential address" />
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 20, marginBottom: 28 }}>
+                    <div style={{ gridColumn: '1 / -1' }}>
+                      <label className="kai-label">Address Line<RequiredMark /></label>
+                      <input className="kai-input" value={profile.address} onChange={e => setProfile(p => ({ ...p, address: e.target.value }))} placeholder="123 Main Street, Apt 4B" required />
+                    </div>
+                    <div>
+                      <label className="kai-label">City<RequiredMark /></label>
+                      <input className="kai-input" value={profile.city} onChange={e => setProfile(p => ({ ...p, city: e.target.value }))} placeholder="Mumbai" required />
+                    </div>
+                    <div>
+                      <label className="kai-label">State</label>
+                      <input className="kai-input" value={profile.state} onChange={e => setProfile(p => ({ ...p, state: e.target.value }))} placeholder="Maharashtra" />
+                    </div>
+                    <div>
+                      <label className="kai-label">Country<RequiredMark /></label>
+                      <select className="kai-input" value={profile.country} onChange={e => setProfile(p => ({ ...p, country: e.target.value }))} required>
+                        <option value="">Select country</option>
+                        {COUNTRIES.map(c => <option key={c} value={c}>{c}</option>)}
+                      </select>
+                    </div>
+                    <div>
+                      <label className="kai-label">Pincode</label>
+                      <input className="kai-input" value={profile.pincode} onChange={e => setProfile(p => ({ ...p, pincode: e.target.value }))} placeholder="400001" />
+                    </div>
+                  </div>
+
+                  {/* Section 3: About */}
+                  <SectionHeader icon={User} title="About" subtitle="Tell us about yourself (min 50 characters)" />
+                  <div style={{ marginBottom: 28 }}>
+                    <label className="kai-label">About / Bio<RequiredMark /></label>
+                    <textarea
+                      className="kai-input"
+                      value={profile.about}
+                      onChange={e => setProfile(p => ({ ...p, about: e.target.value }))}
+                      placeholder="Tell us about yourself, your experience, interests, and what drives you..."
+                      required
+                      rows={4}
+                      style={{ resize: 'vertical', minHeight: 100 }}
+                    />
+                    <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 4 }}>
+                      <span style={{ fontSize: 11, color: (profile.about?.length || 0) < 50 ? '#DC2626' : '#16A34A' }}>
+                        {profile.about?.length || 0} / 50 minimum characters
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Section 4: Social Profiles */}
+                  <SectionHeader icon={Link2} title="Social Profiles" subtitle="Connect your social accounts" optional />
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 20, marginBottom: 28 }}>
+                    <div>
+                      <label className="kai-label">LinkedIn URL</label>
+                      <input className="kai-input" value={profile.linkedinUrl} onChange={e => setProfile(p => ({ ...p, linkedinUrl: e.target.value }))} placeholder="https://linkedin.com/in/username" />
+                    </div>
+                    <div>
+                      <label className="kai-label">Twitter / X URL</label>
+                      <input className="kai-input" value={profile.twitterUrl} onChange={e => setProfile(p => ({ ...p, twitterUrl: e.target.value }))} placeholder="https://x.com/username" />
+                    </div>
+                    <div>
+                      <label className="kai-label">GitHub URL</label>
+                      <input className="kai-input" value={profile.githubUrl} onChange={e => setProfile(p => ({ ...p, githubUrl: e.target.value }))} placeholder="https://github.com/username" />
+                    </div>
+                    <div>
+                      <label className="kai-label">Instagram URL</label>
+                      <input className="kai-input" value={profile.instagramUrl} onChange={e => setProfile(p => ({ ...p, instagramUrl: e.target.value }))} placeholder="https://instagram.com/username" />
+                    </div>
+                    <div>
+                      <label className="kai-label">Portfolio / Website URL</label>
+                      <input className="kai-input" value={profile.websiteUrl} onChange={e => setProfile(p => ({ ...p, websiteUrl: e.target.value }))} placeholder="https://yoursite.com" />
+                    </div>
+                  </div>
+
+                  {/* Section 5: Skills */}
+                  <SectionHeader icon={Target} title="Skills" subtitle="Your professional skills (comma separated)" optional />
+                  <div style={{ marginBottom: 28 }}>
+                    <label className="kai-label">Skills</label>
+                    <input className="kai-input" value={profile.skills} onChange={e => setProfile(p => ({ ...p, skills: e.target.value }))} placeholder="React, Node.js, Figma, Python, etc." />
+                  </div>
+
+                  <div style={{ marginTop: 24, display: 'flex', justifyContent: 'flex-end', gap: 12 }}>
                     <button type="submit" className="kai-btn kai-btn-primary" disabled={saving}>
                       {saving ? <Loader2 size={16} style={{ animation: 'spin 1s linear infinite' }} /> : <Save size={16} />}
-                      <span style={{ marginLeft: 6 }}>{saving ? 'Saving...' : 'Save Changes'}</span>
+                      <span style={{ marginLeft: 6 }}>{saving ? 'Saving...' : 'Save Profile'}</span>
                     </button>
                   </div>
                 </form>

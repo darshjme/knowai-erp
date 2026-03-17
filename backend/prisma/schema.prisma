@@ -210,6 +210,28 @@ model User {
   secretAnswer      String?  // bcrypt hashed
   companyEmail      String?  @unique // auto-generated: firstname.lastname@knowai.com
 
+  // Profile completion
+  profileComplete     Boolean   @default(false)
+  profileDeadline     DateTime? // 14 days from account creation
+  accountDisabled     Boolean   @default(false)
+  accountDisabledAt   DateTime?
+  disableReason       String?
+
+  // Required profile fields
+  address             String?
+  city                String?
+  state               String?
+  country             String?
+  pincode             String?
+  alternateEmail      String?
+  about               String?   // Bio/about me
+
+  // Social profiles
+  twitterUrl          String?
+  githubUrl           String?
+  instagramUrl        String?
+  websiteUrl          String?
+
   chatMuted    Boolean   @default(false)
   chatMutedAt  DateTime?
   chatMutedBy  String?

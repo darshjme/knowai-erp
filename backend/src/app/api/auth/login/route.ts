@@ -186,6 +186,24 @@ export async function POST(req: NextRequest) {
       return jsonError("Invalid email or password", 401);
     }
 
+    // Check if account is already disabled
+    if (user.accountDisabled) {
+      return jsonError("Your account has been disabled due to incomplete profile. Contact HR.", 403);
+    }
+
+    // Check profile deadline — if past deadline and profile not complete, disable account
+    if (user.profileDeadline && !user.profileComplete && new Date() > new Date(user.profileDeadline)) {
+      await prisma.user.update({
+        where: { id: user.id },
+        data: {
+          accountDisabled: true,
+          accountDisabledAt: new Date(),
+          disableReason: "Profile not completed within 14-day deadline",
+        },
+      });
+      return jsonError("Your account has been disabled due to incomplete profile. Contact HR.", 403);
+    }
+
     // Successful login — clear failed attempt counters
     clearFailedAttempts(`ip:${ip}`);
     clearFailedAttempts(`email:${email.toLowerCase()}`);
@@ -217,6 +235,8 @@ export async function POST(req: NextRequest) {
         user: {
           ...userWithoutPassword,
           onboardingComplete: user.onboardingComplete,
+          profileComplete: user.profileComplete,
+          profileDeadline: user.profileDeadline,
           permissions,
         },
       },

@@ -35,8 +35,13 @@ export default function Login() {
         navigate('/dashboard');
       }
     } catch (err) {
-      const msg = err.response?.data?.error || err.response?.data?.message || err.message || 'Invalid credentials';
-      setError(msg);
+      const status = err.response?.status;
+      const serverMsg = err.response?.data?.error || err.response?.data?.message || err.message || 'Invalid credentials';
+      if (status === 403 && serverMsg.toLowerCase().includes('disabled')) {
+        setError('Your account has been disabled due to incomplete profile. Contact HR.');
+      } else {
+        setError(serverMsg);
+      }
     } finally {
       setLoading(false);
     }

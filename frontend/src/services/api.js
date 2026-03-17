@@ -238,6 +238,12 @@ export const reportsApi = {
   getAnalytics: (params) => api.get('/analytics', { params }),
 };
 
+// Profile Setup
+export const profileSetupApi = {
+  getStatus: () => api.get('/profile-setup'),
+  save: (data) => api.post('/profile-setup', data),
+};
+
 // Settings
 export const settingsApi = {
   get: () => api.get('/settings'),

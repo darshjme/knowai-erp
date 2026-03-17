@@ -16,6 +16,8 @@ export async function GET(req: NextRequest) {
       success: true,
       data: {
         onboardingComplete: authUser.onboardingComplete,
+        profileComplete: authUser.profileComplete,
+        profileDeadline: authUser.profileDeadline,
         dateOfBirth: authUser.dateOfBirth,
         bio: authUser.bio,
         phone: authUser.phone,
@@ -24,6 +26,17 @@ export async function GET(req: NextRequest) {
         secretQuestion: authUser.secretQuestion,
         resumeUrl: authUser.resumeUrl,
         companyEmail: authUser.companyEmail,
+        address: authUser.address,
+        city: authUser.city,
+        state: authUser.state,
+        country: authUser.country,
+        pincode: authUser.pincode,
+        alternateEmail: authUser.alternateEmail,
+        about: authUser.about,
+        twitterUrl: authUser.twitterUrl,
+        githubUrl: authUser.githubUrl,
+        instagramUrl: authUser.instagramUrl,
+        websiteUrl: authUser.websiteUrl,
       },
     });
   } catch (error) {
@@ -48,6 +61,17 @@ export async function POST(req: NextRequest) {
     let department: string | undefined;
     let designation: string | undefined;
     let resumeFile: File | null = null;
+    let address: string | undefined;
+    let city: string | undefined;
+    let state: string | undefined;
+    let country: string | undefined;
+    let pincode: string | undefined;
+    let alternateEmail: string | undefined;
+    let about: string | undefined;
+    let twitterUrl: string | undefined;
+    let githubUrl: string | undefined;
+    let instagramUrl: string | undefined;
+    let websiteUrl: string | undefined;
 
     if (contentType.includes("multipart/form-data")) {
       const formData = await req.formData();
@@ -59,6 +83,17 @@ export async function POST(req: NextRequest) {
       department = formData.get("department") as string | undefined;
       designation = formData.get("designation") as string | undefined;
       resumeFile = formData.get("resume") as File | null;
+      address = formData.get("address") as string | undefined;
+      city = formData.get("city") as string | undefined;
+      state = formData.get("state") as string | undefined;
+      country = formData.get("country") as string | undefined;
+      pincode = formData.get("pincode") as string | undefined;
+      alternateEmail = formData.get("alternateEmail") as string | undefined;
+      about = formData.get("about") as string | undefined;
+      twitterUrl = formData.get("twitterUrl") as string | undefined;
+      githubUrl = formData.get("githubUrl") as string | undefined;
+      instagramUrl = formData.get("instagramUrl") as string | undefined;
+      websiteUrl = formData.get("websiteUrl") as string | undefined;
     } else {
       const body = await req.json();
       dateOfBirth = body.dateOfBirth;
@@ -68,6 +103,17 @@ export async function POST(req: NextRequest) {
       phone = body.phone;
       department = body.department;
       designation = body.designation;
+      address = body.address;
+      city = body.city;
+      state = body.state;
+      country = body.country;
+      pincode = body.pincode;
+      alternateEmail = body.alternateEmail;
+      about = body.about;
+      twitterUrl = body.twitterUrl;
+      githubUrl = body.githubUrl;
+      instagramUrl = body.instagramUrl;
+      websiteUrl = body.websiteUrl;
     }
 
     // Validate required fields
@@ -122,6 +168,31 @@ export async function POST(req: NextRequest) {
     if (department) updateData.department = department;
     if (designation) updateData.designation = designation;
     if (resumeUrl) updateData.resumeUrl = resumeUrl;
+    if (address) updateData.address = address;
+    if (city) updateData.city = city;
+    if (state) updateData.state = state;
+    if (country) updateData.country = country;
+    if (pincode) updateData.pincode = pincode;
+    if (alternateEmail) updateData.alternateEmail = alternateEmail;
+    if (about) updateData.about = about;
+    if (twitterUrl) updateData.twitterUrl = twitterUrl;
+    if (githubUrl) updateData.githubUrl = githubUrl;
+    if (instagramUrl) updateData.instagramUrl = instagramUrl;
+    if (websiteUrl) updateData.websiteUrl = websiteUrl;
+
+    // Check if all mandatory profile fields are filled to mark profileComplete
+    const updatedFirstName = authUser.firstName;
+    const updatedLastName = authUser.lastName;
+    const updatedPhone = phone || authUser.phone;
+    const updatedAddress = address || authUser.address;
+    const updatedCity = city || authUser.city;
+    const updatedCountry = country || authUser.country;
+    const updatedAbout = about || authUser.about;
+    const updatedAltEmail = alternateEmail || authUser.alternateEmail;
+
+    if (updatedFirstName && updatedLastName && updatedPhone && updatedAddress && updatedCity && updatedCountry && updatedAbout && updatedAltEmail) {
+      updateData.profileComplete = true;
+    }
 
     const updatedUser = await prisma.user.update({
       where: { id: authUser.id },
