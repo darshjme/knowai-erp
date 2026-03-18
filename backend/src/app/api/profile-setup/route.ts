@@ -97,6 +97,7 @@ export async function GET(req: NextRequest) {
           state: user.state,
           country: user.country,
           pincode: user.pincode,
+          avatar: user.avatar,
           alternateEmail: user.alternateEmail,
           about: user.about,
           bio: user.bio,
@@ -132,7 +133,7 @@ export async function POST(req: NextRequest) {
       "firstName", "lastName", "phone", "address", "city", "state",
       "country", "pincode", "alternateEmail", "about", "bio", "skills",
       "linkedinUrl", "twitterUrl", "githubUrl", "instagramUrl", "websiteUrl",
-      "portfolioUrl", "department", "designation",
+      "portfolioUrl", "department", "designation", "avatar",
     ];
 
     for (const field of stringFields) {

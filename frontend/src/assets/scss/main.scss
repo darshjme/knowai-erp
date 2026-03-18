@@ -59,12 +59,32 @@
   --kai-sidebar-bg: #030D14;
   --kai-header-bg: #10222F;
   --kai-text: #F2F2F2;
-  --kai-text-secondary: #A6B5BF;
-  --kai-text-muted: #5B6B76;
+  --kai-text-secondary: #C5D0DA;
+  --kai-text-muted: #8A9AAA;
   --kai-border: #232E35;
   --kai-border-light: #1A2630;
   --kai-shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.3);
   --kai-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
+
+  // Fix React Bootstrap components in dark mode
+  .modal-content, .offcanvas { background: var(--kai-surface); color: var(--kai-text); border-color: var(--kai-border); }
+  .modal-header, .offcanvas-header { border-color: var(--kai-border); color: var(--kai-text); }
+  .modal-footer { border-color: var(--kai-border); }
+  .form-control, .form-select { background: var(--kai-bg); color: var(--kai-text); border-color: var(--kai-border); &:focus { background: var(--kai-surface); color: var(--kai-text); } }
+  .form-check-label { color: var(--kai-text); }
+  .btn-close { filter: invert(1); }
+  .dropdown-menu { background: var(--kai-surface); border-color: var(--kai-border); }
+  .dropdown-item { color: var(--kai-text); &:hover { background: var(--kai-surface-hover); color: var(--kai-text); } }
+  .table { color: var(--kai-text); --bs-table-bg: transparent; }
+  .table > :not(caption) > * > * { color: var(--kai-text); background: transparent; border-color: var(--kai-border); }
+  .nav-tabs { border-color: var(--kai-border); }
+  .nav-tabs .nav-link { color: var(--kai-text-muted); &.active { background: var(--kai-surface); color: var(--kai-text); border-color: var(--kai-border) var(--kai-border) var(--kai-surface); } }
+  .card { background: var(--kai-surface); border-color: var(--kai-border); color: var(--kai-text); }
+  .card-header, .card-footer { background: var(--kai-bg); border-color: var(--kai-border); }
+  input, select, textarea { color: var(--kai-text); }
+  .text-dark { color: var(--kai-text) !important; }
+  .bg-light { background: var(--kai-bg) !important; }
+  h1, h2, h3, h4, h5, h6 { color: var(--kai-text); }
 }
 
 // ── Base ───────────────────────────────────────────────

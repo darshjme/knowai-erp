@@ -375,7 +375,7 @@ export async function PUT(req: NextRequest) {
           password: hashed,
           firstName,
           lastName,
-          role: role as "ADMIN" | "HR" | "PROJECT_MANAGER" | "TEAM_MANAGER" | "USER" | "DRIVER",
+          role: role as any,
           department: department || null,
           workspaceId: workspace.id,
           status: "ONLINE",
