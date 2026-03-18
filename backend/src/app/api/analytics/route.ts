@@ -283,7 +283,7 @@ async function buildProductAnalytics(workspaceId: string, dateFrom: Date | undef
   // Client engagement: tasks and projects per client
   const clientMap: Record<string, { projects: number; tasks: number; completed: number; avgProgress: number; progressSum: number }> = {};
   for (const p of projects) {
-    const clientName = p.client?.name || "Internal";
+    const clientName = (p as any).client?.name || "Internal";
     if (!clientMap[clientName]) clientMap[clientName] = { projects: 0, tasks: 0, completed: 0, avgProgress: 0, progressSum: 0 };
     clientMap[clientName].projects++;
     clientMap[clientName].tasks += p.tasks.length;
@@ -304,7 +304,7 @@ async function buildProductAnalytics(workspaceId: string, dateFrom: Date | undef
   return {
     kpis: {
       totalProjects: projects.length,
-      activeProjects: projects.filter((p) => p.status === "IN_PROGRESS").length,
+      activeProjects: projects.filter((p) => (p.status as string) === "IN_PROGRESS" || (p.status as string) === "ACTIVE").length,
       avgProgress: projects.length > 0 ? Math.round(projects.reduce((s, p) => s + p.progress, 0) / projects.length) : 0,
       totalTasks: allTasks.length,
       completedTasks: allTasks.filter((t) => t.status === "COMPLETED").length,

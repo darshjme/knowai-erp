@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
-import { useParams } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
-import { teamApi } from '../services/api';
+import { teamApi, chatApi } from '../services/api';
 import { Mail, Phone, MapPin, Calendar, Briefcase, Award, Globe, Linkedin, Target, Clock, Star, FileText, MessageCircle, Brain } from 'lucide-react';
 import { ROLE_LABELS, ROLE_COLORS } from '../utils/roleConfig';
 import VerifiedBadge from '../components/ui/VerifiedBadge';
@@ -28,9 +28,11 @@ const PERSONALITY_DESCRIPTIONS = {
 export default function UserProfile() {
   const { id } = useParams();
   const dispatch = useDispatch();
+  const navigate = useNavigate();
   const { user: currentUser } = useSelector(s => s.auth);
   const [profile, setProfile] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [startingChat, setStartingChat] = useState(false);
 
   const userId = id || currentUser?.id;
   const isOwnProfile = !id || id === currentUser?.id;
@@ -54,6 +56,19 @@ export default function UserProfile() {
       if (isOwnProfile && currentUser) setProfile(currentUser);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleStartChat = async () => {
+    try {
+      setStartingChat(true);
+      const res = await chatApi.createRoom({ type: 'dm', memberIds: [userId] });
+      const room = res.data?.data || res.data;
+      navigate(`/chat?room=${room.id}`);
+    } catch {
+      navigate('/chat');
+    } finally {
+      setStartingChat(false);
     }
   };
 
@@ -113,8 +128,8 @@ export default function UserProfile() {
             </div>
             {!isOwnProfile && (
               <div style={{ display: 'flex', gap: 8 }}>
-                <button className="kai-btn kai-btn-primary kai-btn-sm" onClick={() => window.location.href = '/chat'}>
-                  <MessageCircle size={14} /> Message
+                <button className="kai-btn kai-btn-primary kai-btn-sm" onClick={handleStartChat} disabled={startingChat}>
+                  <MessageCircle size={14} /> {startingChat ? 'Opening...' : 'Message'}
                 </button>
               </div>
             )}

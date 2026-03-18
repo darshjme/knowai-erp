@@ -39,11 +39,11 @@ export async function GET(req: NextRequest) {
       const [invoiceCount, revenueAgg, pendingAgg] = await Promise.all([
         prisma.invoice.count(),
         prisma.invoice.aggregate({ _sum: { total: true }, where: { status: "PAID" } }),
-        prisma.invoice.aggregate({ _sum: { total: true }, where: { status: "PENDING" } }),
+        prisma.invoice.aggregate({ _sum: { total: true }, where: { status: "PENDING" as any } }),
       ]);
       totalInvoices = invoiceCount;
-      revenue = revenueAgg._sum.total?.toNumber?.() ?? Number(revenueAgg._sum.total ?? 0);
-      pendingPayments = pendingAgg._sum.total?.toNumber?.() ?? Number(pendingAgg._sum.total ?? 0);
+      revenue = Number(revenueAgg._sum.total ?? 0);
+      pendingPayments = Number(pendingAgg._sum.total ?? 0);
     } catch {
       // Invoice table may not have data
     }
@@ -89,7 +89,7 @@ export async function GET(req: NextRequest) {
       totalClients = clientCount;
       totalLeads = leadCount;
       totalExpenses = expenseCount;
-      expenseTotal = expenseAgg._sum.amount?.toNumber?.() ?? Number(expenseAgg._sum.amount ?? 0);
+      expenseTotal = Number(expenseAgg._sum.amount ?? 0);
     } catch {
       // Tables may not exist
     }

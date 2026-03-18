@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
+import { useSearchParams } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import { chatApi, filesApi } from '../services/api';
 import VerifiedBadge from '../components/ui/VerifiedBadge';
@@ -79,6 +80,7 @@ function renderMessageText(text) {
 export default function Chat() {
   const dispatch = useDispatch();
   const currentUser = useSelector((s) => s.auth.user);
+  const [searchParams] = useSearchParams();
   const messagesEndRef = useRef(null);
   const fileInputRef = useRef(null);
 
@@ -116,6 +118,18 @@ export default function Chat() {
     }
     return () => { if (pollRef.current) clearInterval(pollRef.current); };
   }, [selectedRoom]);
+
+  // Auto-select room from URL param ?room=<id>
+  useEffect(() => {
+    const roomId = searchParams.get('room');
+    if (roomId && rooms.length > 0 && !selectedRoom) {
+      const found = rooms.find(r => (r._id || r.id) === roomId);
+      if (found) {
+        setSelectedRoom(found);
+        setMobileShowMessages(true);
+      }
+    }
+  }, [rooms, searchParams]);
 
   const fetchRooms = async () => {
     try {
