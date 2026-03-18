@@ -19,6 +19,7 @@ import {
   AlertCircle,
   Activity,
   ArrowRight,
+  Shield,
 } from 'lucide-react';
 import { dashboardApi } from '../services/api';
 import AccountabilityWidget from '../components/dashboard/AccountabilityWidget';
@@ -31,6 +32,7 @@ const STAT_CARD_CONFIG = [
   { key: 'revenue', label: 'Revenue', icon: DollarSign, color: '#16A34A', bg: '#E8F9EF', format: 'currency', widget: 'revenue' },
   { key: 'pendingLeaves', label: 'Pending Leaves', icon: CalendarOff, color: '#CB3939', bg: '#FDECEC', widget: 'leaves' },
   { key: 'expensesThisMonth', label: 'Expenses This Month', icon: Receipt, color: '#2563EB', bg: '#EBF3FF', format: 'currency', widget: 'expenses' },
+  { key: 'pendingVerifications', label: 'Pending Verifications', icon: Shield, color: '#7C3AED', bg: '#F3EAFF', widget: 'team' },
 ];
 
 function formatValue(value, format) {
@@ -78,6 +80,7 @@ export default function Dashboard() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [stats, setStats] = useState({});
+  const [verificationStatus, setVerificationStatus] = useState(null);
   const [personalityBannerDismissed, setPersonalityBannerDismissed] = useState(false);
   const [revenueChart, setRevenueChart] = useState([]);
   const [taskDistribution, setTaskDistribution] = useState([]);
@@ -129,6 +132,7 @@ export default function Dashboard() {
         revenueDelta: d.revenueDelta ?? d.deltas?.revenue ?? null,
         pendingLeavesDelta: d.pendingLeavesDelta ?? d.deltas?.pendingLeaves ?? null,
         expensesThisMonthDelta: d.expensesThisMonthDelta ?? d.deltas?.expenses ?? null,
+        pendingVerifications: d.pendingVerifications ?? 0,
         // Task breakdown
         todayTasks: d.todayTasks || [],
         backlogTasks: d.backlogTasks || [],
@@ -152,6 +156,16 @@ export default function Dashboard() {
     dispatch({ type: 'UI_SET_PAGE_TITLE', payload: 'Dashboard' });
     fetchDashboard();
   }, [dispatch, fetchDashboard]);
+
+  useEffect(() => {
+    fetch('/api/document-verification', { credentials: 'include' })
+      .then(r => r.json())
+      .then(d => {
+        const data = d?.data || d;
+        setVerificationStatus(data);
+      })
+      .catch(() => {});
+  }, []);
 
   // Revenue bar chart config
   const revenueChartOptions = {
@@ -294,6 +308,7 @@ export default function Dashboard() {
   const STAT_NAVIGATE = {
     totalTeam: '/team', activeProjects: '/projects', openTasks: '/tasks',
     revenue: '/invoices', pendingLeaves: '/leaves', expensesThisMonth: '/expenses',
+    pendingVerifications: '/hr-dashboard',
   };
 
   return (
@@ -397,6 +412,26 @@ export default function Dashboard() {
           >
             &times;
           </button>
+        </div>
+      )}
+
+      {/* Identity Verification Banner */}
+      {verificationStatus && !user?.verified && (
+        <div style={{
+          background: 'linear-gradient(135deg, rgba(20,109,247,0.08), rgba(124,58,237,0.08))',
+          border: '1px solid rgba(20,109,247,0.2)',
+          borderRadius: 12, padding: '14px 20px', marginBottom: 20,
+          display: 'flex', alignItems: 'center', gap: 12,
+        }}>
+          <i className="bi bi-shield-check" style={{ fontSize: 24, color: '#146DF7' }} />
+          <div style={{ flex: 1 }}>
+            <div style={{ fontWeight: 600, fontSize: 14, color: 'var(--kai-text)' }}>Verify Your Identity</div>
+            <div style={{ fontSize: 12, color: 'var(--kai-text-muted)' }}>Upload your government ID and PAN card to get verified</div>
+          </div>
+          <button onClick={() => navigate('/settings')} style={{
+            background: '#146DF7', color: '#fff', border: 'none', borderRadius: 8,
+            padding: '6px 16px', fontSize: 13, fontWeight: 600, cursor: 'pointer',
+          }}>Verify Now</button>
         </div>
       )}
 

@@ -1,4 +1,5 @@
 import ExportButtons from '../components/ui/ExportButtons';
+import VerifiedBadge from '../components/ui/VerifiedBadge';
 import { useState, useEffect, useMemo } from 'react';
 import { useDispatch } from 'react-redux';
 import { toast } from 'react-toastify';
@@ -190,6 +191,7 @@ export default function Team() {
                           {member.avatar ? <img src={member.avatar} alt={member.name} /> : initials(member.name)}
                         </div>
                         <span style={{ fontWeight: 600 }}>{member.name}</span>
+                        <VerifiedBadge verified={member.verified} size={14} />
                       </div>
                     </td>
                     <td><span className="kai-badge" style={{ background: `${ROLE_COLORS[member.role] || '#146DF7'}15`, color: ROLE_COLORS[member.role] || '#146DF7' }}>{member.role || 'Member'}</span></td>
@@ -229,7 +231,7 @@ export default function Team() {
                   {member.avatar ? <img src={member.avatar} alt={member.name} /> : initials(member.name)}
                 </div>
 
-                <h6 style={{ margin: '0 0 6px', fontSize: 15, fontWeight: 600, color: 'var(--kai-text)' }}>{member.name}</h6>
+                <h6 style={{ margin: '0 0 6px', fontSize: 15, fontWeight: 600, color: 'var(--kai-text)', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}>{member.name} <VerifiedBadge verified={member.verified} size={14} /></h6>
                 <span className="kai-badge primary" style={{ marginBottom: 10, background: `${ROLE_COLORS[member.role] || '#146DF7'}15`, color: ROLE_COLORS[member.role] || '#146DF7' }}>
                   {member.role || 'Member'}
                 </span>

@@ -108,6 +108,8 @@ export async function GET(req: NextRequest) {
           instagramUrl: user.instagramUrl,
           websiteUrl: user.websiteUrl,
           portfolioUrl: user.portfolioUrl,
+          verified: user.verified,
+          verifiedAt: user.verifiedAt,
         },
       },
     });

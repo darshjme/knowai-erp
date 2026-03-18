@@ -2,6 +2,7 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import { useNavigate, useLocation, Link } from 'react-router-dom';
 import { Search, Bell, Moon, Sun, Menu, LogOut, ChevronRight, Home, Megaphone } from 'lucide-react';
+import VerifiedBadge from '../ui/VerifiedBadge';
 import { authApi, notificationsApi } from '../../services/api';
 import { Dropdown } from 'react-bootstrap';
 
@@ -246,7 +247,7 @@ export default function Header() {
         </Dropdown.Toggle>
         <Dropdown.Menu style={{ minWidth: 200, borderRadius: 'var(--kai-radius-lg)', border: '1px solid var(--kai-border)', boxShadow: 'var(--kai-shadow-lg)' }}>
           <div style={{ padding: '12px 16px', borderBottom: '1px solid var(--kai-border)' }}>
-            <div style={{ fontWeight: 600, fontSize: 14 }}>{user?.firstName} {user?.lastName}</div>
+            <div style={{ fontWeight: 600, fontSize: 14, display: 'flex', alignItems: 'center', gap: 6 }}>{user?.firstName} {user?.lastName} <VerifiedBadge verified={user?.verified} size={14} /></div>
             <div style={{ fontSize: 12, color: 'var(--kai-text-muted)' }}>{user?.email}</div>
             <div className="kai-badge primary" style={{ marginTop: 6, fontSize: 10 }}>{user?.role}</div>
           </div>

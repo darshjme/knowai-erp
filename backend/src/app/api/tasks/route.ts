@@ -37,6 +37,7 @@ export async function GET(req: NextRequest) {
     const view = searchParams.get("view"); // "my" | "team" | "blocked" | "calendar"
     const sortBy = searchParams.get("sortBy"); // "title" | "priority" | "dueDate" | "createdAt" | "status"
     const sortDir = searchParams.get("sortDir"); // "asc" | "desc"
+    const taskType = searchParams.get("taskType");
     const dueDateFrom = searchParams.get("dueDateFrom");
     const dueDateTo = searchParams.get("dueDateTo");
     const { page = 1, pageSize = 50 } = getPaginationParams(searchParams, { pageSize: 50 });
@@ -47,6 +48,7 @@ export async function GET(req: NextRequest) {
 
     if (status) where.status = status;
     if (priority) where.priority = priority;
+    if (taskType) where.taskType = taskType;
     if (projectId) where.projectId = projectId;
     if (search) {
       where.OR = [
@@ -335,6 +337,7 @@ export async function POST(req: NextRequest) {
       if (status) updateData.status = status;
       if (assigneeId) updateData.assigneeId = assigneeId;
       if (priority) updateData.priority = priority;
+      if (body.taskType) updateData.taskType = body.taskType;
 
       if (Object.keys(updateData).length === 0) return jsonError("No update fields provided", 400);
 
@@ -435,6 +438,7 @@ export async function POST(req: NextRequest) {
         assigneeId: assigneeId || user.id,
         collaborators: Array.isArray(collaborators) ? collaborators : [],
         projectId,
+        taskType: body.taskType || "REGULAR",
         dueDate: dueDate ? new Date(dueDate) : null,
         createdById: user.id,
         ...(Array.isArray(dependsOn) && dependsOn.length > 0
@@ -541,6 +545,7 @@ export async function PATCH(req: NextRequest) {
     if (description !== undefined) updateData.description = description;
     if (dueDate !== undefined) updateData.dueDate = dueDate ? new Date(dueDate) : null;
     if (collaborators !== undefined && Array.isArray(collaborators)) updateData.collaborators = collaborators;
+    if (body.taskType !== undefined) updateData.taskType = body.taskType;
 
     const task = await prisma.task.update({
       where: { id },

@@ -10,6 +10,7 @@ import {
   Calendar, ArrowUpDown, Copy, Pencil, Check, Upload, User,
 } from 'lucide-react';
 import { hiringApi, teamApi } from '../services/api';
+import VerifiedBadge from '../components/ui/VerifiedBadge';
 
 /* ========================================================================
    CONSTANTS
@@ -351,8 +352,9 @@ function CommentThread({ comments = [], onAddComment, candidateId }) {
               </div>
               <div style={{ flex: 1, minWidth: 0 }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                  <span style={{ fontSize: 12, fontWeight: 600, color: '#374151' }}>
+                  <span style={{ fontSize: 12, fontWeight: 600, color: '#374151', display: 'inline-flex', alignItems: 'center', gap: 4 }}>
                     {c.createdBy || c.author || 'Unknown'}
+                    <VerifiedBadge verified={c.createdByVerified || c.authorVerified} size={13} />
                   </span>
                   <span style={{ fontSize: 11, color: '#9CA3AF' }}>
                     {formatRelative(c.createdAt || c.timestamp)}
@@ -400,7 +402,7 @@ function StatusTimeline({ events = [] }) {
             <div style={{ paddingBottom: isLast ? 0 : 16 }}>
               <p style={{ fontSize: 13, color: '#1F2937', margin: 0 }}>{desc}</p>
               <p style={{ fontSize: 11, color: '#9CA3AF', margin: '2px 0 0' }}>
-                {ev.createdBy && <span style={{ marginRight: 4 }}>{ev.createdBy} &middot;</span>}
+                {ev.createdBy && <span style={{ marginRight: 4, display: 'inline-flex', alignItems: 'center', gap: 3 }}>{ev.createdBy} <VerifiedBadge verified={ev.createdByVerified} size={12} /> &middot;</span>}
                 {formatRelative(ev.createdAt || ev.timestamp)}
               </p>
             </div>

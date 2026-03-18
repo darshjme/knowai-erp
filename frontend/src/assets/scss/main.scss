@@ -563,3 +563,92 @@ html, body { overflow-x: hidden; max-width: 100vw; }
 
 // Kanban columns fit viewport
 .kanban-scroll { overflow-x: auto; -webkit-overflow-scrolling: touch; max-width: 100%; }
+
+// ─── Verified Badge ──────────────────────────────────────
+.verified-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+
+  svg { flex-shrink: 0; }
+}
+
+// ─── Document Verification Cards ─────────────────────────
+.doc-upload-card {
+  border: 2px dashed var(--kai-border);
+  border-radius: var(--kai-radius-lg);
+  padding: 24px;
+  text-align: center;
+  cursor: pointer;
+  transition: var(--kai-transition);
+  background: var(--kai-bg);
+
+  &:hover { border-color: var(--kai-primary); background: rgba(20, 109, 247, 0.03); }
+  &.uploaded { border-style: solid; border-color: var(--kai-success); }
+  &.rejected { border-style: solid; border-color: var(--kai-danger); }
+  &.pending { border-style: solid; border-color: var(--kai-warning); }
+}
+
+// ─── Password Strength Indicator ─────────────────────────
+.password-strength {
+  height: 4px;
+  border-radius: 2px;
+  margin-top: 8px;
+  background: var(--kai-border);
+  overflow: hidden;
+
+  &-bar {
+    height: 100%;
+    border-radius: 2px;
+    transition: width 0.3s ease, background 0.3s ease;
+
+    &.weak { width: 33%; background: var(--kai-danger); }
+    &.medium { width: 66%; background: var(--kai-warning); }
+    &.strong { width: 100%; background: var(--kai-success); }
+  }
+}
+
+// ─── 2FA Backup Codes ────────────────────────────────────
+.backup-codes-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 8px;
+
+  .backup-code {
+    font-family: 'IBM Plex Mono', monospace;
+    padding: 8px 12px;
+    background: var(--kai-bg);
+    border: 1px solid var(--kai-border);
+    border-radius: var(--kai-radius);
+    font-size: 13px;
+    font-weight: 600;
+    letter-spacing: 1px;
+    color: var(--kai-text);
+    text-align: center;
+  }
+}
+
+// ─── Task Type Badges ────────────────────────────────────
+.task-type-badge {
+  @extend .kai-badge;
+  font-size: 10px;
+  padding: 2px 8px;
+
+  &.content-review { background: #EDE9FE; color: #7C3AED; }
+  &.bug { background: #FEE2E2; color: #DC2626; }
+  &.feature { background: #DBEAFE; color: #2563EB; }
+  &.improvement { background: #D1FAE5; color: #059669; }
+  &.regular { background: var(--kai-bg); color: var(--kai-text-muted); }
+}
+
+[data-theme="dark"] {
+  .task-type-badge {
+    &.content-review { background: rgba(124, 58, 237, 0.2); }
+    &.bug { background: rgba(220, 38, 38, 0.2); }
+    &.feature { background: rgba(37, 99, 235, 0.2); }
+    &.improvement { background: rgba(5, 150, 105, 0.2); }
+  }
+
+  .doc-upload-card { background: var(--kai-surface); }
+  .backup-codes-grid .backup-code { background: var(--kai-surface); }
+}

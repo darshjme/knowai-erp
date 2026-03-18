@@ -2,6 +2,7 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { toast } from 'react-toastify';
 import { chatApi, filesApi } from '../services/api';
+import VerifiedBadge from '../components/ui/VerifiedBadge';
 
 const ROOM_ICONS = {
   dm: (
@@ -447,9 +448,10 @@ export default function Chat() {
                         {!showAvatar && !isSent && <div style={{ width: 28 }} />}
                         <div>
                           {showAvatar && !isSent && (
-                            <div style={{ fontSize: 11, fontWeight: 600, color: 'var(--kai-primary)', marginBottom: 2, paddingLeft: 4, cursor: 'pointer' }}
+                            <div style={{ fontSize: 11, fontWeight: 600, color: 'var(--kai-primary)', marginBottom: 2, paddingLeft: 4, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4 }}
                               onClick={() => window.location.href = `/profile/${msg.senderId || msg.sender?.id}`}>
                               {senderName}
+                              <VerifiedBadge verified={msg.sender?.verified} size={14} />
                             </div>
                           )}
                           <div
@@ -635,7 +637,7 @@ export default function Chat() {
                       {m.avatar ? <img src={m.avatar} alt="" style={{ width: '100%', height: '100%', borderRadius: '50%', objectFit: 'cover' }} /> : getInitials(memberName)}
                     </div>
                     <div style={{ flex: 1, minWidth: 0 }}>
-                      <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--kai-text)' }}>{memberName}</div>
+                      <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--kai-text)', display: 'flex', alignItems: 'center', gap: 4 }}>{memberName} <VerifiedBadge verified={m.verified} size={14} /></div>
                       {memberRole && <div style={{ fontSize: 10, color: 'var(--kai-text-muted)' }}>{memberRole}</div>}
                     </div>
                     {m.status === 'ONLINE' && <div style={{ width: 8, height: 8, borderRadius: '50%', background: '#16A34A', flexShrink: 0 }} />}

@@ -4,6 +4,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import { teamApi } from '../services/api';
 import { Mail, Phone, MapPin, Calendar, Briefcase, Award, Globe, Linkedin, Target, Clock, Star, FileText, MessageCircle, Brain } from 'lucide-react';
 import { ROLE_LABELS, ROLE_COLORS } from '../utils/roleConfig';
+import VerifiedBadge from '../components/ui/VerifiedBadge';
 
 const PERSONALITY_DESCRIPTIONS = {
   INTJ: { title: 'The Architect', desc: 'Strategic, independent, determined. Excels at long-range planning and system design.' },
@@ -83,8 +84,9 @@ export default function UserProfile() {
               {profile.avatar ? <img src={profile.avatar} alt="" style={{ width: '100%', height: '100%', borderRadius: '50%', objectFit: 'cover' }} /> : `${profile.firstName?.[0]}${profile.lastName?.[0]}`}
             </div>
             <div style={{ flex: 1 }}>
-              <h2 style={{ margin: 0, fontSize: 26, fontWeight: 800, color: 'var(--kai-text)', letterSpacing: -0.5 }}>
+              <h2 style={{ margin: 0, fontSize: 26, fontWeight: 800, color: 'var(--kai-text)', letterSpacing: -0.5, display: 'flex', alignItems: 'center', gap: 8 }}>
                 {profile.firstName} {profile.lastName}
+                <VerifiedBadge verified={profile?.verified} />
               </h2>
               <p style={{ margin: '4px 0 0', fontSize: 15, color: 'var(--kai-text-secondary)' }}>
                 {profile.designation || roleLabel}

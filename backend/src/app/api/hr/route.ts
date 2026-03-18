@@ -33,6 +33,7 @@ export async function GET(req: NextRequest) {
       pendingLeaves,
       activeComplaints,
       onLeaveToday,
+      pendingVerifications,
       allEmployees,
     ] = await Promise.all([
       prisma.user.count({ where: { workspaceId: user.workspaceId } }),
@@ -115,6 +116,11 @@ export async function GET(req: NextRequest) {
         },
       }),
 
+      // Pending identity document verifications
+      prisma.identityDocument.count({
+        where: { status: "PENDING" },
+      }),
+
       // All employees for directory
       prisma.user.findMany({
         where: { workspaceId: user.workspaceId },
@@ -167,6 +173,7 @@ export async function GET(req: NextRequest) {
         pendingExpenses,
         pendingLeaves,
         activeComplaints,
+        pendingVerifications,
         onLeaveToday: onLeaveToday.map((l) => ({
           id: l.id,
           employee: l.employee,

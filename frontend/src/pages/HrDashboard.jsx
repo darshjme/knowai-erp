@@ -63,6 +63,14 @@ export default function HrDashboard() {
   const [passwordLoading, setPasswordLoading] = useState(false);
   const [actionLoading, setActionLoading] = useState({});
 
+  // Identity Verification state
+  const [verificationDocs, setVerificationDocs] = useState([]);
+  const [verificationLoading, setVerificationLoading] = useState(false);
+  const [verificationExpanded, setVerificationExpanded] = useState(true);
+  const [verificationActionLoading, setVerificationActionLoading] = useState({});
+  const [verificationNoteInput, setVerificationNoteInput] = useState({});
+  const [verificationActiveAction, setVerificationActiveAction] = useState({});
+
   const fetchAnalytics = useCallback(async () => {
     setAnalyticsLoading(true);
     try {
@@ -75,6 +83,44 @@ export default function HrDashboard() {
       setAnalyticsLoading(false);
     }
   }, []);
+
+  const fetchVerificationDocs = useCallback(async () => {
+    setVerificationLoading(true);
+    try {
+      const res = await fetch('/api/document-verification?pending=true', { credentials: 'include' });
+      if (!res.ok) throw new Error('Failed to fetch verification data');
+      const data = await res.json();
+      const d = data?.data || data;
+      setVerificationDocs(d.documents || d || []);
+    } catch (err) {
+      console.error('Verification fetch error:', err);
+    } finally {
+      setVerificationLoading(false);
+    }
+  }, []);
+
+  const handleVerificationAction = async (action, documentId, note) => {
+    const key = `${action}-${documentId}`;
+    setVerificationActionLoading((prev) => ({ ...prev, [key]: true }));
+    try {
+      const res = await fetch('/api/document-verification', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ action, documentId, note }),
+      });
+      if (!res.ok) throw new Error('Action failed');
+      const actionLabels = { approve: 'Approved', reject: 'Rejected', requestResubmit: 'Resubmit requested' };
+      toast.success(actionLabels[action] || 'Action completed');
+      setVerificationActiveAction({});
+      setVerificationNoteInput({});
+      fetchVerificationDocs();
+    } catch (err) {
+      toast.error(err.message || 'Verification action failed');
+    } finally {
+      setVerificationActionLoading((prev) => ({ ...prev, [key]: false }));
+    }
+  };
 
   const fetchPasswordData = useCallback(async () => {
     setPasswordLoading(true);
@@ -154,7 +200,8 @@ export default function HrDashboard() {
     fetchHrData();
     fetchAnalytics();
     fetchPasswordData();
-  }, [dispatch, fetchHrData, fetchAnalytics, fetchPasswordData]);
+    fetchVerificationDocs();
+  }, [dispatch, fetchHrData, fetchAnalytics, fetchPasswordData, fetchVerificationDocs]);
 
   // Employees by Role bar chart
   const roleLabels = employeesByRole.map((r) => r.role || r.label || r.name || '');
@@ -829,6 +876,282 @@ export default function HrDashboard() {
           </div>
         </Col>
       </Row>
+
+      {/* ── Identity Verification Section ────────────────────────────── */}
+      {(() => {
+        const pendingDocs = verificationDocs.filter((d) => d.status === 'pending' || !d.status);
+        const reviewedDocs = verificationDocs.filter((d) => d.status && d.status !== 'pending');
+        const approvedToday = verificationDocs.filter((d) => {
+          if (d.status !== 'approved' || !d.reviewedAt) return false;
+          const rev = new Date(d.reviewedAt);
+          const now = new Date();
+          return rev.toDateString() === now.toDateString();
+        });
+        const totalVerified = verificationDocs.filter((d) => d.status === 'approved').length;
+
+        return (
+          <Row className="g-3 mb-4" style={{ marginTop: 0 }}>
+            <Col xs={12}>
+              <div className="kai-card">
+                <div
+                  className="kai-card-header"
+                  style={{ cursor: 'pointer', userSelect: 'none' }}
+                  onClick={() => setVerificationExpanded((v) => !v)}
+                >
+                  <h6 style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                    <ClipboardCheck size={18} style={{ color: '#2563EB' }} /> Identity Verification
+                  </h6>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                    {pendingDocs.length > 0 && (
+                      <span className="kai-badge warning" style={{ fontSize: 10 }}>
+                        {pendingDocs.length} pending
+                      </span>
+                    )}
+                    <button className="kai-btn kai-btn-outline kai-btn-sm" onClick={(e) => { e.stopPropagation(); fetchVerificationDocs(); }}>
+                      <RotateCcw size={12} /> Refresh
+                    </button>
+                    <span style={{ fontSize: 16, color: 'var(--kai-text-muted)', transition: 'transform 0.2s', transform: verificationExpanded ? 'rotate(0deg)' : 'rotate(-90deg)' }}>
+                      <ArrowRight size={14} style={{ transform: 'rotate(90deg)' }} />
+                    </span>
+                  </div>
+                </div>
+
+                {verificationExpanded && (
+                  <div className="kai-card-body">
+                    {verificationLoading ? (
+                      <div className="flex-center" style={{ padding: 40 }}>
+                        <Spinner size="sm" animation="border" style={{ color: '#146DF7' }} />
+                        <span style={{ marginLeft: 8, color: '#5B6B76', fontSize: 13 }}>Loading verification data...</span>
+                      </div>
+                    ) : (
+                      <>
+                        {/* Stats Row */}
+                        <div style={{ display: 'flex', gap: 16, marginBottom: 24, flexWrap: 'wrap' }}>
+                          <div style={{ flex: 1, minWidth: 140, textAlign: 'center', padding: '14px 12px', background: '#FFF3CD', borderRadius: 10 }}>
+                            <div style={{ fontSize: 28, fontWeight: 800, color: '#856404' }}>{pendingDocs.length}</div>
+                            <div style={{ fontSize: 11, fontWeight: 600, color: '#856404', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Pending Review</div>
+                          </div>
+                          <div style={{ flex: 1, minWidth: 140, textAlign: 'center', padding: '14px 12px', background: '#D4EDDA', borderRadius: 10 }}>
+                            <div style={{ fontSize: 28, fontWeight: 800, color: '#155724' }}>{approvedToday.length}</div>
+                            <div style={{ fontSize: 11, fontWeight: 600, color: '#155724', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Approved Today</div>
+                          </div>
+                          <div style={{ flex: 1, minWidth: 140, textAlign: 'center', padding: '14px 12px', background: '#EBF3FF', borderRadius: 10 }}>
+                            <div style={{ fontSize: 28, fontWeight: 800, color: '#146DF7' }}>{totalVerified}</div>
+                            <div style={{ fontSize: 11, fontWeight: 600, color: '#146DF7', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Total Verified</div>
+                          </div>
+                        </div>
+
+                        {/* Pending Documents Table */}
+                        {pendingDocs.length > 0 && (
+                          <>
+                            <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--kai-text)', marginBottom: 12 }}>
+                              Pending Documents
+                            </div>
+                            <div style={{ overflowX: 'auto', marginBottom: 24 }}>
+                              <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
+                                <thead>
+                                  <tr style={{ borderBottom: '2px solid #E5E7EB' }}>
+                                    {['Employee', 'Document Type', 'Submitted', 'Preview', 'Actions'].map((h) => (
+                                      <th key={h} style={{ padding: '10px 12px', textAlign: 'left', fontSize: 11, fontWeight: 700, color: '#5B6B76', textTransform: 'uppercase', letterSpacing: '0.5px' }}>{h}</th>
+                                    ))}
+                                  </tr>
+                                </thead>
+                                <tbody>
+                                  {pendingDocs.map((doc, idx) => {
+                                    const name = doc.employeeName || doc.name || 'Unknown';
+                                    const docType = doc.documentType || doc.type || 'Document';
+                                    const submitted = doc.submittedDate || doc.submittedAt || doc.createdAt || '';
+                                    const previewUrl = doc.fileUrl || doc.previewUrl || doc.url || '#';
+                                    const docId = doc.id || doc._id || idx;
+                                    const activeAction = verificationActiveAction[docId];
+                                    const noteValue = verificationNoteInput[docId] || '';
+
+                                    return (
+                                      <tr key={docId} style={{ borderBottom: '1px solid #F3F4F6' }}>
+                                        <td style={{ padding: '10px 12px' }}>
+                                          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                                            <div className="kai-avatar" style={{ background: AVATAR_COLORS[idx % AVATAR_COLORS.length], width: 32, height: 32, fontSize: 11 }}>
+                                              {getInitials(name)}
+                                            </div>
+                                            <span style={{ fontWeight: 600, color: 'var(--kai-text)' }}>{name}</span>
+                                          </div>
+                                        </td>
+                                        <td style={{ padding: '10px 12px' }}>
+                                          <span style={{
+                                            padding: '3px 8px',
+                                            borderRadius: 6,
+                                            fontSize: 11,
+                                            fontWeight: 600,
+                                            background: docType === 'Passport' ? '#EBF3FF' : docType === 'Aadhaar' ? '#F3EAFF' : docType === 'PAN Card' ? '#FFF4ED' : '#E8F9EF',
+                                            color: docType === 'Passport' ? '#146DF7' : docType === 'Aadhaar' ? '#8B3FE9' : docType === 'PAN Card' ? '#EA580C' : '#16A34A',
+                                          }}>
+                                            {docType}
+                                          </span>
+                                        </td>
+                                        <td style={{ padding: '10px 12px', fontSize: 12, color: '#5B6B76' }}>
+                                          {submitted ? new Date(submitted).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : '--'}
+                                        </td>
+                                        <td style={{ padding: '10px 12px' }}>
+                                          <a
+                                            href={previewUrl}
+                                            target="_blank"
+                                            rel="noopener noreferrer"
+                                            style={{ fontSize: 12, color: '#146DF7', textDecoration: 'none', fontWeight: 600, display: 'inline-flex', alignItems: 'center', gap: 4 }}
+                                          >
+                                            <ArrowRight size={12} /> View File
+                                          </a>
+                                        </td>
+                                        <td style={{ padding: '10px 12px' }}>
+                                          {!activeAction ? (
+                                            <div style={{ display: 'flex', gap: 6 }}>
+                                              <button
+                                                className="kai-btn kai-btn-sm"
+                                                style={{ fontSize: 11, padding: '4px 10px', background: '#16A34A', color: '#fff', border: 'none', borderRadius: 6 }}
+                                                onClick={() => setVerificationActiveAction((prev) => ({ ...prev, [docId]: 'approve' }))}
+                                              >
+                                                <CheckCircle2 size={12} /> Approve
+                                              </button>
+                                              <button
+                                                className="kai-btn kai-btn-sm"
+                                                style={{ fontSize: 11, padding: '4px 10px', background: '#CB3939', color: '#fff', border: 'none', borderRadius: 6 }}
+                                                onClick={() => setVerificationActiveAction((prev) => ({ ...prev, [docId]: 'reject' }))}
+                                              >
+                                                <AlertCircle size={12} /> Reject
+                                              </button>
+                                              <button
+                                                className="kai-btn kai-btn-sm"
+                                                style={{ fontSize: 11, padding: '4px 10px', background: '#EA580C', color: '#fff', border: 'none', borderRadius: 6 }}
+                                                onClick={() => setVerificationActiveAction((prev) => ({ ...prev, [docId]: 'requestResubmit' }))}
+                                              >
+                                                <RotateCcw size={12} /> Resubmit
+                                              </button>
+                                            </div>
+                                          ) : (
+                                            <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                                              <div style={{ fontSize: 11, fontWeight: 600, color: activeAction === 'approve' ? '#16A34A' : activeAction === 'reject' ? '#CB3939' : '#EA580C', textTransform: 'capitalize' }}>
+                                                {activeAction === 'requestResubmit' ? 'Request Resubmit' : activeAction} - Add a note:
+                                              </div>
+                                              <input
+                                                type="text"
+                                                placeholder="Optional note..."
+                                                value={noteValue}
+                                                onChange={(e) => setVerificationNoteInput((prev) => ({ ...prev, [docId]: e.target.value }))}
+                                                style={{
+                                                  width: '100%',
+                                                  padding: '5px 8px',
+                                                  fontSize: 12,
+                                                  border: '1px solid var(--kai-border, #E5E7EB)',
+                                                  borderRadius: 6,
+                                                  outline: 'none',
+                                                  color: 'var(--kai-text)',
+                                                  background: 'var(--kai-bg, #fff)',
+                                                }}
+                                              />
+                                              <div style={{ display: 'flex', gap: 6 }}>
+                                                <button
+                                                  className="kai-btn kai-btn-sm"
+                                                  style={{
+                                                    fontSize: 11,
+                                                    padding: '4px 10px',
+                                                    background: activeAction === 'approve' ? '#16A34A' : activeAction === 'reject' ? '#CB3939' : '#EA580C',
+                                                    color: '#fff',
+                                                    border: 'none',
+                                                    borderRadius: 6,
+                                                  }}
+                                                  disabled={verificationActionLoading[`${activeAction}-${docId}`]}
+                                                  onClick={() => handleVerificationAction(activeAction, docId, noteValue)}
+                                                >
+                                                  {verificationActionLoading[`${activeAction}-${docId}`] ? (
+                                                    <Spinner size="sm" animation="border" />
+                                                  ) : (
+                                                    'Confirm'
+                                                  )}
+                                                </button>
+                                                <button
+                                                  className="kai-btn kai-btn-outline kai-btn-sm"
+                                                  style={{ fontSize: 11, padding: '4px 10px' }}
+                                                  onClick={() => {
+                                                    setVerificationActiveAction((prev) => { const n = { ...prev }; delete n[docId]; return n; });
+                                                    setVerificationNoteInput((prev) => { const n = { ...prev }; delete n[docId]; return n; });
+                                                  }}
+                                                >
+                                                  Cancel
+                                                </button>
+                                              </div>
+                                            </div>
+                                          )}
+                                        </td>
+                                      </tr>
+                                    );
+                                  })}
+                                </tbody>
+                              </table>
+                            </div>
+                          </>
+                        )}
+                        {pendingDocs.length === 0 && !verificationLoading && (
+                          <div className="flex-center text-muted" style={{ padding: 20, marginBottom: 16, background: '#F9FAFB', borderRadius: 8 }}>
+                            <CheckCircle2 size={16} style={{ marginRight: 8, color: '#16A34A' }} />
+                            No pending verifications. All caught up!
+                          </div>
+                        )}
+
+                        {/* Recently Reviewed */}
+                        {reviewedDocs.length > 0 && (
+                          <>
+                            <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--kai-text)', marginBottom: 12 }}>
+                              Recently Reviewed
+                            </div>
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+                              {reviewedDocs.slice(0, 10).map((doc, idx) => {
+                                const name = doc.employeeName || doc.name || 'Unknown';
+                                const docType = doc.documentType || doc.type || 'Document';
+                                const reviewedAt = doc.reviewedAt || doc.updatedAt || '';
+                                const status = doc.status;
+                                const statusConfig = {
+                                  approved: { bg: '#D4EDDA', color: '#155724', label: 'Approved' },
+                                  rejected: { bg: '#F8D7DA', color: '#721C24', label: 'Rejected' },
+                                  resubmit: { bg: '#FFF3CD', color: '#856404', label: 'Resubmit Requested' },
+                                  requestResubmit: { bg: '#FFF3CD', color: '#856404', label: 'Resubmit Requested' },
+                                };
+                                const sc = statusConfig[status] || { bg: '#E5E7EB', color: '#5B6B76', label: status };
+                                return (
+                                  <div key={doc.id || doc._id || idx} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '8px 12px', background: '#F9FAFB', borderRadius: 8 }}>
+                                    <div className="kai-avatar" style={{ background: AVATAR_COLORS[idx % AVATAR_COLORS.length], width: 28, height: 28, fontSize: 10 }}>
+                                      {getInitials(name)}
+                                    </div>
+                                    <div style={{ flex: 1, minWidth: 0 }}>
+                                      <span style={{ fontSize: 13, fontWeight: 600, color: 'var(--kai-text)' }}>{name}</span>
+                                      <span style={{ fontSize: 12, color: 'var(--kai-text-muted)', marginLeft: 8 }}>{docType}</span>
+                                    </div>
+                                    <span style={{
+                                      padding: '3px 8px',
+                                      borderRadius: 6,
+                                      fontSize: 10,
+                                      fontWeight: 700,
+                                      background: sc.bg,
+                                      color: sc.color,
+                                    }}>
+                                      {sc.label}
+                                    </span>
+                                    <span style={{ fontSize: 11, color: 'var(--kai-text-muted)', flexShrink: 0 }}>
+                                      {reviewedAt ? new Date(reviewedAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : ''}
+                                    </span>
+                                  </div>
+                                );
+                              })}
+                            </div>
+                          </>
+                        )}
+                      </>
+                    )}
+                  </div>
+                )}
+              </div>
+            </Col>
+          </Row>
+        );
+      })()}
     </div>
   );
 }

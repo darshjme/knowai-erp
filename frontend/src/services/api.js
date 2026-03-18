@@ -361,4 +361,22 @@ export const contentWorkspaceApi = {
   delete: (id, type) => api.delete(`/content-workspace?id=${id}${type ? `&type=${type}` : ''}`),
 };
 
+// Document Verification
+export const documentVerificationApi = {
+  list: (params) => api.get('/document-verification', { params }),
+  submit: (data) => api.post('/document-verification', { action: 'submit', ...data }),
+  approve: (id, note) => api.post('/document-verification', { action: 'approve', documentId: id, note }),
+  reject: (id, note) => api.post('/document-verification', { action: 'reject', documentId: id, note }),
+  requestResubmit: (id, note) => api.post('/document-verification', { action: 'requestResubmit', documentId: id, note }),
+  delete: (id) => api.delete(`/document-verification?id=${id}`),
+};
+
+// Password & 2FA
+export const securityApi = {
+  changePassword: (data) => api.post('/auth/change-password', data),
+  get2FAStatus: () => api.get('/auth/two-factor'),
+  enable2FA: () => api.post('/auth/two-factor', { action: 'enable' }),
+  disable2FA: () => api.post('/auth/two-factor', { action: 'disable' }),
+};
+
 export default api;

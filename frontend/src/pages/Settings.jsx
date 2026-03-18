@@ -4,7 +4,7 @@ import { settingsApi, profileSetupApi } from '../services/api';
 import {
   User, Shield, Bell, Palette, Save, Eye, EyeOff, Smartphone,
   Sun, Moon, Monitor, PanelLeft, PanelLeftClose, Loader2, Check,
-  MapPin, Globe, Link2, Target, AlertCircle
+  MapPin, Globe, Link2, Target, AlertCircle, Upload
 } from 'lucide-react';
 
 const TABS = [
@@ -50,6 +50,10 @@ export default function Settings() {
   const [passwords, setPasswords] = useState({ current: '', newPass: '', confirm: '' });
   const [showPasswords, setShowPasswords] = useState({ current: false, newPass: false, confirm: false });
   const [twoFactorEnabled, setTwoFactorEnabled] = useState(false);
+  const [backupCodes, setBackupCodes] = useState([]);
+  const [showBackupModal, setShowBackupModal] = useState(false);
+  const [verificationDocs, setVerificationDocs] = useState([]);
+  const [docUploading, setDocUploading] = useState({});
 
   const [notifications, setNotifications] = useState({
     emailNotifications: true, pushNotifications: true, weeklyDigest: false,
@@ -64,6 +68,12 @@ export default function Settings() {
     dispatch({ type: 'UI_SET_PAGE_TITLE', payload: 'Settings' });
     fetchSettings();
   }, []);
+
+  useEffect(() => {
+    if (activeTab === 'security') {
+      fetchVerificationDocs();
+    }
+  }, [activeTab]);
 
   const fetchSettings = async () => {
     setLoading(true);
@@ -194,39 +204,118 @@ export default function Settings() {
 
   const handleChangePassword = async (e) => {
     e.preventDefault();
-    if (passwords.newPass !== passwords.confirm) {
-      showMessage('error', 'New passwords do not match');
+    if (!passwords.current) {
+      showMessage('error', 'Current password is required');
       return;
     }
     if (passwords.newPass.length < 8) {
       showMessage('error', 'Password must be at least 8 characters');
       return;
     }
+    if (passwords.newPass !== passwords.confirm) {
+      showMessage('error', 'New passwords do not match');
+      return;
+    }
     setSaving(true);
     try {
-      await settingsApi.update({
-        section: 'security', currentPassword: passwords.current, newPassword: passwords.newPass,
+      const res = await fetch('/api/auth/change-password', {
+        method: 'POST',
+        body: JSON.stringify({ currentPassword: passwords.current, newPassword: passwords.newPass }),
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
       });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Failed to change password');
       setPasswords({ current: '', newPass: '', confirm: '' });
       showMessage('success', 'Password changed successfully');
     } catch (err) {
-      showMessage('error', err.response?.data?.error || 'Failed to change password');
+      showMessage('error', err.message || 'Failed to change password');
     } finally {
       setSaving(false);
     }
   };
 
   const handleToggle2FA = async () => {
+    const action = twoFactorEnabled ? 'disable' : 'enable';
     setSaving(true);
     try {
-      await settingsApi.update({ section: 'security', twoFactorEnabled: !twoFactorEnabled });
+      const res = await fetch('/api/auth/two-factor', {
+        method: 'POST',
+        body: JSON.stringify({ action }),
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Failed to update 2FA');
       setTwoFactorEnabled(!twoFactorEnabled);
-      showMessage('success', `Two-factor authentication ${!twoFactorEnabled ? 'enabled' : 'disabled'}`);
+      if (action === 'enable' && data.backupCodes) {
+        setBackupCodes(data.backupCodes);
+        setShowBackupModal(true);
+      }
+      showMessage('success', `Two-factor authentication ${action === 'enable' ? 'enabled' : 'disabled'}`);
     } catch (err) {
-      showMessage('error', err.response?.data?.error || 'Failed to update 2FA');
+      showMessage('error', err.message || 'Failed to update 2FA');
     } finally {
       setSaving(false);
     }
+  };
+
+  const fetchVerificationDocs = async () => {
+    try {
+      const res = await fetch('/api/document-verification', { credentials: 'include' });
+      const data = await res.json();
+      if (res.ok) {
+        const docs = data?.data || data?.documents || (Array.isArray(data) ? data : []);
+        setVerificationDocs(docs);
+      }
+    } catch {}
+  };
+
+  const handleDocUpload = async (docType, file) => {
+    if (!file) return;
+    if (file.size > 10 * 1024 * 1024) {
+      showMessage('error', 'File must be under 10MB');
+      return;
+    }
+    setDocUploading(prev => ({ ...prev, [docType]: true }));
+    try {
+      const fd = new FormData();
+      fd.append('file', file);
+      const uploadRes = await fetch('/api/files', { method: 'POST', body: fd, credentials: 'include' });
+      const uploadData = await uploadRes.json();
+      if (!uploadRes.ok) throw new Error(uploadData.error || 'Upload failed');
+      const fi = uploadData?.data || uploadData;
+      const fileUrl = fi?.url || fi?.fileUrl || `/api/files/serve/${fi?.fileName || file.name}`;
+      const fileName = fi?.originalName || fi?.fileName || file.name;
+      const fileSize = fi?.size || file.size;
+
+      const submitRes = await fetch('/api/document-verification', {
+        method: 'POST',
+        body: JSON.stringify({ action: 'submit', docType, fileName, fileUrl, fileSize }),
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+      });
+      const submitData = await submitRes.json();
+      if (!submitRes.ok) throw new Error(submitData.error || 'Submission failed');
+      showMessage('success', `${docType} submitted for verification`);
+      fetchVerificationDocs();
+    } catch (err) {
+      showMessage('error', err.message || 'Failed to upload document');
+    } finally {
+      setDocUploading(prev => ({ ...prev, [docType]: false }));
+    }
+  };
+
+  const getPasswordStrength = (password) => {
+    if (!password) return { label: '', color: 'transparent', percent: 0 };
+    let score = 0;
+    if (password.length >= 8) score++;
+    if (password.length >= 12) score++;
+    if (/\d/.test(password)) score++;
+    if (/[^A-Za-z0-9]/.test(password)) score++;
+    if (score <= 1) return { label: 'Weak', color: '#DC2626', percent: 33 };
+    if (score <= 2) return { label: 'Medium', color: '#D97706', percent: 66 };
+    return { label: 'Strong', color: '#16A34A', percent: 100 };
   };
 
   const handleSaveNotifications = async () => {
@@ -594,29 +683,56 @@ export default function Settings() {
 
           {activeTab === 'security' && (
             <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
+              {/* Password Change Section */}
               <div className="kai-card">
                 <div className="kai-card-body">
                   <h3 style={{ fontSize: 18, fontWeight: 600, color: 'var(--kai-text)', marginBottom: 4 }}>Change Password</h3>
                   <p style={{ color: 'var(--kai-text-muted)', fontSize: 13, marginBottom: 24 }}>Ensure your account is using a strong, unique password</p>
                   <form onSubmit={handleChangePassword} style={{ maxWidth: 420 }}>
                     <PasswordField label="Current Password" value={passwords.current} onChange={e => setPasswords(p => ({ ...p, current: e.target.value }))} field="current" />
-                    <PasswordField label="New Password" value={passwords.newPass} onChange={e => setPasswords(p => ({ ...p, newPass: e.target.value }))} field="newPass" />
+                    <PasswordField label="New Password (min 8 characters)" value={passwords.newPass} onChange={e => setPasswords(p => ({ ...p, newPass: e.target.value }))} field="newPass" />
+                    {passwords.newPass && (() => {
+                      const strength = getPasswordStrength(passwords.newPass);
+                      return (
+                        <div style={{ marginTop: -12, marginBottom: 20 }}>
+                          <div style={{ height: 4, borderRadius: 2, background: 'var(--kai-border)', overflow: 'hidden', marginBottom: 4 }}>
+                            <div style={{ width: `${strength.percent}%`, height: '100%', borderRadius: 2, background: strength.color, transition: 'width 0.3s ease' }} />
+                          </div>
+                          <span style={{ fontSize: 11, fontWeight: 500, color: strength.color }}>Password strength: {strength.label}</span>
+                        </div>
+                      );
+                    })()}
                     <PasswordField label="Confirm New Password" value={passwords.confirm} onChange={e => setPasswords(p => ({ ...p, confirm: e.target.value }))} field="confirm" />
+                    {passwords.confirm && passwords.newPass !== passwords.confirm && (
+                      <p style={{ fontSize: 12, color: '#DC2626', marginTop: -12, marginBottom: 16 }}>Passwords do not match</p>
+                    )}
                     <button type="submit" className="kai-btn kai-btn-primary" disabled={saving}>
-                      {saving ? 'Updating...' : 'Update Password'}
+                      {saving ? <><Loader2 size={16} style={{ animation: 'spin 1s linear infinite' }} /> <span style={{ marginLeft: 6 }}>Changing...</span></> : 'Change Password'}
                     </button>
                   </form>
                 </div>
               </div>
+
+              {/* Two-Factor Authentication Section */}
               <div className="kai-card">
                 <div className="kai-card-body">
                   <h3 style={{ fontSize: 18, fontWeight: 600, color: 'var(--kai-text)', marginBottom: 4 }}>Two-Factor Authentication</h3>
                   <p style={{ color: 'var(--kai-text-muted)', fontSize: 13, marginBottom: 20 }}>Add an extra layer of security to your account</p>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
-                    <Smartphone size={32} style={{ color: '#146DF7' }} />
+                    <div style={{ width: 48, height: 48, borderRadius: 12, display: 'flex', alignItems: 'center', justifyContent: 'center', background: twoFactorEnabled ? 'rgba(22,163,74,0.1)' : 'var(--kai-bg)' }}>
+                      <Shield size={24} style={{ color: twoFactorEnabled ? '#16A34A' : 'var(--kai-text-muted)' }} />
+                    </div>
                     <div style={{ flex: 1 }}>
-                      <div style={{ fontWeight: 600, fontSize: 14, color: 'var(--kai-text)' }}>
-                        {twoFactorEnabled ? 'Enabled' : 'Disabled'}
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 2 }}>
+                        <span style={{ fontWeight: 600, fontSize: 14, color: 'var(--kai-text)' }}>Two-Factor Authentication</span>
+                        <span className="kai-badge" style={{
+                          fontSize: 11, padding: '2px 8px', borderRadius: 8,
+                          background: twoFactorEnabled ? 'rgba(22,163,74,0.1)' : 'var(--kai-bg)',
+                          color: twoFactorEnabled ? '#16A34A' : 'var(--kai-text-muted)',
+                          fontWeight: 600,
+                        }}>
+                          {twoFactorEnabled ? 'Enabled' : 'Disabled'}
+                        </span>
                       </div>
                       <div style={{ fontSize: 13, color: 'var(--kai-text-muted)' }}>
                         {twoFactorEnabled ? 'Your account is secured with 2FA' : 'Enable 2FA for enhanced security'}
@@ -625,10 +741,165 @@ export default function Settings() {
                     <button onClick={handleToggle2FA}
                       className={`kai-btn ${twoFactorEnabled ? '' : 'kai-btn-primary'}`}
                       disabled={saving}
-                      style={twoFactorEnabled ? { background: '#f8d7da', color: '#721c24', border: 'none' } : {}}>
-                      {twoFactorEnabled ? 'Disable' : 'Enable'} 2FA
+                      style={twoFactorEnabled ? { background: 'rgba(220,38,38,0.1)', color: '#DC2626', border: '1px solid rgba(220,38,38,0.2)' } : {}}>
+                      {saving ? <Loader2 size={16} style={{ animation: 'spin 1s linear infinite' }} /> : (twoFactorEnabled ? 'Disable 2FA' : 'Enable 2FA')}
                     </button>
                   </div>
+                </div>
+              </div>
+
+              {/* Backup Codes Modal */}
+              {showBackupModal && (
+                <div style={{
+                  position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
+                  background: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  zIndex: 9999,
+                }} onClick={() => setShowBackupModal(false)}>
+                  <div className="kai-card" style={{ maxWidth: 480, width: '90%', margin: 20 }} onClick={e => e.stopPropagation()}>
+                    <div className="kai-card-body" style={{ padding: 28 }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 16 }}>
+                        <Shield size={20} style={{ color: '#16A34A' }} />
+                        <h3 style={{ fontSize: 18, fontWeight: 600, color: 'var(--kai-text)', margin: 0 }}>Save Your Backup Codes</h3>
+                      </div>
+                      <p style={{ color: 'var(--kai-text-muted)', fontSize: 13, marginBottom: 20, lineHeight: 1.5 }}>
+                        Store these backup codes in a safe place. You can use them to access your account if you lose your two-factor authentication device. Each code can only be used once.
+                      </p>
+                      <div style={{
+                        background: 'var(--kai-bg)', border: '1px solid var(--kai-border)', borderRadius: 10, padding: 16,
+                        display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, marginBottom: 20,
+                      }}>
+                        {backupCodes.map((code, i) => (
+                          <div key={i} style={{ fontFamily: 'monospace', fontSize: 14, fontWeight: 600, color: 'var(--kai-text)', padding: '4px 0', textAlign: 'center' }}>
+                            {code}
+                          </div>
+                        ))}
+                      </div>
+                      <div style={{ display: 'flex', gap: 12, justifyContent: 'flex-end' }}>
+                        <button
+                          className="kai-btn"
+                          onClick={() => {
+                            const text = backupCodes.join('\n');
+                            navigator.clipboard.writeText(text).then(() => showMessage('success', 'Backup codes copied to clipboard'));
+                          }}
+                          style={{ border: '1px solid var(--kai-border)', background: 'var(--kai-surface)', color: 'var(--kai-text)' }}
+                        >
+                          Copy Codes
+                        </button>
+                        <button className="kai-btn kai-btn-primary" onClick={() => setShowBackupModal(false)}>
+                          I have saved these codes
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Identity Verification Section */}
+              <div className="kai-card">
+                <div className="kai-card-body">
+                  <h3 style={{ fontSize: 18, fontWeight: 600, color: 'var(--kai-text)', marginBottom: 4 }}>Identity Verification</h3>
+                  <p style={{ color: 'var(--kai-text-muted)', fontSize: 13, marginBottom: 20 }}>Verify your identity by uploading official documents</p>
+
+                  {/* Verification Status */}
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 24, padding: '12px 16px', borderRadius: 10, background: 'var(--kai-bg)' }}>
+                    <span style={{ fontSize: 14, fontWeight: 500, color: 'var(--kai-text)' }}>Verification Status:</span>
+                    {verificationDocs.length > 0 && verificationDocs.every(d => d.status === 'Approved') ? (
+                      <span className="kai-badge" style={{ background: 'rgba(22,163,74,0.1)', color: '#16A34A', padding: '4px 12px', borderRadius: 8, fontSize: 12, fontWeight: 600, display: 'flex', alignItems: 'center', gap: 4 }}>
+                        <Check size={14} /> Verified
+                      </span>
+                    ) : (
+                      <span className="kai-badge" style={{ background: 'var(--kai-surface)', color: 'var(--kai-text-muted)', padding: '4px 12px', borderRadius: 8, fontSize: 12, fontWeight: 600 }}>
+                        Not verified
+                      </span>
+                    )}
+                  </div>
+
+                  {/* Document Upload Areas */}
+                  {(() => {
+                    const country = profile.country || 'India';
+                    const TAX_DOCS = {
+                      'India': { type: 'PAN_CARD', label: 'PAN Card', desc: 'Permanent Account Number' },
+                      'United States': { type: 'SSN_CARD', label: 'SSN Card', desc: 'Social Security Number' },
+                      'United Kingdom': { type: 'NI_NUMBER', label: 'NI Number', desc: 'National Insurance Number' },
+                      'Canada': { type: 'SIN_CARD', label: 'SIN Card', desc: 'Social Insurance Number' },
+                      'UAE': { type: 'EMIRATES_ID', label: 'Emirates ID', desc: 'UAE National ID' },
+                      'Singapore': { type: 'NRIC', label: 'NRIC', desc: 'National Registration Identity Card' },
+                      'Australia': { type: 'TFN', label: 'TFN', desc: 'Tax File Number' },
+                    };
+                    const taxDoc = TAX_DOCS[country] || { type: 'TAX_ID', label: 'Tax ID', desc: 'Government tax identification' };
+                    return [
+                      { type: 'PASSPORT', label: 'Government ID', description: 'Passport, National ID, Driver\'s License, or Aadhaar' },
+                      { type: taxDoc.type, label: taxDoc.label, description: taxDoc.desc },
+                    ];
+                  })().map(doc => {
+                    const existingDoc = verificationDocs.find(d => d.docType === doc.type || d.docType === doc.label);
+                    const isUploading = docUploading[doc.type] || docUploading[doc.label];
+                    const statusColors = {
+                      Pending: { bg: 'rgba(217,119,6,0.1)', color: '#D97706' },
+                      Approved: { bg: 'rgba(22,163,74,0.1)', color: '#16A34A' },
+                      Rejected: { bg: 'rgba(220,38,38,0.1)', color: '#DC2626' },
+                      Resubmit: { bg: 'rgba(217,119,6,0.1)', color: '#D97706' },
+                    };
+
+                    return (
+                      <div key={doc.type} style={{
+                        border: '1px solid var(--kai-border)', borderRadius: 12, padding: 20, marginBottom: 16,
+                      }}>
+                        <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap' }}>
+                          <div style={{ flex: 1, minWidth: 200 }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
+                              <span style={{ fontWeight: 600, fontSize: 14, color: 'var(--kai-text)' }}>{doc.label || doc.type}</span>
+                              {existingDoc && (
+                                <span className="kai-badge" style={{
+                                  background: (statusColors[existingDoc.status] || statusColors.Pending).bg,
+                                  color: (statusColors[existingDoc.status] || statusColors.Pending).color,
+                                  padding: '2px 10px', borderRadius: 8, fontSize: 11, fontWeight: 600,
+                                }}>
+                                  {existingDoc.status}
+                                </span>
+                              )}
+                            </div>
+                            <p style={{ fontSize: 12, color: 'var(--kai-text-muted)', margin: 0, marginBottom: 8 }}>{doc.description}</p>
+                            {existingDoc?.fileName && (
+                              <p style={{ fontSize: 12, color: 'var(--kai-text-muted)', margin: '4px 0 0 0' }}>
+                                Uploaded: {existingDoc.fileName}
+                              </p>
+                            )}
+                            {existingDoc?.reviewerNote && (
+                              <p style={{ fontSize: 12, color: (statusColors[existingDoc.status] || statusColors.Pending).color, margin: '6px 0 0 0', fontWeight: 500 }}>
+                                Note: {existingDoc.reviewerNote}
+                              </p>
+                            )}
+                          </div>
+                          <div>
+                            <label style={{ cursor: isUploading ? 'not-allowed' : 'pointer' }}>
+                              <input
+                                type="file"
+                                accept=".pdf,.jpg,.jpeg,.png"
+                                hidden
+                                disabled={isUploading}
+                                onChange={e => {
+                                  handleDocUpload(doc.type, e.target.files?.[0]);
+                                  e.target.value = '';
+                                }}
+                              />
+                              <span className="kai-btn" style={{
+                                display: 'inline-flex', alignItems: 'center', gap: 6,
+                                border: '1px solid var(--kai-border)', background: 'var(--kai-surface)', color: 'var(--kai-text)',
+                                pointerEvents: isUploading ? 'none' : 'auto', opacity: isUploading ? 0.6 : 1,
+                                padding: '8px 16px', borderRadius: 8, fontSize: 13, fontWeight: 500, cursor: 'pointer',
+                              }}>
+                                {isUploading
+                                  ? <><Loader2 size={14} style={{ animation: 'spin 1s linear infinite' }} /> Uploading...</>
+                                  : <><Upload size={14} /> {existingDoc && (existingDoc.status === 'Rejected' || existingDoc.status === 'Resubmit') ? 'Re-upload' : existingDoc ? 'Replace' : 'Upload'}</>
+                                }
+                              </span>
+                            </label>
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
                 </div>
               </div>
             </div>

@@ -60,6 +60,7 @@ const FILTER_TABS = [
   { key: 'MY', label: 'My Tasks' },
   { key: 'TEAM', label: 'Team' },
   { key: 'BLOCKED', label: 'Blocked' },
+  { key: 'CONTENT_REVIEW', label: 'Content Review' },
 ];
 
 const PAGE_SIZE = 20;
@@ -122,6 +123,7 @@ export default function Tasks() {
     priority: 'MEDIUM',
     status: 'TODO',
     due_date: '',
+    taskType: 'REGULAR',
   });
 
   useEffect(() => {
@@ -138,6 +140,7 @@ export default function Tasks() {
       if (priorityFilter) params.priority = priorityFilter;
       if (activeFilter === 'MY' && user?.id) params.assignee_id = user.id;
       if (activeFilter === 'BLOCKED') params.status = 'BLOCKED';
+      if (activeFilter === 'CONTENT_REVIEW') params.taskType = 'CONTENT_REVIEW';
       const res = await tasksApi.list(params);
       const data = res.data;
       if (Array.isArray(data)) {
@@ -199,11 +202,12 @@ export default function Tasks() {
         priority: formData.priority,
         status: formData.status,
         dueDate: formData.due_date,
+        taskType: formData.taskType,
       };
       await tasksApi.create(payload);
       toast.success('Task created successfully');
       setShowCreateModal(false);
-      setFormData({ title: '', description: '', project_id: '', assignee_id: '', collaborators: [], priority: 'MEDIUM', status: 'TODO', due_date: '' });
+      setFormData({ title: '', description: '', project_id: '', assignee_id: '', collaborators: [], priority: 'MEDIUM', status: 'TODO', due_date: '', taskType: 'REGULAR' });
       fetchTasks();
     } catch (err) {
       toast.error(err.response?.data?.message || 'Failed to create task');
@@ -491,6 +495,7 @@ export default function Tasks() {
                     />
                   </th>
                   <th>Title</th>
+                  <th>Type</th>
                   <th>Project</th>
                   <th>Assigned To</th>
                   <th>Team</th>
@@ -535,6 +540,22 @@ export default function Tasks() {
                         {task.description && (
                           <div style={{ fontSize: 11, color: 'var(--kai-text-muted)', marginTop: 2, maxWidth: 300 }} className="truncate">{task.description}</div>
                         )}
+                      </td>
+
+                      {/* Task Type */}
+                      <td>
+                        <span className="kai-badge" style={{
+                          background: task.taskType === 'CONTENT_REVIEW' ? '#EDE9FE' :
+                                      task.taskType === 'BUG' ? '#FEE2E2' :
+                                      task.taskType === 'FEATURE' ? '#DBEAFE' :
+                                      task.taskType === 'IMPROVEMENT' ? '#D1FAE5' : '#F1F5F9',
+                          color: task.taskType === 'CONTENT_REVIEW' ? '#7C3AED' :
+                                 task.taskType === 'BUG' ? '#DC2626' :
+                                 task.taskType === 'FEATURE' ? '#2563EB' :
+                                 task.taskType === 'IMPROVEMENT' ? '#059669' : '#64748B',
+                        }}>
+                          {(task.taskType || 'REGULAR').replace('_', ' ')}
+                        </span>
                       </td>
 
                       {/* Project - clickable */}
@@ -847,6 +868,17 @@ export default function Tasks() {
                   onChange={(e) => setFormData({ ...formData, due_date: e.target.value })}
                   required
                 />
+              </Col>
+              <Col xs={12} md={4}>
+                <label className="kai-label">Task Type</label>
+                <select className="kai-input" value={formData.taskType || 'REGULAR'}
+                  onChange={(e) => setFormData({ ...formData, taskType: e.target.value })} style={{ appearance: 'auto' }}>
+                  <option value="REGULAR">Regular Task</option>
+                  <option value="CONTENT_REVIEW">Content Review</option>
+                  <option value="BUG">Bug Fix</option>
+                  <option value="FEATURE">Feature</option>
+                  <option value="IMPROVEMENT">Improvement</option>
+                </select>
               </Col>
             </Row>
           </Modal.Body>

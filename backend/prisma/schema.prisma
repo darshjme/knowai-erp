@@ -163,6 +163,13 @@ model User {
   accountLocked         Boolean  @default(false)
   accountLockedUntil    DateTime?
 
+  // Verification & 2FA
+  verified          Boolean   @default(false)
+  verifiedAt        DateTime?
+  verifiedBy        String?   // HR user who verified
+  twoFactorEnabled  Boolean   @default(false)
+  twoFactorSecret   String?
+
   // Behavioral Analytics (computed/updated by system)
   behaviorScore         Float?   @default(0) // 0-100 overall score
   attendanceRate        Float?   // % of working days present
@@ -252,6 +259,8 @@ model User {
   videoApprovals    VideoApproval[] @relation("VideoApprover")
   collections       ContentCollection[] @relation("UserCollections")
   contentAssets     ContentAsset[]      @relation("UserAssets")
+  identityDocuments IdentityDocument[] @relation("UserDocuments")
+  reviewedDocuments IdentityDocument[] @relation("DocumentReviewer")
 
   @@index([workspaceId])
   @@map("users")
@@ -352,6 +361,7 @@ model Task {
   description   String?
   status        TaskStatus   @default(TODO)
   priority      TaskPriority @default(MEDIUM)
+  taskType      String?      // REGULAR, CONTENT_REVIEW, BUG, FEATURE, IMPROVEMENT
   assigneeId    String?
   collaborators String[]     // additional team members assigned
   projectId     String
@@ -1737,4 +1747,57 @@ model ContentAsset {
   @@index([collectionId])
   @@index([workspaceId])
   @@index([uploadedById])
+}
+
+enum VerificationDocType {
+  PASSPORT
+  NATIONAL_ID
+  DRIVERS_LICENSE
+  // India
+  PAN_CARD
+  AADHAAR
+  // USA
+  SSN_CARD
+  // UK
+  NI_NUMBER
+  // Canada
+  SIN_CARD
+  // UAE
+  EMIRATES_ID
+  // Singapore
+  NRIC
+  // Australia
+  TFN
+  // Other
+  TAX_ID
+}
+
+enum VerificationStatus {
+  PENDING
+  UNDER_REVIEW
+  APPROVED
+  REJECTED
+  RESUBMIT
+}
+
+model IdentityDocument {
+  id          String             @id @default(cuid())
+  userId      String
+  user        User               @relation("UserDocuments", fields: [userId], references: [id])
+  docType     VerificationDocType
+  fileName    String
+  fileUrl     String
+  fileSize    Int?
+  status      VerificationStatus @default(PENDING)
+  reviewerId  String?
+  reviewer    User?              @relation("DocumentReviewer", fields: [reviewerId], references: [id])
+  reviewNote  String?
+  reviewedAt  DateTime?
+  submittedAt DateTime           @default(now())
+  updatedAt   DateTime           @updatedAt
+
+  @@map("identity_documents")
+  @@index([userId])
+  @@index([status])
+  @@index([reviewerId])
 }
