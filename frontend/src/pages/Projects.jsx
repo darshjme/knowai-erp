@@ -94,6 +94,9 @@ export default function Projects() {
     due_date: '',
     manager_id: '',
     status: 'PLANNING',
+    members: [],
+    discussionTime: '',
+    discussionFrequency: '',
   });
 
   useEffect(() => {
@@ -145,7 +148,7 @@ export default function Projects() {
       await projectsApi.create(formData);
       toast.success('Project created successfully');
       setShowCreateModal(false);
-      setFormData({ name: '', description: '', due_date: '', manager_id: '', status: 'PLANNING' });
+      setFormData({ name: '', description: '', due_date: '', manager_id: '', status: 'PLANNING', members: [], discussionTime: '', discussionFrequency: '' });
       fetchProjects();
     } catch (err) {
       toast.error(err.response?.data?.message || 'Failed to create project');
@@ -615,6 +618,51 @@ export default function Projects() {
                   <option value="PLANNING">Planning</option>
                   <option value="ACTIVE">Active</option>
                   <option value="ON_HOLD">On Hold</option>
+                </select>
+              </Col>
+              <Col xs={12}>
+                <label className="kai-label">Project Members</label>
+                <div style={{ maxHeight: 150, overflowY: 'auto', border: '1px solid var(--kai-border)', borderRadius: 8, padding: 8 }}>
+                  {teamMembers.map(m => {
+                    const mName = m.name || m.full_name || `${m.firstName || ''} ${m.lastName || ''}`.trim() || m.email;
+                    return (
+                      <label key={m.id} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '4px 0', cursor: 'pointer', fontSize: 13 }}>
+                        <input type="checkbox" checked={formData.members.includes(m.id)}
+                          onChange={(e) => setFormData(prev => ({
+                            ...prev,
+                            members: e.target.checked ? [...prev.members, m.id] : prev.members.filter(x => x !== m.id)
+                          }))} />
+                        <span>{mName}</span>
+                        <span style={{ fontSize: 10, color: 'var(--kai-text-muted)', marginLeft: 'auto' }}>{m.role}</span>
+                      </label>
+                    );
+                  })}
+                </div>
+                <small style={{ color: 'var(--kai-text-muted)' }}>{formData.members.length} member(s)</small>
+              </Col>
+              <Col xs={12} md={4}>
+                <label className="kai-label">Discussion Time</label>
+                <input
+                  type="time"
+                  className="kai-input"
+                  value={formData.discussionTime}
+                  onChange={(e) => setFormData({ ...formData, discussionTime: e.target.value })}
+                />
+              </Col>
+              <Col xs={12} md={4}>
+                <label className="kai-label">Discussion Frequency</label>
+                <select
+                  className="kai-input"
+                  value={formData.discussionFrequency}
+                  onChange={(e) => setFormData({ ...formData, discussionFrequency: e.target.value })}
+                  style={{ appearance: 'auto' }}
+                >
+                  <option value="">None</option>
+                  <option value="DAILY">Daily</option>
+                  <option value="ALTERNATE_DAYS">Alternate Days</option>
+                  <option value="TWICE_A_WEEK">Twice a Week</option>
+                  <option value="WEEKLY">Weekly</option>
+                  <option value="BIWEEKLY">Once in 2 Weeks</option>
                 </select>
               </Col>
             </Row>

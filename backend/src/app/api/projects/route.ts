@@ -242,7 +242,8 @@ export async function POST(req: NextRequest) {
       return jsonError("You do not have permission to create projects", 403);
     }
 
-    const { name, description, status, dueDate } = await req.json();
+    const body = await req.json();
+    const { name, description, status, dueDate, members, discussionTime, discussionFrequency } = body;
 
     if (!name) {
       return jsonError("Project name is required", 400);
@@ -256,6 +257,9 @@ export async function POST(req: NextRequest) {
         dueDate: dueDate ? new Date(dueDate) : null,
         managerId: user.id,
         workspaceId: user.workspaceId,
+        members: Array.isArray(members) ? members : [],
+        discussionTime: discussionTime || null,
+        discussionFrequency: discussionFrequency || null,
       },
       include: {
         manager: {
@@ -288,7 +292,7 @@ export async function POST(req: NextRequest) {
       },
     });
 
-    // Auto-create project chat room
+    // Auto-create project chat room and add all members
     try {
       const chatRoom = await prisma.chatRoom.create({
         data: {
@@ -298,10 +302,24 @@ export async function POST(req: NextRequest) {
           createdById: user.id,
         },
       });
+      // Save chatRoomId on project
+      await prisma.project.update({ where: { id: project.id }, data: { chatRoomId: chatRoom.id } });
+
       // Add project manager as member
       await prisma.chatRoomMember.create({
         data: { roomId: chatRoom.id, userId: user.id },
-      });
+      }).catch(() => {});
+
+      // Add all project members to chat
+      if (Array.isArray(members) && members.length > 0) {
+        for (const memberId of members) {
+          if (memberId !== user.id) {
+            await prisma.chatRoomMember.create({
+              data: { roomId: chatRoom.id, userId: memberId },
+            }).catch(() => {});
+          }
+        }
+      }
     } catch (e) {
       console.error("Failed to create project chat room:", e);
     }
@@ -318,7 +336,8 @@ export async function PATCH(req: NextRequest) {
     const user = await getAuthUser(req);
     if (!user) return jsonError("Unauthorized", 401);
 
-    const { id, name, description, status, dueDate } = await req.json();
+    const body = await req.json();
+    const { id, name, description, status, dueDate, members: newMembers, discussionTime, discussionFrequency } = body;
     if (!id) return jsonError("Project id is required", 400);
 
     const existing = await prisma.project.findFirst({
@@ -335,6 +354,9 @@ export async function PATCH(req: NextRequest) {
     if (description !== undefined) data.description = description;
     if (status !== undefined) data.status = status;
     if (dueDate !== undefined) data.dueDate = dueDate ? new Date(dueDate) : null;
+    if (newMembers !== undefined && Array.isArray(newMembers)) data.members = newMembers;
+    if (discussionTime !== undefined) data.discussionTime = discussionTime;
+    if (discussionFrequency !== undefined) data.discussionFrequency = discussionFrequency;
 
     const project = await prisma.project.update({
       where: { id },

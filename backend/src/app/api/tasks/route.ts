@@ -95,6 +95,7 @@ export async function GET(req: NextRequest) {
       where.OR = [
         ...(Array.isArray(where.OR) ? where.OR : []),
         { assigneeId: user.id },
+        { collaborators: { has: user.id } },
         { createdById: user.id },
       ];
       // If search OR was set, we need to nest the conditions
@@ -106,7 +107,7 @@ export async function GET(req: NextRequest) {
         delete where.OR;
         where.AND = [
           { OR: searchConditions },
-          { OR: [{ assigneeId: user.id }, { createdById: user.id }] },
+          { OR: [{ assigneeId: user.id }, { collaborators: { has: user.id } }, { createdById: user.id }] },
         ];
       }
     } else if (role === "SR_DEVELOPER") {
@@ -155,6 +156,7 @@ export async function GET(req: NextRequest) {
       const managedProjectIds = managedProjects.map((p) => p.id);
       const scopeOR: Record<string, unknown>[] = [
         { assigneeId: user.id },
+        { collaborators: { has: user.id } },
         { createdById: user.id },
       ];
       if (managedProjectIds.length > 0) {
@@ -396,7 +398,7 @@ export async function POST(req: NextRequest) {
     }
 
     // ── Create task ──
-    const { title, description, status, priority, assigneeId, projectId, dueDate, dependsOn } = body;
+    const { title, description, status, priority, assigneeId, collaborators, projectId, dueDate, dependsOn } = body;
 
     if (!title || !projectId) {
       return jsonError("Title and projectId are required", 400);
@@ -431,6 +433,7 @@ export async function POST(req: NextRequest) {
         status: status || "TODO",
         priority: priority || "MEDIUM",
         assigneeId: assigneeId || user.id,
+        collaborators: Array.isArray(collaborators) ? collaborators : [],
         projectId,
         dueDate: dueDate ? new Date(dueDate) : null,
         createdById: user.id,
@@ -492,7 +495,8 @@ export async function PATCH(req: NextRequest) {
     const user = await getAuthUser(req);
     if (!user) return jsonError("Unauthorized", 401);
 
-    const { id, status, assigneeId, priority, title, description, dueDate } = await req.json();
+    const body = await req.json();
+    const { id, status, assigneeId, collaborators, priority, title, description, dueDate } = body;
     if (!id) return jsonError("Task id is required", 400);
 
     const existing = await prisma.task.findFirst({
@@ -536,6 +540,7 @@ export async function PATCH(req: NextRequest) {
     if (title !== undefined) updateData.title = title;
     if (description !== undefined) updateData.description = description;
     if (dueDate !== undefined) updateData.dueDate = dueDate ? new Date(dueDate) : null;
+    if (collaborators !== undefined && Array.isArray(collaborators)) updateData.collaborators = collaborators;
 
     const task = await prisma.task.update({
       where: { id },

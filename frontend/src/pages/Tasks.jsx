@@ -118,6 +118,7 @@ export default function Tasks() {
     description: '',
     project_id: '',
     assignee_id: '',
+    collaborators: [],
     priority: 'MEDIUM',
     status: 'TODO',
     due_date: '',
@@ -183,16 +184,26 @@ export default function Tasks() {
 
   const handleCreate = async (e) => {
     e.preventDefault();
-    if (!formData.title.trim()) {
-      toast.warning('Task title is required');
-      return;
-    }
+    if (!formData.title.trim()) return toast.warning('Task title is required');
+    if (!formData.project_id) return toast.warning('Project is required');
+    if (!formData.assignee_id) return toast.warning('Assignee is required');
+    if (!formData.due_date) return toast.warning('Due date is required');
     try {
       setCreating(true);
-      await tasksApi.create(formData);
+      const payload = {
+        title: formData.title,
+        description: formData.description,
+        projectId: formData.project_id,
+        assigneeId: formData.assignee_id,
+        collaborators: formData.collaborators,
+        priority: formData.priority,
+        status: formData.status,
+        dueDate: formData.due_date,
+      };
+      await tasksApi.create(payload);
       toast.success('Task created successfully');
       setShowCreateModal(false);
-      setFormData({ title: '', description: '', project_id: '', assignee_id: '', priority: 'MEDIUM', status: 'TODO', due_date: '' });
+      setFormData({ title: '', description: '', project_id: '', assignee_id: '', collaborators: [], priority: 'MEDIUM', status: 'TODO', due_date: '' });
       fetchTasks();
     } catch (err) {
       toast.error(err.response?.data?.message || 'Failed to create task');
@@ -481,10 +492,12 @@ export default function Tasks() {
                   </th>
                   <th>Title</th>
                   <th>Project</th>
-                  <th>Assignee</th>
+                  <th>Assigned To</th>
+                  <th>Team</th>
                   <th>Status</th>
                   <th>Priority</th>
-                  <th>Due Date</th>
+                  <th>Created</th>
+                  <th>Deadline</th>
                   <th style={{ width: 80 }}>Actions</th>
                 </tr>
               </thead>
@@ -553,6 +566,35 @@ export default function Tasks() {
                         ) : (
                           <span style={{ fontSize: 12, color: 'var(--kai-text-muted)' }}>Unassigned</span>
                         )}
+                        {task.createdBy && (
+                          <div style={{ fontSize: 10, color: 'var(--kai-text-muted)', marginTop: 2 }}>
+                            by {task.createdBy.firstName} {task.createdBy.lastName?.[0]}
+                          </div>
+                        )}
+                      </td>
+
+                      {/* Team / Collaborators */}
+                      <td>
+                        {task.collaborators?.length > 0 ? (
+                          <div className="d-flex" style={{ gap: -4 }}>
+                            {task.collaborators.slice(0, 3).map((cId, i) => {
+                              const collab = teamMembers.find(m => m.id === cId);
+                              const cName = collab ? `${collab.firstName || ''} ${collab.lastName || ''}`.trim() : '';
+                              return (
+                                <div key={cId} className="kai-avatar kai-avatar-sm"
+                                  style={{ background: getAvatarColor(cName || 'U'), width: 22, height: 22, fontSize: 9, marginLeft: i > 0 ? -6 : 0, border: '2px solid var(--kai-bg)', zIndex: 3 - i }}
+                                  title={cName || cId}>
+                                  {getInitials(cName || 'U')}
+                                </div>
+                              );
+                            })}
+                            {task.collaborators.length > 3 && (
+                              <span style={{ fontSize: 10, color: 'var(--kai-text-muted)', marginLeft: 4 }}>+{task.collaborators.length - 3}</span>
+                            )}
+                          </div>
+                        ) : (
+                          <span style={{ fontSize: 11, color: 'var(--kai-text-muted)' }}>--</span>
+                        )}
                       </td>
 
                       {/* Status */}
@@ -595,7 +637,14 @@ export default function Tasks() {
                         </span>
                       </td>
 
-                      {/* Due Date */}
+                      {/* Created */}
+                      <td>
+                        <span style={{ fontSize: 11, color: 'var(--kai-text-muted)' }}>
+                          {formatDate(task.createdAt)}
+                        </span>
+                      </td>
+
+                      {/* Deadline */}
                       <td>
                         <span
                           className="flex-gap-8"
@@ -712,32 +761,54 @@ export default function Tasks() {
                 />
               </Col>
               <Col xs={12} md={6}>
-                <label className="kai-label">Project</label>
+                <label className="kai-label">Project *</label>
                 <select
                   className="kai-input"
                   value={formData.project_id}
                   onChange={(e) => setFormData({ ...formData, project_id: e.target.value })}
                   style={{ appearance: 'auto' }}
+                  required
                 >
-                  <option value="">No Project</option>
+                  <option value="">Select Project</option>
                   {projects.map(p => (
                     <option key={p.id} value={p.id}>{p.name}</option>
                   ))}
                 </select>
               </Col>
               <Col xs={12} md={6}>
-                <label className="kai-label">Assignee</label>
+                <label className="kai-label">Primary Assignee *</label>
                 <select
                   className="kai-input"
                   value={formData.assignee_id}
                   onChange={(e) => setFormData({ ...formData, assignee_id: e.target.value })}
                   style={{ appearance: 'auto' }}
+                  required
                 >
-                  <option value="">Unassigned</option>
+                  <option value="">Select Assignee</option>
                   {teamMembers.map(m => (
-                    <option key={m.id} value={m.id}>{m.name || m.full_name || m.email}</option>
+                    <option key={m.id} value={m.id}>{m.name || m.full_name || `${m.firstName || ''} ${m.lastName || ''}`.trim() || m.email}</option>
                   ))}
                 </select>
+              </Col>
+              <Col xs={12}>
+                <label className="kai-label">Team Members (Collaborators)</label>
+                <div style={{ maxHeight: 140, overflowY: 'auto', border: '1px solid var(--kai-border)', borderRadius: 8, padding: 8, background: 'var(--kai-bg)' }}>
+                  {teamMembers.filter(m => m.id !== formData.assignee_id).map(m => {
+                    const mName = m.name || m.full_name || `${m.firstName || ''} ${m.lastName || ''}`.trim() || m.email;
+                    return (
+                      <label key={m.id} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '4px 0', cursor: 'pointer', fontSize: 13 }}>
+                        <input type="checkbox" checked={formData.collaborators.includes(m.id)}
+                          onChange={(e) => setFormData(prev => ({
+                            ...prev,
+                            collaborators: e.target.checked ? [...prev.collaborators, m.id] : prev.collaborators.filter(x => x !== m.id)
+                          }))} />
+                        <span>{mName}</span>
+                        {m.role && <span style={{ fontSize: 10, color: 'var(--kai-text-muted)', marginLeft: 'auto' }}>{m.role}</span>}
+                      </label>
+                    );
+                  })}
+                </div>
+                <small style={{ color: 'var(--kai-text-muted)' }}>{formData.collaborators.length} member(s) selected</small>
               </Col>
               <Col xs={12} md={4}>
                 <label className="kai-label">Priority</label>
@@ -768,12 +839,13 @@ export default function Tasks() {
                 </select>
               </Col>
               <Col xs={12} md={4}>
-                <label className="kai-label">Due Date</label>
+                <label className="kai-label">Deadline *</label>
                 <input
                   type="date"
                   className="kai-input"
                   value={formData.due_date}
                   onChange={(e) => setFormData({ ...formData, due_date: e.target.value })}
+                  required
                 />
               </Col>
             </Row>
