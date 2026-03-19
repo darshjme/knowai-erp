@@ -563,9 +563,8 @@ export default function HelpTour({ role }) {
       if ([STATUS.FINISHED, STATUS.SKIPPED].includes(status)) {
         setRun(false);
         setStepIndex(0);
-        if (dontShowAgain || status === STATUS.FINISHED) {
-          localStorage.setItem(storageKey, 'true');
-        }
+        // Always persist — both "Skip tour" and "Finish" should prevent re-showing
+        localStorage.setItem(storageKey, 'true');
         return;
       }
 
