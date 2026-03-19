@@ -2,6 +2,7 @@ import { NextRequest } from "next/server";
 import prisma from "@/lib/prisma";
 import { jsonOk, jsonError, getAuthUser } from "@/lib/api-utils";
 import { getPaginationParams } from "@/lib/pagination";
+import { NotificationType } from "@prisma/client";
 
 // ─── Role-specific notification type mapping ─────────────────────
 // Defines which notification types each role is allowed to see,
@@ -47,9 +48,9 @@ const ROLE_NOTIFICATION_TYPES: Record<string, readonly string[]> = {
  * Returns the full set of notification types a given role is allowed to see.
  * Combines role-specific types with universal types that everyone receives.
  */
-function getAllowedTypesForRole(role: string): string[] {
+function getAllowedTypesForRole(role: string): NotificationType[] {
   const roleTypes = ROLE_NOTIFICATION_TYPES[role] ?? [];
-  return [...new Set([...UNIVERSAL_TYPES, ...roleTypes])];
+  return [...new Set([...UNIVERSAL_TYPES, ...roleTypes])] as NotificationType[];
 }
 
 // ─── GET: List notifications ────────────────────────────────────
@@ -79,7 +80,7 @@ export async function GET(req: NextRequest) {
     // If client requests specific types, intersect with allowed types
     if (typeFilter) {
       const requestedTypes = typeFilter.split(",").map((t) => t.trim()).filter(Boolean);
-      const intersected = requestedTypes.filter((t) => allowedTypes.includes(t));
+      const intersected = requestedTypes.filter((t) => allowedTypes.includes(t as NotificationType)) as NotificationType[];
       if (intersected.length > 0) {
         where.type = { in: intersected };
       } else {

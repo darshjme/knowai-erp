@@ -5,9 +5,9 @@ import { createNotification } from "@/lib/notifications";
 
 // ─── helpers ────────────────────────────────────────────────────────────────
 
-const ESCALATION_ORDER: Array<"HR" | "PRODUCT_OWNER" | "CTO" | "CEO"> = [
+const ESCALATION_ORDER: Array<"HR" | "PROJECT_MANAGER" | "CTO" | "CEO"> = [
   "HR",
-  "PRODUCT_OWNER",
+  "PROJECT_MANAGER",
   "CTO",
   "CEO",
 ];
@@ -17,7 +17,7 @@ function levelToRole(level: string): string {
   switch (level) {
     case "HR":
       return "HR";
-    case "PRODUCT_OWNER":
+    case "PROJECT_MANAGER":
       return "PRODUCT_OWNER";
     case "CTO":
       return "CTO";

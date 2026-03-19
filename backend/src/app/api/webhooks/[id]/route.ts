@@ -12,7 +12,7 @@ export async function GET(
   if (auth.role !== "ADMIN") return jsonError("Forbidden: Admin access required", 403);
 
   const { id } = await params;
-  const webhook = webhooksDB.find((w) => w.id === id);
+  const webhook = webhooksDB.get(id);
 
   if (!webhook) {
     return NextResponse.json(
@@ -39,25 +39,27 @@ export async function PUT(
   try {
     const { id } = await params;
     const body = await request.json();
-    const index = webhooksDB.findIndex((w) => w.id === id);
+    const existing = webhooksDB.get(id);
 
-    if (index === -1) {
+    if (!existing) {
       return NextResponse.json(
         { success: false, error: "Webhook not found" },
         { status: 404 }
       );
     }
 
-    webhooksDB[index] = {
-      ...webhooksDB[index],
-      ...body,
-      id: id, // Preserve ID
-      secret: webhooksDB[index].secret, // Preserve secret
-    };
+    // Delete old and recreate with merged data (preserving id and secret)
+    webhooksDB.delete(id);
+    const updated = webhooksDB.create({
+      url: body.url ?? existing.url,
+      events: body.events ?? existing.events,
+      active: body.active ?? existing.active,
+      secret: existing.secret,
+    });
 
     return NextResponse.json({
       success: true,
-      data: webhooksDB[index],
+      data: updated,
     });
   } catch (error) {
     return NextResponse.json(
@@ -77,16 +79,14 @@ export async function DELETE(
   if (auth.role !== "ADMIN") return jsonError("Forbidden: Admin access required", 403);
 
   const { id } = await params;
-  const index = webhooksDB.findIndex((w) => w.id === id);
+  const deleted = webhooksDB.delete(id);
 
-  if (index === -1) {
+  if (!deleted) {
     return NextResponse.json(
       { success: false, error: "Webhook not found" },
       { status: 404 }
     );
   }
-
-  webhooksDB.splice(index, 1);
 
   return NextResponse.json({
     success: true,

@@ -61,31 +61,33 @@ export async function GET(req: NextRequest) {
     // CFO/ACCOUNTING only see financial-related fields
     const isFinancialOnly = CLIENTS_FINANCIAL_ROLES.includes(user.role);
 
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const queryBase: any = {
+      where,
+      orderBy: { createdAt: "desc" },
+      skip: (page - 1) * pageSize,
+      take: pageSize,
+    };
+
+    if (isFinancialOnly) {
+      queryBase.select = {
+        id: true,
+        name: true,
+        company: true,
+        email: true,
+        workspaceId: true,
+        createdAt: true,
+        _count: { select: { invoices: true } },
+      };
+    } else {
+      queryBase.include = {
+        _count: { select: { leads: true, invoices: true } },
+        createdBy: { select: { id: true, firstName: true, lastName: true } },
+      };
+    }
+
     const [clients, total] = await Promise.all([
-      prisma.client.findMany({
-        where,
-        ...(isFinancialOnly
-          ? {
-              select: {
-                id: true,
-                name: true,
-                company: true,
-                email: true,
-                workspaceId: true,
-                createdAt: true,
-                _count: { select: { invoices: true } },
-              },
-            }
-          : {
-              include: {
-                _count: { select: { leads: true, invoices: true } },
-                createdBy: { select: { id: true, firstName: true, lastName: true } },
-              },
-            }),
-        orderBy: { createdAt: "desc" },
-        skip: (page - 1) * pageSize,
-        take: pageSize,
-      }),
+      prisma.client.findMany(queryBase),
       prisma.client.count({ where }),
     ]);
 

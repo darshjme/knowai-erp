@@ -101,7 +101,7 @@ export async function POST(
   if (auth.role !== "ADMIN") return jsonError("Forbidden: Admin access required", 403);
 
   const { id } = await params;
-  const webhook = webhooksDB.find((w) => w.id === id);
+  const webhook = webhooksDB.get(id);
 
   if (!webhook) {
     return NextResponse.json(
@@ -139,26 +139,20 @@ export async function POST(
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        "X-Webhook-Secret": webhook.secret,
+        "X-Webhook-Secret": webhook.secret || "",
       },
       body: JSON.stringify(testPayload),
       signal: controller.signal,
       redirect: "error", // Prevent redirect-based SSRF
     }).catch(() => null).finally(() => clearTimeout(timeout));
 
-    const success = response?.ok ?? false;
-
-    // Update last triggered timestamp
-    const index = webhooksDB.findIndex((w) => w.id === id);
-    if (index !== -1) {
-      webhooksDB[index].lastTriggered = new Date().toISOString();
-    }
+    const delivered = response?.ok ?? false;
 
     return NextResponse.json({
       success: true,
-      delivered: success,
+      delivered,
       status: response?.status ?? 0,
-      message: success
+      message: delivered
         ? "Test webhook delivered successfully"
         : "Test delivery failed - webhook endpoint may be unreachable",
     });

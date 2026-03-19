@@ -10,7 +10,7 @@ export async function GET(request: NextRequest) {
 
   return NextResponse.json({
     success: true,
-    data: webhooksDB,
+    data: webhooksDB.getAll(),
   });
 }
 
@@ -22,27 +22,21 @@ export async function POST(request: NextRequest) {
 
   try {
     const body = await request.json();
-    const { name, url, events, enabled } = body;
+    const { url, events, active } = body;
 
-    if (!name || !url || !events || events.length === 0) {
+    if (!url || !events || events.length === 0) {
       return NextResponse.json(
         { success: false, error: "Missing required fields" },
         { status: 400 }
       );
     }
 
-    const newWebhook = {
-      id: Date.now().toString(36) + Math.random().toString(36).substring(2, 8),
-      name,
+    const newWebhook = webhooksDB.create({
       url,
       events,
-      enabled: enabled ?? true,
+      active: active ?? true,
       secret: "whsec_" + Math.random().toString(36).substring(2, 15),
-      createdAt: new Date().toISOString(),
-      lastTriggered: null,
-    };
-
-    webhooksDB.push(newWebhook);
+    });
 
     return NextResponse.json({
       success: true,
