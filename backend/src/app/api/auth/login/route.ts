@@ -214,12 +214,15 @@ export async function POST(req: NextRequest) {
       data: { status: "ONLINE" },
     });
 
-    // JWT payload includes userId, email, role, and workspaceId
+    // JWT payload includes userId, email, role, workspaceId, and tokenVersion
+    // tokenVersion is checked on each request — if the DB version is higher
+    // (e.g., after a role change), this JWT is rejected as stale.
     const token = await signToken({
       userId: user.id,
       email: user.email,
       role: user.role,
       workspaceId: user.workspaceId,
+      tokenVersion: user.tokenVersion ?? 0,
     });
 
     // Build full profile response (strip password)

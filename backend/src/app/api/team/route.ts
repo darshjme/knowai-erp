@@ -309,7 +309,11 @@ export async function PATCH(req: NextRequest) {
     }
 
     const data: Record<string, unknown> = {};
-    if (role !== undefined) data.role = role;
+    if (role !== undefined) {
+      data.role = role;
+      // Bump tokenVersion to invalidate existing JWTs with the old role
+      data.tokenVersion = { increment: 1 };
+    }
     if (status !== undefined) data.status = status;
     if (department !== undefined) data.department = department || null;
     if (phone !== undefined) data.phone = phone || null;

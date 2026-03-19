@@ -134,7 +134,8 @@ model User {
   additionalRoles String[] // Additional roles (e.g., Zeel has BRAND_FACE + CFO)
   designation String?    // Job title: "Senior React Developer", "Lead Editor", etc.
   reportingTo String?    // Manager's userId
-  salary      Float?     // Monthly salary for payroll
+  salary      Int?       // Monthly salary in cents (paise) for payroll
+  tokenVersion Int       @default(0) // Bumped on role change to invalidate existing JWTs
   joinDate    DateTime?  // Date of joining
   bankDetails Json?      // { accountNo, ifsc, bankName } for payroll
   emergencyContact Json? // { name, phone, relation }
@@ -962,7 +963,7 @@ model Subscription {
   name            String   // "Figma", "AWS", "GitHub", "Slack", "Google Workspace"
   provider        String?  // Service provider name
   plan            String?  // "Pro", "Business", "Enterprise"
-  cost            Float    // Monthly cost
+  cost            Int      // Monthly cost in cents (paise)
   billingCycle    String   @default("MONTHLY") // MONTHLY, QUARTERLY, YEARLY
   currency        String   @default("INR")
   startDate       DateTime
@@ -996,7 +997,7 @@ model ResourceRequest {
   title       String   // What they need
   purpose     String   // Why they need it
   url         String?  // URL of the tool/subscription
-  cost        Float?   // Monthly/one-time cost
+  cost        Int?     // Monthly/one-time cost in cents (paise)
   currency    String   @default("INR")
   projectId   String?  // Related project (in their scope)
   priority    String   @default("MEDIUM") // LOW, MEDIUM, HIGH, URGENT
@@ -1222,7 +1223,7 @@ model Client {
 model Lead {
   id           String     @id @default(uuid())
   title        String
-  value        Float?
+  value        Int?       // Deal value in cents (paise)
   currency     String     @default("INR")
   status       LeadStatus @default(NEW)
   source       String?

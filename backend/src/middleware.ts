@@ -186,6 +186,7 @@ export async function middleware(req: NextRequest) {
       h.set("x-user-email", payload.email as string);
       h.set("x-user-role", role);
       if (payload.workspaceId) h.set("x-workspace-id", payload.workspaceId as string);
+      h.set("x-token-version", String(payload.tokenVersion ?? 0));
       return NextResponse.next({ request: { headers: h } });
     } catch {
       const r = NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
@@ -209,6 +210,7 @@ export async function middleware(req: NextRequest) {
       h.set("x-user-email", payload.email as string);
       h.set("x-user-role", role);
       if (payload.workspaceId) h.set("x-workspace-id", payload.workspaceId as string);
+      h.set("x-token-version", String(payload.tokenVersion ?? 0));
       return NextResponse.next({ request: { headers: h } });
     } catch {
       const r = NextResponse.redirect(new URL("/login", req.url));
