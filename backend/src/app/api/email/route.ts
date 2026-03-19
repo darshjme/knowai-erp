@@ -367,28 +367,15 @@ export async function POST(req: NextRequest) {
       const html = invoiceEmailHtml({
         invoiceNumber: invoice.invoiceNumber,
         clientName: invoice.clientName,
-        clientEmail: invoice.clientEmail,
-        clientAddress: invoice.clientAddress,
-        items: invoice.items,
-        subtotal: invoice.subtotal,
-        tax: invoice.tax,
-        discount: invoice.discount,
-        total: invoice.total,
-        currency: invoice.currency,
-        dueDate: invoice.dueDate,
-        notes: invoice.notes,
-        createdAt: invoice.createdAt,
+        amount: `${invoice.currency} ${invoice.total}`,
+        dueDate: invoice.dueDate ? invoice.dueDate.toLocaleDateString() : "On receipt",
       });
 
-      const result = await sendEmail({
-        to: invoice.clientEmail,
-        subject: `Invoice ${invoice.invoiceNumber} from KnowAI`,
+      const result = await sendEmail(
+        invoice.clientEmail,
+        `Invoice ${invoice.invoiceNumber} from KnowAI`,
         html,
-      });
-
-      if (!result.success) {
-        return jsonError("Failed to send email: " + (result.error || "Unknown error"), 500);
-      }
+      );
 
       await prisma.sentEmail.create({
         data: {
@@ -412,7 +399,7 @@ export async function POST(req: NextRequest) {
       return jsonOk({
         success: true,
         message: `Invoice sent to ${invoice.clientEmail}`,
-        simulated: result.simulated || false,
+        messageId: result.messageId,
       });
     }
 
@@ -429,16 +416,13 @@ export async function POST(req: NextRequest) {
         footerText: `Sent by ${user.firstName} ${user.lastName} via KnowAI ERP`,
       });
 
-      const result = await sendEmail({ to, subject, html });
-
-      if (!result.success) {
-        return jsonError("Failed to send email: " + (result.error || "Unknown error"), 500);
-      }
+      const toStr = Array.isArray(to) ? to.join(", ") : to;
+      const result = await sendEmail(toStr, subject, html);
 
       await prisma.sentEmail.create({
         data: {
           fromId: user.id,
-          toEmail: Array.isArray(to) ? to.join(", ") : to,
+          toEmail: toStr,
           subject,
           body: html,
           status: "SENT",
@@ -448,8 +432,8 @@ export async function POST(req: NextRequest) {
 
       return jsonOk({
         success: true,
-        message: `Email sent to ${Array.isArray(to) ? to.join(", ") : to}`,
-        simulated: result.simulated || false,
+        message: `Email sent to ${toStr}`,
+        messageId: result.messageId,
       });
     }
 
@@ -481,11 +465,7 @@ export async function POST(req: NextRequest) {
         footerText: `Sent by ${user.firstName} ${user.lastName} (${user.role}) via KnowAI ERP`,
       });
 
-      const result = await sendEmail({ to: emails, subject, html });
-
-      if (!result.success) {
-        return jsonError("Failed to send newsletter: " + (result.error || "Unknown error"), 500);
-      }
+      const result = await sendEmail(emails.join(", "), subject, html);
 
       await prisma.sentEmail.create({
         data: {
@@ -501,7 +481,7 @@ export async function POST(req: NextRequest) {
       return jsonOk({
         success: true,
         message: `Newsletter sent to ${emails.length} team member(s)`,
-        simulated: result.simulated || false,
+        messageId: result.messageId,
       });
     }
 
@@ -530,20 +510,13 @@ export async function POST(req: NextRequest) {
         return jsonError("Only HR, managers, or executives can send leave approval emails", 403);
       }
 
-      const result = await sendEmail({
-        to,
-        subject: template.subject,
-        html: template.html,
-      });
-
-      if (!result.success) {
-        return jsonError("Failed to send email: " + (result.error || "Unknown error"), 500);
-      }
+      const toStr = Array.isArray(to) ? to.join(", ") : to;
+      const result = await sendEmail(toStr, template.subject, template.html);
 
       await prisma.sentEmail.create({
         data: {
           fromId: user.id,
-          toEmail: Array.isArray(to) ? to.join(", ") : to,
+          toEmail: toStr,
           subject: template.subject,
           body: template.html,
           status: "SENT",
@@ -553,8 +526,8 @@ export async function POST(req: NextRequest) {
 
       return jsonOk({
         success: true,
-        message: `Template email (${templateName}) sent to ${Array.isArray(to) ? to.join(", ") : to}`,
-        simulated: result.simulated || false,
+        message: `Template email (${templateName}) sent to ${toStr}`,
+        messageId: result.messageId,
       });
     }
 
