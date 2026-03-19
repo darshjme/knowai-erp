@@ -3,6 +3,7 @@ import bcrypt from "bcryptjs";
 import prisma from "@/lib/prisma";
 import { signToken } from "@/lib/auth";
 import { jsonOk, jsonError } from "@/lib/api-utils";
+import { getRoleContext } from "@/lib/roles";
 
 // ── Role-based permission definitions ──
 const ROLE_PERMISSIONS: Record<string, string[]> = {
@@ -229,8 +230,8 @@ export async function POST(req: NextRequest) {
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const { password: _, ...userWithoutPassword } = user;
 
-    // Resolve permissions from role
-    const permissions = ROLE_PERMISSIONS[user.role] || [];
+    // Resolve role context from single source of truth (lib/roles.ts)
+    const roleContext = getRoleContext(user.role);
 
     const response = jsonOk({
       success: true,
@@ -240,7 +241,7 @@ export async function POST(req: NextRequest) {
           onboardingComplete: user.onboardingComplete,
           profileComplete: user.profileComplete,
           profileDeadline: user.profileDeadline,
-          permissions,
+          ...roleContext,
         },
       },
     });
