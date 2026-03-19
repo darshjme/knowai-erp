@@ -54,6 +54,7 @@ import 'bootstrap/dist/css/bootstrap.min.css';
 import 'react-toastify/dist/ReactToastify.css';
 import 'react-datepicker/dist/react-datepicker.css';
 import './assets/scss/main.scss';
+import { useNotificationStream } from './hooks/useNotificationStream';
 
 function useAuthUser() {
   const dispatch = useDispatch();
@@ -76,6 +77,9 @@ function useAuthUser() {
 
 function ProtectedRoute({ children }) {
   const { isAuthenticated, user } = useAuthUser();
+
+  // Connect to SSE notification stream when authenticated
+  useNotificationStream();
 
   if (!isAuthenticated) {
     return <Navigate to="/login" replace />;

@@ -28,7 +28,14 @@ function notificationsReducer(state = notifsInitial, action) {
   switch (action.type) {
     case 'NOTIFS_SET': return { ...state, items: action.payload, unreadCount: action.payload.filter(n => !n.read).length };
     case 'NOTIFS_MARK_READ': return { ...state, items: state.items.map(n => n.id === action.payload ? { ...n, read: true } : n), unreadCount: Math.max(0, state.unreadCount - 1) };
-    case 'NOTIFS_ADD': return { ...state, items: [action.payload, ...state.items], unreadCount: state.unreadCount + 1 };
+    case 'NOTIFS_ADD': {
+      const newItems = Array.isArray(action.payload) ? action.payload : [action.payload];
+      // Deduplicate by id — SSE may send items we already have
+      const existingIds = new Set(state.items.map(n => n.id));
+      const unique = newItems.filter(n => !existingIds.has(n.id));
+      if (unique.length === 0) return state;
+      return { ...state, items: [...unique, ...state.items], unreadCount: state.unreadCount + unique.length };
+    }
     default: return state;
   }
 }
