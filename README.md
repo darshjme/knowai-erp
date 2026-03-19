@@ -1,90 +1,105 @@
 <div align="center">
 
-<!-- HERO BANNER SVG -->
+<!-- HERO BANNER -->
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 180" width="800" height="180">
   <defs>
-    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+    <linearGradient id="heroBg" x1="0%" y1="0%" x2="100%" y2="100%">
       <stop offset="0%" style="stop-color:#0d1117"/>
+      <stop offset="50%" style="stop-color:#101820"/>
       <stop offset="100%" style="stop-color:#161b22"/>
     </linearGradient>
-    <linearGradient id="blueGrad" x1="0%" y1="0%" x2="100%" y2="0%">
-      <stop offset="0%" style="stop-color:#0066FF"/>
-      <stop offset="100%" style="stop-color:#003399"/>
-    </linearGradient>
-    <linearGradient id="blueGradAnim" x1="0%" y1="0%" x2="100%" y2="0%">
+    <linearGradient id="titleGrad" x1="0%" y1="0%" x2="100%" y2="0%">
       <stop offset="0%" style="stop-color:#0066FF">
-        <animate attributeName="stop-color" values="#0066FF;#003399;#0066FF" dur="4s" repeatCount="indefinite"/>
+        <animate attributeName="stop-color" values="#0066FF;#1a8cff;#0066FF" dur="5s" repeatCount="indefinite"/>
       </stop>
       <stop offset="100%" style="stop-color:#003399">
-        <animate attributeName="stop-color" values="#003399;#0066FF;#003399" dur="4s" repeatCount="indefinite"/>
+        <animate attributeName="stop-color" values="#003399;#0055cc;#003399" dur="5s" repeatCount="indefinite"/>
       </stop>
     </linearGradient>
-    <pattern id="grid" width="40" height="40" patternUnits="userSpaceOnUse">
+    <linearGradient id="accentLine" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" style="stop-color:#0066FF" stop-opacity="0"/>
+      <stop offset="50%" style="stop-color:#0066FF" stop-opacity="0.8"/>
+      <stop offset="100%" style="stop-color:#003399" stop-opacity="0"/>
+    </linearGradient>
+    <pattern id="gridPat" width="40" height="40" patternUnits="userSpaceOnUse">
       <rect width="40" height="40" fill="none"/>
       <path d="M 40 0 L 0 0 0 40" fill="none" stroke="#21262d" stroke-width="0.5">
-        <animate attributeName="stroke-opacity" values="0.3;0.6;0.3" dur="6s" repeatCount="indefinite"/>
+        <animate attributeName="stroke-opacity" values="0.2;0.5;0.2" dur="8s" repeatCount="indefinite"/>
       </path>
     </pattern>
-    <pattern id="dots" width="60" height="60" patternUnits="userSpaceOnUse">
-      <circle cx="30" cy="30" r="1" fill="#0066FF" opacity="0.15">
-        <animate attributeName="opacity" values="0.1;0.3;0.1" dur="5s" repeatCount="indefinite"/>
+    <pattern id="dotPat" width="50" height="50" patternUnits="userSpaceOnUse">
+      <circle cx="25" cy="25" r="0.8" fill="#0066FF" opacity="0.12">
+        <animate attributeName="opacity" values="0.08;0.22;0.08" dur="6s" repeatCount="indefinite"/>
       </circle>
     </pattern>
+    <filter id="glow">
+      <feGaussianBlur stdDeviation="3" result="blur"/>
+      <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
   </defs>
-  <rect width="800" height="180" fill="url(#bg)" rx="12"/>
-  <rect width="800" height="180" fill="url(#grid)" rx="12"/>
-  <rect width="800" height="180" fill="url(#dots)" rx="12"/>
-  <!-- Geometric data shapes -->
-  <rect x="620" y="30" width="50" height="35" rx="4" fill="none" stroke="#0066FF" stroke-width="0.8" opacity="0.2">
-    <animate attributeName="opacity" values="0.15;0.3;0.15" dur="7s" repeatCount="indefinite"/>
+  <!-- Background layers -->
+  <rect width="800" height="180" fill="url(#heroBg)" rx="12"/>
+  <rect width="800" height="180" fill="url(#gridPat)" rx="12"/>
+  <rect width="800" height="180" fill="url(#dotPat)" rx="12"/>
+  <!-- Geometric dashboard shapes - left -->
+  <rect x="60" y="110" width="8" height="28" rx="2" fill="#0066FF" opacity="0.08">
+    <animate attributeName="height" values="28;38;28" dur="4s" repeatCount="indefinite"/>
+    <animate attributeName="y" values="110;100;110" dur="4s" repeatCount="indefinite"/>
   </rect>
-  <rect x="680" y="45" width="40" height="50" rx="4" fill="none" stroke="#003399" stroke-width="0.8" opacity="0.15">
-    <animate attributeName="opacity" values="0.1;0.25;0.1" dur="5s" repeatCount="indefinite"/>
+  <rect x="72" y="100" width="8" height="38" rx="2" fill="#0066FF" opacity="0.1">
+    <animate attributeName="height" values="38;22;38" dur="5s" repeatCount="indefinite"/>
+    <animate attributeName="y" values="100;116;100" dur="5s" repeatCount="indefinite"/>
   </rect>
-  <rect x="640" y="80" width="60" height="30" rx="4" fill="none" stroke="#0066FF" stroke-width="0.6" opacity="0.12">
-    <animate attributeName="opacity" values="0.08;0.2;0.08" dur="8s" repeatCount="indefinite"/>
+  <rect x="84" y="105" width="8" height="33" rx="2" fill="#003399" opacity="0.08">
+    <animate attributeName="height" values="33;42;33" dur="6s" repeatCount="indefinite"/>
+    <animate attributeName="y" values="105;96;105" dur="6s" repeatCount="indefinite"/>
   </rect>
-  <!-- Chart bars -->
-  <rect x="110" y="120" width="8" height="25" rx="2" fill="#0066FF" opacity="0.1">
-    <animate attributeName="height" values="25;35;25" dur="4s" repeatCount="indefinite"/>
-    <animate attributeName="y" values="120;110;120" dur="4s" repeatCount="indefinite"/>
+  <rect x="96" y="115" width="8" height="23" rx="2" fill="#0066FF" opacity="0.06">
+    <animate attributeName="height" values="23;35;23" dur="3.5s" repeatCount="indefinite"/>
+    <animate attributeName="y" values="115;103;115" dur="3.5s" repeatCount="indefinite"/>
   </rect>
-  <rect x="122" y="110" width="8" height="35" rx="2" fill="#0066FF" opacity="0.12">
-    <animate attributeName="height" values="35;20;35" dur="5s" repeatCount="indefinite"/>
-    <animate attributeName="y" values="110;125;110" dur="5s" repeatCount="indefinite"/>
+  <!-- Geometric shapes - right -->
+  <rect x="640" y="28" width="52" height="36" rx="5" fill="none" stroke="#0066FF" stroke-width="0.7" opacity="0.15">
+    <animate attributeName="opacity" values="0.1;0.25;0.1" dur="7s" repeatCount="indefinite"/>
   </rect>
-  <rect x="134" y="115" width="8" height="30" rx="2" fill="#003399" opacity="0.1">
-    <animate attributeName="height" values="30;40;30" dur="6s" repeatCount="indefinite"/>
-    <animate attributeName="y" values="115;105;115" dur="6s" repeatCount="indefinite"/>
+  <rect x="700" y="42" width="42" height="52" rx="5" fill="none" stroke="#003399" stroke-width="0.7" opacity="0.12">
+    <animate attributeName="opacity" values="0.08;0.2;0.08" dur="5.5s" repeatCount="indefinite"/>
   </rect>
-  <!-- Node connections top-right -->
-  <circle cx="720" cy="25" r="3" fill="#0066FF" opacity="0.2"/>
-  <circle cx="755" cy="40" r="2.5" fill="#003399" opacity="0.18"/>
-  <line x1="720" y1="25" x2="755" y2="40" stroke="#0066FF" stroke-width="0.5" opacity="0.15"/>
-  <circle cx="740" cy="60" r="2" fill="#0066FF" opacity="0.15"/>
-  <line x1="755" y1="40" x2="740" y2="60" stroke="#003399" stroke-width="0.5" opacity="0.12"/>
+  <rect x="660" y="78" width="62" height="28" rx="5" fill="none" stroke="#0066FF" stroke-width="0.6" opacity="0.1">
+    <animate attributeName="opacity" values="0.06;0.18;0.06" dur="9s" repeatCount="indefinite"/>
+  </rect>
+  <!-- Node connections -->
+  <circle cx="730" cy="24" r="2.5" fill="#0066FF" opacity="0.18"/>
+  <circle cx="760" cy="38" r="2" fill="#003399" opacity="0.15"/>
+  <line x1="730" y1="24" x2="760" y2="38" stroke="#0066FF" stroke-width="0.4" opacity="0.12"/>
+  <circle cx="748" cy="58" r="1.8" fill="#0066FF" opacity="0.12"/>
+  <line x1="760" y1="38" x2="748" y2="58" stroke="#003399" stroke-width="0.4" opacity="0.1"/>
+  <!-- Floating hexagon left -->
+  <polygon points="40,40 50,34 60,40 60,52 50,58 40,52" fill="none" stroke="#0066FF" stroke-width="0.5" opacity="0.1">
+    <animate attributeName="opacity" values="0.06;0.15;0.06" dur="10s" repeatCount="indefinite"/>
+  </polygon>
   <!-- Title -->
-  <text x="400" y="78" font-family="'Segoe UI','Helvetica Neue',Arial,sans-serif" font-size="52" font-weight="800" fill="url(#blueGradAnim)" text-anchor="middle" letter-spacing="-1">KnowAI<tspan font-weight="300" fill="#c9d1d9"> ERP</tspan></text>
+  <text x="400" y="72" font-family="'Segoe UI','Helvetica Neue',Arial,sans-serif" font-size="54" font-weight="800" fill="url(#titleGrad)" text-anchor="middle" letter-spacing="-1.5" filter="url(#glow)">KnowAI<tspan font-weight="300" fill="#c9d1d9" letter-spacing="2"> ERP</tspan></text>
   <!-- Subtitle -->
-  <text x="400" y="110" font-family="'Segoe UI','Helvetica Neue',Arial,sans-serif" font-size="16" fill="#8b949e" text-anchor="middle" letter-spacing="3">AI-Powered Enterprise Intelligence</text>
-  <!-- Thin accent line -->
-  <rect x="310" y="125" width="180" height="1.5" rx="1" fill="url(#blueGrad)" opacity="0.5">
-    <animate attributeName="width" values="180;220;180" dur="6s" repeatCount="indefinite"/>
-    <animate attributeName="x" values="310;290;310" dur="6s" repeatCount="indefinite"/>
+  <text x="400" y="106" font-family="'Segoe UI','Helvetica Neue',Arial,sans-serif" font-size="15" fill="#8b949e" text-anchor="middle" letter-spacing="4">AI-Powered Enterprise Intelligence</text>
+  <!-- Accent line -->
+  <rect x="280" y="120" width="240" height="1.5" rx="1" fill="url(#accentLine)">
+    <animate attributeName="width" values="240;280;240" dur="6s" repeatCount="indefinite"/>
+    <animate attributeName="x" values="280;260;280" dur="6s" repeatCount="indefinite"/>
   </rect>
-  <!-- Version tag -->
-  <rect x="340" y="140" width="120" height="22" rx="11" fill="#161b22" stroke="#30363d" stroke-width="1"/>
-  <text x="400" y="155" font-family="'Segoe UI','Helvetica Neue',Arial,sans-serif" font-size="11" fill="#8b949e" text-anchor="middle">v1.0.0 — Production</text>
+  <!-- Version badge -->
+  <rect x="340" y="134" width="120" height="24" rx="12" fill="#0d1117" stroke="#30363d" stroke-width="1"/>
+  <text x="400" y="150" font-family="'Segoe UI Mono','SF Mono',monospace" font-size="10.5" fill="#8b949e" text-anchor="middle">v1.0.0 Production</text>
 </svg>
 
 <br/>
 
-[![React](https://img.shields.io/badge/React_19-61DAFB?style=for-the-badge&logo=react&logoColor=black)](https://react.dev)
-[![Next.js](https://img.shields.io/badge/Next.js_15-000000?style=for-the-badge&logo=next.js&logoColor=white)](https://nextjs.org)
-[![PostgreSQL](https://img.shields.io/badge/PostgreSQL_16-4169E1?style=for-the-badge&logo=postgresql&logoColor=white)](https://postgresql.org)
+[![React 19](https://img.shields.io/badge/React_19-61DAFB?style=for-the-badge&logo=react&logoColor=black)](https://react.dev)
+[![Next.js 15](https://img.shields.io/badge/Next.js_15-000000?style=for-the-badge&logo=next.js&logoColor=white)](https://nextjs.org)
+[![PostgreSQL 16](https://img.shields.io/badge/PostgreSQL_16-4169E1?style=for-the-badge&logo=postgresql&logoColor=white)](https://postgresql.org)
 [![TypeScript](https://img.shields.io/badge/TypeScript-3178C6?style=for-the-badge&logo=typescript&logoColor=white)](https://typescriptlang.org)
 [![Docker](https://img.shields.io/badge/Docker-2496ED?style=for-the-badge&logo=docker&logoColor=white)](https://docker.com)
-[![License: ISC](https://img.shields.io/badge/License-ISC-green?style=for-the-badge)](LICENSE)
+[![License: ISC](https://img.shields.io/badge/License-ISC-22c55e?style=for-the-badge)](LICENSE)
 
 </div>
 
@@ -92,38 +107,42 @@
 
 ## What is KnowAI
 
-**KnowAI ERP** is a production-grade, multi-tenant enterprise resource planning platform that consolidates 20+ business functions into a single application. Hiring pipelines, payroll processing, CRM, project management, real-time inventory, workflow automation, and predictive analytics -- all unified under one roof, with a 25-role permission hierarchy enforced across every surface.
+**KnowAI ERP** is a production-grade, multi-tenant enterprise resource planning platform that replaces your entire SaaS stack with a single deployment. Hiring pipelines, payroll processing, CRM, project management, real-time inventory, time tracking, workflow automation, and predictive analytics -- unified under one roof with a 25-role permission hierarchy enforced across every surface.
 
-Stop stitching together a dozen SaaS tools. Deploy one platform. Run your entire company.
+Most companies run 12 to 15 disconnected tools. KnowAI runs one.
 
-Built across **56,365+ lines of production code** with **46 PostgreSQL tables**, **40+ REST API endpoints**, **34+ pages**, and **17 seeded users** ready out of the box. Multi-currency support (USD, INR, HKD, CAD, GBP, AUD, AED), dark theme, two-factor authentication, and Docker-based deployment included.
+Built across **56,365+ lines of production code**, the platform ships with **46 PostgreSQL tables**, **40+ REST API endpoints**, **34+ fully-realized pages**, and **17 seeded users** ready to demo out of the box. Multi-currency support (USD, INR, HKD, CAD, GBP, AUD, AED), system-wide dark theme, two-factor authentication, video review workflows, and Docker-based deployment are included -- not upsold.
 
 ---
 
 <div align="center">
 
-<!-- STATS BAR SVG -->
+<!-- STATS BAR -->
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 50" width="800" height="50">
   <defs>
-    <linearGradient id="pillBg" x1="0%" y1="0%" x2="0%" y2="100%">
+    <linearGradient id="statPillBg" x1="0%" y1="0%" x2="0%" y2="100%">
       <stop offset="0%" style="stop-color:#161b22"/>
       <stop offset="100%" style="stop-color:#0d1117"/>
     </linearGradient>
+    <linearGradient id="statBorder" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" style="stop-color:#0066FF"/>
+      <stop offset="100%" style="stop-color:#003399"/>
+    </linearGradient>
   </defs>
   <!-- Pill 1: LOC -->
-  <rect x="12" y="5" width="142" height="40" rx="20" fill="url(#pillBg)" stroke="#0066FF" stroke-width="1.2"/>
+  <rect x="12" y="5" width="142" height="40" rx="20" fill="url(#statPillBg)" stroke="url(#statBorder)" stroke-width="1.2"/>
   <text x="83" y="30" font-family="'Segoe UI','Helvetica Neue',Arial,sans-serif" font-size="14" font-weight="700" fill="#58a6ff" text-anchor="middle">56K+ LOC</text>
   <!-- Pill 2: Tables -->
-  <rect x="168" y="5" width="142" height="40" rx="20" fill="url(#pillBg)" stroke="#0066FF" stroke-width="1.2"/>
+  <rect x="168" y="5" width="142" height="40" rx="20" fill="url(#statPillBg)" stroke="url(#statBorder)" stroke-width="1.2"/>
   <text x="239" y="30" font-family="'Segoe UI','Helvetica Neue',Arial,sans-serif" font-size="14" font-weight="700" fill="#58a6ff" text-anchor="middle">46 Tables</text>
   <!-- Pill 3: APIs -->
-  <rect x="324" y="5" width="142" height="40" rx="20" fill="url(#pillBg)" stroke="#0066FF" stroke-width="1.2"/>
+  <rect x="324" y="5" width="142" height="40" rx="20" fill="url(#statPillBg)" stroke="url(#statBorder)" stroke-width="1.2"/>
   <text x="395" y="30" font-family="'Segoe UI','Helvetica Neue',Arial,sans-serif" font-size="14" font-weight="700" fill="#58a6ff" text-anchor="middle">40+ APIs</text>
   <!-- Pill 4: Pages -->
-  <rect x="480" y="5" width="142" height="40" rx="20" fill="url(#pillBg)" stroke="#0066FF" stroke-width="1.2"/>
+  <rect x="480" y="5" width="142" height="40" rx="20" fill="url(#statPillBg)" stroke="url(#statBorder)" stroke-width="1.2"/>
   <text x="551" y="30" font-family="'Segoe UI','Helvetica Neue',Arial,sans-serif" font-size="14" font-weight="700" fill="#58a6ff" text-anchor="middle">34+ Pages</text>
   <!-- Pill 5: Roles -->
-  <rect x="636" y="5" width="152" height="40" rx="20" fill="url(#pillBg)" stroke="#0066FF" stroke-width="1.2"/>
+  <rect x="636" y="5" width="152" height="40" rx="20" fill="url(#statPillBg)" stroke="url(#statBorder)" stroke-width="1.2"/>
   <text x="712" y="30" font-family="'Segoe UI','Helvetica Neue',Arial,sans-serif" font-size="14" font-weight="700" fill="#58a6ff" text-anchor="middle">25 Roles</text>
 </svg>
 
@@ -135,63 +154,63 @@ Built across **56,365+ lines of production code** with **46 PostgreSQL tables**,
 
 <div align="center">
 
-<!-- FEATURE GRID SVG -->
+<!-- FEATURE GRID -->
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 200" width="800" height="200">
   <defs>
-    <linearGradient id="cardBg" x1="0%" y1="0%" x2="0%" y2="100%">
+    <linearGradient id="featCardBg" x1="0%" y1="0%" x2="0%" y2="100%">
       <stop offset="0%" style="stop-color:#161b22"/>
       <stop offset="100%" style="stop-color:#0d1117"/>
     </linearGradient>
-    <linearGradient id="iconBlue" x1="0%" y1="0%" x2="100%" y2="100%">
+    <linearGradient id="featIconGrad" x1="0%" y1="0%" x2="100%" y2="100%">
       <stop offset="0%" style="stop-color:#0066FF"/>
       <stop offset="100%" style="stop-color:#003399"/>
     </linearGradient>
   </defs>
   <!-- Row 1 -->
   <!-- Card 1: Inventory Management -->
-  <rect x="10" y="8" width="245" height="82" rx="10" fill="url(#cardBg)" stroke="#21262d" stroke-width="1"/>
-  <rect x="24" y="24" width="36" height="36" rx="8" fill="url(#iconBlue)" opacity="0.15"/>
-  <rect x="32" y="32" width="20" height="4" rx="1" fill="#0066FF"/>
-  <rect x="32" y="39" width="20" height="4" rx="1" fill="#0066FF" opacity="0.7"/>
-  <rect x="32" y="46" width="14" height="4" rx="1" fill="#0066FF" opacity="0.4"/>
+  <rect x="10" y="8" width="245" height="82" rx="10" fill="url(#featCardBg)" stroke="#21262d" stroke-width="1"/>
+  <rect x="24" y="24" width="36" height="36" rx="8" fill="url(#featIconGrad)" opacity="0.15"/>
+  <rect x="33" y="32" width="18" height="3.5" rx="1" fill="#0066FF"/>
+  <rect x="33" y="38" width="18" height="3.5" rx="1" fill="#0066FF" opacity="0.7"/>
+  <rect x="33" y="44" width="12" height="3.5" rx="1" fill="#0066FF" opacity="0.4"/>
   <text x="72" y="39" font-family="'Segoe UI','Helvetica Neue',Arial,sans-serif" font-size="13" font-weight="700" fill="#c9d1d9">Inventory Management</text>
   <text x="72" y="56" font-family="'Segoe UI','Helvetica Neue',Arial,sans-serif" font-size="11" fill="#8b949e">Real-time stock, SKU, reorder alerts</text>
   <!-- Card 2: HR & Hiring -->
-  <rect x="275" y="8" width="245" height="82" rx="10" fill="url(#cardBg)" stroke="#21262d" stroke-width="1"/>
-  <rect x="289" y="24" width="36" height="36" rx="8" fill="url(#iconBlue)" opacity="0.15"/>
+  <rect x="275" y="8" width="245" height="82" rx="10" fill="url(#featCardBg)" stroke="#21262d" stroke-width="1"/>
+  <rect x="289" y="24" width="36" height="36" rx="8" fill="url(#featIconGrad)" opacity="0.15"/>
   <circle cx="303" cy="36" r="5" fill="none" stroke="#0066FF" stroke-width="1.5"/>
   <path d="M295 50 Q303 44 311 50" fill="none" stroke="#0066FF" stroke-width="1.5"/>
   <text x="337" y="39" font-family="'Segoe UI','Helvetica Neue',Arial,sans-serif" font-size="13" font-weight="700" fill="#c9d1d9">HR & Hiring</text>
   <text x="337" y="56" font-family="'Segoe UI','Helvetica Neue',Arial,sans-serif" font-size="11" fill="#8b949e">HireFlow pipeline, payroll, leaves</text>
   <!-- Card 3: Project Tracking -->
-  <rect x="540" y="8" width="245" height="82" rx="10" fill="url(#cardBg)" stroke="#21262d" stroke-width="1"/>
-  <rect x="554" y="24" width="36" height="36" rx="8" fill="url(#iconBlue)" opacity="0.15"/>
-  <rect x="562" y="33" width="8" height="18" rx="2" fill="#0066FF" opacity="0.5"/>
-  <rect x="573" y="28" width="8" height="23" rx="2" fill="#0066FF" opacity="0.7"/>
-  <rect x="562" y="33" width="8" height="18" rx="2" fill="#0066FF" opacity="0.5"/>
+  <rect x="540" y="8" width="245" height="82" rx="10" fill="url(#featCardBg)" stroke="#21262d" stroke-width="1"/>
+  <rect x="554" y="24" width="36" height="36" rx="8" fill="url(#featIconGrad)" opacity="0.15"/>
+  <rect x="562" y="34" width="8" height="17" rx="2" fill="#0066FF" opacity="0.5"/>
+  <rect x="573" y="29" width="8" height="22" rx="2" fill="#0066FF" opacity="0.75"/>
+  <rect x="584" y="37" width="8" height="14" rx="2" fill="#0066FF" opacity="0.4"/>
   <text x="602" y="39" font-family="'Segoe UI','Helvetica Neue',Arial,sans-serif" font-size="13" font-weight="700" fill="#c9d1d9">Project Tracking</text>
   <text x="602" y="56" font-family="'Segoe UI','Helvetica Neue',Arial,sans-serif" font-size="11" fill="#8b949e">Kanban, tasks, dependencies, OKRs</text>
   <!-- Row 2 -->
   <!-- Card 4: Time Management -->
-  <rect x="10" y="108" width="245" height="82" rx="10" fill="url(#cardBg)" stroke="#21262d" stroke-width="1"/>
-  <rect x="24" y="124" width="36" height="36" rx="8" fill="url(#iconBlue)" opacity="0.15"/>
+  <rect x="10" y="108" width="245" height="82" rx="10" fill="url(#featCardBg)" stroke="#21262d" stroke-width="1"/>
+  <rect x="24" y="124" width="36" height="36" rx="8" fill="url(#featIconGrad)" opacity="0.15"/>
   <circle cx="42" cy="142" r="10" fill="none" stroke="#0066FF" stroke-width="1.5"/>
   <line x1="42" y1="142" x2="42" y2="135" stroke="#0066FF" stroke-width="1.5"/>
   <line x1="42" y1="142" x2="48" y2="142" stroke="#0066FF" stroke-width="1.2"/>
   <text x="72" y="139" font-family="'Segoe UI','Helvetica Neue',Arial,sans-serif" font-size="13" font-weight="700" fill="#c9d1d9">Time Management</text>
   <text x="72" y="156" font-family="'Segoe UI','Helvetica Neue',Arial,sans-serif" font-size="11" fill="#8b949e">Billable hours, entries, utilization</text>
   <!-- Card 5: AI Analytics -->
-  <rect x="275" y="108" width="245" height="82" rx="10" fill="url(#cardBg)" stroke="#21262d" stroke-width="1"/>
-  <rect x="289" y="124" width="36" height="36" rx="8" fill="url(#iconBlue)" opacity="0.15"/>
+  <rect x="275" y="108" width="245" height="82" rx="10" fill="url(#featCardBg)" stroke="#21262d" stroke-width="1"/>
+  <rect x="289" y="124" width="36" height="36" rx="8" fill="url(#featIconGrad)" opacity="0.15"/>
   <path d="M298 148 L305 138 L312 143 L319 132" fill="none" stroke="#0066FF" stroke-width="1.8" stroke-linecap="round"/>
-  <circle cx="319" cy="132" r="2" fill="#0066FF"/>
+  <circle cx="319" cy="132" r="2.5" fill="#0066FF"/>
   <text x="337" y="139" font-family="'Segoe UI','Helvetica Neue',Arial,sans-serif" font-size="13" font-weight="700" fill="#c9d1d9">AI Analytics</text>
   <text x="337" y="156" font-family="'Segoe UI','Helvetica Neue',Arial,sans-serif" font-size="11" fill="#8b949e">Predictive insights, performance scoring</text>
   <!-- Card 6: Role-Based Access -->
-  <rect x="540" y="108" width="245" height="82" rx="10" fill="url(#cardBg)" stroke="#21262d" stroke-width="1"/>
-  <rect x="554" y="124" width="36" height="36" rx="8" fill="url(#iconBlue)" opacity="0.15"/>
-  <rect x="563" y="132" width="18" height="12" rx="3" fill="none" stroke="#0066FF" stroke-width="1.5"/>
-  <circle cx="572" cy="130" r="3" fill="none" stroke="#0066FF" stroke-width="1.2"/>
+  <rect x="540" y="108" width="245" height="82" rx="10" fill="url(#featCardBg)" stroke="#21262d" stroke-width="1"/>
+  <rect x="554" y="124" width="36" height="36" rx="8" fill="url(#featIconGrad)" opacity="0.15"/>
+  <rect x="563" y="133" width="18" height="12" rx="3" fill="none" stroke="#0066FF" stroke-width="1.5"/>
+  <circle cx="572" cy="131" r="3" fill="none" stroke="#0066FF" stroke-width="1.2"/>
   <line x1="572" y1="138" x2="572" y2="148" stroke="#0066FF" stroke-width="1.5"/>
   <text x="602" y="139" font-family="'Segoe UI','Helvetica Neue',Arial,sans-serif" font-size="13" font-weight="700" fill="#c9d1d9">Role-Based Access</text>
   <text x="602" y="156" font-family="'Segoe UI','Helvetica Neue',Arial,sans-serif" font-size="11" fill="#8b949e">25-level RBAC on every endpoint</text>
@@ -204,53 +223,53 @@ Built across **56,365+ lines of production code** with **46 PostgreSQL tables**,
 ## Feature Breakdown
 
 ### Core Platform
-- **Multi-Tenant Architecture** -- Workspace isolation with membership controls, department segmentation, and tenant-aware data access
-- **25-Role Permission Hierarchy** -- Granular numeric permission levels from Office Boy (10) to CTO (100), enforced across every API route and UI surface
-- **Widgetised Dashboard** -- Customizable executive dashboard with drag-and-drop widgets, KPI cards, and dark theme support
-- **Two-Factor Authentication** -- Identity verification, account lockout policies, encrypted password vault with role-based access logs
+- **Multi-Tenant Architecture** -- Workspace isolation with membership controls, department segmentation, and tenant-aware data access across every module
+- **25-Role Permission Hierarchy** -- Granular numeric permission levels from Office Boy (10) to CTO (100), enforced at the middleware layer across all API routes and UI surfaces
+- **Widgetised Dashboard** -- Customizable executive dashboard with drag-and-drop widgets, KPI cards, department-scoped analytics, and full dark theme support
+- **Two-Factor Authentication** -- Identity verification via TOTP, account lockout policies, encrypted password vault, and role-based access logs
 
 ### HireFlow Hiring Pipeline
-- **End-to-End Recruitment** -- Job postings, candidate tracking, multi-round interview scheduling, scoring rubrics, and offer management
-- **Video Review Engine** -- Candidate video submission review with structured feedback and rating workflows
-- **Identity Verification** -- Document verification pipeline with approval states for onboarding compliance
+- **End-to-End Recruitment** -- Job postings with public careers page, candidate tracking, multi-round interview scheduling, scoring rubrics, and offer management
+- **Video Review Engine** -- Candidate video submission review with structured feedback, rating workflows, and hiring committee collaboration
+- **Identity Verification** -- Document verification pipeline with multi-stage approval states for onboarding compliance
 
 ### Inventory and Order Management
-- **Inventory Tracking** -- Real-time stock levels, reorder alerts, SKU management, and warehouse segmentation
-- **Order Lifecycle** -- Order creation, fulfillment tracking, invoice generation with multi-currency support, and status automation
+- **Inventory Tracking** -- Real-time stock levels, reorder point alerts, SKU management, and warehouse segmentation
+- **Order Lifecycle** -- Order creation, fulfillment tracking, invoice generation with multi-currency support (6 currencies), and automated status transitions
 
 ### Workflow Automation and Analytics
-- **Workflow Engine** -- Automated approval chains, change request workflows, escalation rules, and accountability alerts
-- **Predictive Analytics** -- Executive dashboards, team performance scoring, employee behavioral analytics, and predictive insights
-- **Conversational Assistant** -- Platform navigation, data queries, and operational support through a built-in chatbot
+- **Workflow Engine** -- Automated approval chains, change request workflows, escalation rules, and accountability alerts with audit trails
+- **Predictive Analytics** -- Executive dashboards, team performance scoring, employee behavioral analytics, and trend-based predictive insights
+- **Conversational Assistant** -- Platform navigation, data queries, and operational support through a built-in conversational interface
 
 ### Project and Task Management
-- **Full Project Lifecycle** -- Planning, Active, Review, Complete stages with task dependencies, priority levels, and assignee management
-- **Kanban Boards** -- Drag-and-drop task boards with real-time state synchronization
-- **Time Tracking** -- Billable hours, time entries per task, and utilization reports
-- **OKR Goal Tracking** -- Objective and key result management with progress indicators
+- **Full Project Lifecycle** -- Planning, Active, Review, and Complete stages with task dependencies, priority levels, and multi-assignee management
+- **Kanban Boards** -- Drag-and-drop task boards with real-time state synchronization via @hello-pangea/dnd
+- **Time Tracking** -- Billable hours, time entries per task, utilization reports, and project-level cost analysis
+- **OKR Goal Tracking** -- Objective and key result management with progress indicators and team alignment views
 
 ### HR, Payroll, and People Operations
-- **Payroll Processing** -- Monthly salary computation, payroll logs, expense submission, and multi-currency disbursement
-- **Leave Management** -- Request/approval workflows with calendar integration and balance tracking
-- **Complaint and Escalation** -- Filing, timeline tracking, and resolution workflows
-- **Personality Assessment** -- Carl Jung MBTI-based evaluation for team dynamics
+- **Payroll Processing** -- Monthly salary computation, payroll ledger, expense submission, and multi-currency disbursement
+- **Leave Management** -- Request/approval workflows with calendar integration, balance tracking, and policy enforcement
+- **Complaint and Escalation** -- Filing, timeline tracking, and resolution workflows with escalation rules
+- **Personality Assessment** -- Carl Jung MBTI-based evaluation for team dynamics and hiring insights
 
 ### CRM and Sales
-- **Client Management** -- Client lifecycle tracking, contact directory, and relationship history
-- **Lead Pipeline** -- Stage-based lead progression with associated tasks and conversion analytics
-- **Invoice Generation** -- Multi-currency invoice creation, line items, tax computation, and PDF export
+- **Client Management** -- Client lifecycle tracking, contact directory, relationship history, and revenue attribution
+- **Lead Pipeline** -- Stage-based lead progression with associated tasks, conversion analytics, and pipeline forecasting
+- **Invoice Generation** -- Multi-currency invoice creation, line items, tax computation, and export-ready formatting
 
 ### Communication and Collaboration
-- **Real-Time Chat** -- Chat rooms, direct messages, and threaded conversations
-- **Email Client** -- SMTP-based email composition, inbox management, and analytics dashboard
-- **Calendar** -- Event scheduling, team availability, and deadline tracking
-- **Notification Engine** -- System-wide notifications with read/unread state management
+- **Real-Time Chat** -- Chat rooms, direct messages, and threaded conversations with presence indicators
+- **Email Client** -- SMTP-based email composition, inbox management, and email analytics dashboard
+- **Calendar** -- Event scheduling, team availability, and deadline tracking with project integration
+- **Notification Engine** -- System-wide notifications with read/unread state management and configurable preferences
 
 ### Content and Workspace
-- **Spaces** -- Multi-workspace environments (Engineering, Design, Content, Finance) with isolated resources
+- **Spaces** -- Multi-workspace environments (Engineering, Design, Content, Finance) with isolated resources and access controls
 - **Wiki and Docs** -- Knowledge base with rich-text editing via React Quill
-- **Canvas** -- Whiteboard for visual collaboration and brainstorming
-- **SOPs** -- Standard operating procedure management and distribution
+- **Canvas** -- Whiteboard for visual collaboration, brainstorming, and architecture planning
+- **SOPs** -- Standard operating procedure management, versioning, and distribution
 
 ---
 
@@ -260,18 +279,18 @@ Built across **56,365+ lines of production code** with **46 PostgreSQL tables**,
 |:--|:--|:--|
 | **Frontend** | React 19, Vite 8, React Router 7 | SPA with hot module reload and file-based routing |
 | **UI Framework** | Bootstrap 5, React-Bootstrap, Lucide Icons | Responsive component library with dark theme |
-| **State** | Redux + Redux Thunk | Global state with async action creators |
-| **Charts** | ApexCharts + react-apexcharts | Dashboard analytics, reports, and visualizations |
-| **Rich Text** | React Quill | Document and email editor |
-| **Drag and Drop** | @hello-pangea/dnd | Kanban boards, widget reordering |
+| **State** | Redux + Redux Thunk | Global state management with async action creators |
+| **Charts** | ApexCharts + react-apexcharts | Dashboard analytics, reports, and real-time visualizations |
+| **Rich Text** | React Quill | Document, wiki, and email editor |
+| **Drag and Drop** | @hello-pangea/dnd | Kanban boards, widget reordering, dashboard customization |
 | **Onboarding** | React Joyride | Guided product tours for new users |
-| **Backend** | Next.js 15 (API Routes) | REST API server on port 3001 |
-| **ORM** | Prisma 7 + @prisma/adapter-pg | Type-safe database queries with migrations |
-| **Database** | PostgreSQL 16 Alpine | Relational data store with UUID keys |
-| **Auth** | jose + jsonwebtoken + bcryptjs | JWT tokens, 2FA, password hashing |
-| **Email** | Nodemailer | SMTP email delivery |
+| **Backend** | Next.js 15 (API Routes) | REST API server with route handlers on port 3001 |
+| **ORM** | Prisma 7 + @prisma/adapter-pg | Type-safe database queries with migrations and seeding |
+| **Database** | PostgreSQL 16 Alpine | Relational data store with UUID primary keys |
+| **Auth** | jose + jsonwebtoken + bcryptjs | JWT tokens, TOTP 2FA, password hashing |
+| **Email** | Nodemailer | SMTP email delivery and composition |
 | **Styles** | Sass (SCSS) | Modular stylesheet preprocessing |
-| **Containers** | Docker Compose 3.8 | Multi-service orchestration |
+| **Containers** | Docker Compose 3.8 | Multi-service orchestration with volume persistence |
 
 ---
 
@@ -298,6 +317,7 @@ Built across **56,365+ lines of production code** with **46 PostgreSQL tables**,
 |    |   /login   |  /projects   |     /hr      |   /payroll    |       |
 |    |  /signup   |   /tasks     |   /hiring    |  /invoices    |       |
 |    |  /logout   |  /calendar   |   /leaves    |  /expenses    |       |
+|    |   /2fa     |   /goals     |  /onboarding |  /subscriptions|      |
 |    +------------+--------------+--------------+---------------+       |
 +-----------------------------+-----------------------------------------+
                               | Prisma 7 ORM
@@ -310,7 +330,7 @@ Built across **56,365+ lines of production code** with **46 PostgreSQL tables**,
 +-----------------------------------------------------------------------+
 ```
 
-**Data flow:** The browser SPA communicates with the Next.js API server via a Vite dev proxy (or direct in production). Every API route is guarded by JWT authentication middleware and role-based access control. Prisma 7 provides type-safe, auto-generated queries against PostgreSQL 16.
+**Data flow:** The browser SPA communicates with the Next.js API server via a Vite dev proxy (or direct URL in production). Every API route is guarded by JWT authentication middleware and role-based access control. Prisma 7 provides type-safe, auto-generated queries against PostgreSQL 16 with full migration support.
 
 ### Database Schema -- 46 Tables
 
@@ -473,6 +493,9 @@ All endpoints are served under `/api/` by Next.js route handlers. Authentication
 | `POST` | `/api/auth/login` | Authenticate user, returns JWT |
 | `POST` | `/api/auth/signup` | Register new user |
 | `POST` | `/api/auth/logout` | Invalidate session |
+| `POST` | `/api/auth/two-factor` | Enable/verify TOTP 2FA |
+| `POST` | `/api/auth/change-password` | Change user password |
+| `POST` | `/api/auth/forgot-password` | Password reset flow |
 
 </details>
 
@@ -529,9 +552,11 @@ All endpoints are served under `/api/` by Next.js route handlers. Authentication
 | `GET/POST` | `/api/leaves` | Leave requests and approvals |
 | `GET/POST` | `/api/hiring` | Job postings, candidates, interviews |
 | `GET/POST` | `/api/documents` | Employee document verification |
+| `GET/POST` | `/api/document-verification` | Document approval pipeline |
 | `GET/POST` | `/api/complaints` | Complaint filing and escalation |
 | `GET/POST` | `/api/onboarding` | Employee onboarding flow |
 | `GET/POST` | `/api/expenses` | Expense submission and approval |
+| `GET/POST` | `/api/video-reviews` | Video submission review workflows |
 
 </details>
 
@@ -543,7 +568,7 @@ All endpoints are served under `/api/` by Next.js route handlers. Authentication
 | `GET/POST` | `/api/chat` | Chat rooms, DMs, messages |
 | `GET/POST` | `/api/email` | Email composition via SMTP |
 | `GET` | `/api/email-dashboard` | Email analytics |
-| `GET/POST` | `/api/chatbot` | Chatbot conversations |
+| `GET/POST` | `/api/chatbot` | Conversational assistant |
 
 </details>
 
@@ -560,6 +585,7 @@ All endpoints are served under `/api/` by Next.js route handlers. Authentication
 | `GET/POST` | `/api/spaces` | Workspace spaces |
 | `GET/POST` | `/api/sops` | Standard operating procedures |
 | `GET/POST` | `/api/careers` | Public careers page |
+| `GET/POST` | `/api/content-workspace` | Content workspace management |
 
 </details>
 
@@ -588,6 +614,8 @@ All endpoints are served under `/api/` by Next.js route handlers. Authentication
 | `GET` | `/api/analytics` | Platform analytics |
 | `GET` | `/api/reports` | Generated reports |
 | `GET/POST` | `/api/personality-test` | MBTI personality assessment |
+| `GET/POST` | `/api/profile-setup` | User profile configuration |
+| `GET/POST` | `/api/requests` | General request management |
 
 </details>
 
@@ -601,7 +629,7 @@ All endpoints are served under `/api/` by Next.js route handlers. Authentication
 4. **Push** to the branch: `git push origin feature/your-feature`
 5. **Open** a Pull Request
 
-Please follow the existing code style and include relevant tests for new features.
+Please follow the existing code style, maintain TypeScript strict mode, and include relevant tests for new features.
 
 ---
 
