@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 60" width="1000" height="60">
+  <defs>
+    <linearGradient id="sbg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#0d1117"/>
+      <stop offset="100%" stop-color="#0d1117"/>
+    </linearGradient>
+  </defs>
+  <rect width="1000" height="60" fill="url(#sbg)" rx="8"/>
+  <!-- 56K+ LOC -->
+  <rect x="16" y="10" width="175" height="40" rx="20" fill="#161b22" stroke="#0066FF" stroke-width="1" stroke-opacity="0.5"/>
+  <text x="103" y="36" text-anchor="middle" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="14" font-weight="600" fill="#e6edf3">56K+ LOC</text>
+  <!-- 56 Tables -->
+  <rect x="210" y="10" width="175" height="40" rx="20" fill="#161b22" stroke="#0066FF" stroke-width="1" stroke-opacity="0.5"/>
+  <text x="297" y="36" text-anchor="middle" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="14" font-weight="600" fill="#e6edf3">56 Tables</text>
+  <!-- 63 APIs -->
+  <rect x="404" y="10" width="175" height="40" rx="20" fill="#161b22" stroke="#0066FF" stroke-width="1" stroke-opacity="0.5"/>
+  <text x="491" y="36" text-anchor="middle" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="14" font-weight="600" fill="#e6edf3">63 APIs</text>
+  <!-- 39 Pages -->
+  <rect x="598" y="10" width="175" height="40" rx="20" fill="#161b22" stroke="#0066FF" stroke-width="1" stroke-opacity="0.5"/>
+  <text x="685" y="36" text-anchor="middle" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="14" font-weight="600" fill="#e6edf3">39 Pages</text>
+  <!-- 25 Roles -->
+  <rect x="792" y="10" width="175" height="40" rx="20" fill="#161b22" stroke="#0066FF" stroke-width="1" stroke-opacity="0.5"/>
+  <text x="879" y="36" text-anchor="middle" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="14" font-weight="600" fill="#e6edf3">25 Roles</text>
+</svg>
