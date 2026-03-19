@@ -1,70 +1,86 @@
 // Know AI Enterprise ERP - Main Stylesheet
 // Inspired by WorldNIC template with original composition
 
-// ── Variables ──────────────────────────────────────────
+// ── Variables — Apple Glassmorphism (per DESIGN.md) ──────
 :root {
-  // Brand — Know AI Official Colors
-  --kai-primary: #146DF7;
-  --kai-primary-light: #CFF0FF;
-  --kai-primary-dark: #0148A7;
-  --kai-secondary: #8B3FE9;
-  --kai-success: #16A34A;
-  --kai-warning: #EA580C;
-  --kai-danger: #CB3939;
-  --kai-info: #2563EB;
+  // Brand — Apple System Palette
+  --kai-primary: #007AFF;
+  --kai-primary-light: rgba(0, 122, 255, 0.1);
+  --kai-primary-dark: #0066D6;
+  --kai-success: #34C759;
+  --kai-warning: #FF9500;
+  --kai-danger: #FF3B30;
+  --kai-info: #5AC8FA;
 
-  // Surfaces
-  --kai-bg: #FAFAFA;
-  --kai-surface: #FFFFFF;
-  --kai-surface-hover: #F5F5F5;
-  --kai-sidebar-bg: #05121B;
-  --kai-sidebar-text: #A6B5BF;
-  --kai-sidebar-active: #146DF7;
-  --kai-header-bg: #FFFFFF;
+  // Surfaces — Glassmorphism
+  --kai-bg: #F5F5F7;
+  --kai-surface: rgba(255, 255, 255, 0.92);
+  --kai-surface-hover: rgba(255, 255, 255, 0.95);
+  --kai-surface-solid: #FFFFFF;
+  --kai-sidebar-bg: rgba(245, 245, 247, 0.72);
+  --kai-sidebar-text: #1D1D1F;
+  --kai-sidebar-active: rgba(0, 122, 255, 0.1);
+  --kai-header-bg: rgba(255, 255, 255, 0.72);
 
-  // Text — Know AI Palette
-  --kai-text: #10222F;
-  --kai-text-secondary: #4C5963;
-  --kai-text-muted: #5B6B76;
+  // Glass
+  --kai-glass-bg: rgba(255, 255, 255, 0.72);
+  --kai-glass-border: rgba(255, 255, 255, 0.18);
+  --kai-blur: blur(20px) saturate(180%);
+
+  // Text — Apple Gray Scale
+  --kai-text: #1D1D1F;
+  --kai-text-secondary: #86868B;
+  --kai-text-muted: #AEAEB2;
 
   // Borders
-  --kai-border: #E7E7E8;
-  --kai-border-light: #F2F2F2;
+  --kai-border: rgba(0, 0, 0, 0.06);
+  --kai-border-light: rgba(0, 0, 0, 0.04);
 
   // Shadows
-  --kai-shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.06);
-  --kai-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
-  --kai-shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.12);
+  --kai-shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.04), 0 1px 2px rgba(0, 0, 0, 0.06);
+  --kai-shadow: 0 4px 12px rgba(0, 0, 0, 0.06), 0 1px 3px rgba(0, 0, 0, 0.04);
+  --kai-shadow-lg: 0 12px 40px rgba(0, 0, 0, 0.08), 0 4px 12px rgba(0, 0, 0, 0.04);
 
-  // Radius
-  --kai-radius-sm: 4px;
-  --kai-radius: 8px;
-  --kai-radius-lg: 12px;
+  // Radius — Apple rounded corners
+  --kai-radius-sm: 8px;
+  --kai-radius: 12px;
+  --kai-radius-lg: 16px;
+  --kai-radius-xl: 20px;
   --kai-radius-pill: 50px;
 
   // Transitions
   --kai-transition: all 0.2s ease;
 
   // Layout
-  --kai-sidebar-width: 260px;
-  --kai-sidebar-collapsed-width: 72px;
+  --kai-sidebar-width: 240px;
+  --kai-sidebar-collapsed-width: 64px;
   --kai-header-height: 64px;
 }
 
-// Dark theme — Know AI
+// Dark theme — Apple Dark Mode
 [data-theme="dark"] {
-  --kai-bg: #05121B;
-  --kai-surface: #10222F;
-  --kai-surface-hover: #182C3A;
-  --kai-sidebar-bg: #030D14;
-  --kai-header-bg: #10222F;
-  --kai-text: #F2F2F2;
-  --kai-text-secondary: #C5D0DA;
-  --kai-text-muted: #8A9AAA;
-  --kai-border: #232E35;
-  --kai-border-light: #1A2630;
-  --kai-shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.3);
-  --kai-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
+  --kai-bg: #000000;
+  --kai-surface: rgba(44, 44, 46, 0.72);
+  --kai-surface-hover: rgba(58, 58, 60, 0.85);
+  --kai-surface-solid: #1C1C1E;
+  --kai-sidebar-bg: #1C1C1E; // Opaque in dark mode per DESIGN.md
+  --kai-sidebar-text: #F5F5F7;
+  --kai-header-bg: rgba(28, 28, 30, 0.72);
+  --kai-glass-bg: rgba(44, 44, 46, 0.72);
+  --kai-glass-border: rgba(255, 255, 255, 0.1);
+  --kai-text: #F5F5F7;
+  --kai-text-secondary: #98989D;
+  --kai-text-muted: #636366;
+  --kai-border: rgba(255, 255, 255, 0.08);
+  --kai-border-light: rgba(255, 255, 255, 0.05);
+  --kai-shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.2);
+  --kai-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  --kai-shadow-lg: 0 12px 40px rgba(0, 0, 0, 0.4);
+  --kai-primary-light: rgba(0, 122, 255, 0.18);
+  --kai-success: #30D158;
+  --kai-warning: #FF9F0A;
+  --kai-danger: #FF453A;
+  --kai-info: #64D2FF;
 
   // Fix React Bootstrap components in dark mode
   .modal-content, .offcanvas { background: var(--kai-surface); color: var(--kai-text); border-color: var(--kai-border); }
@@ -110,6 +126,9 @@ a { color: var(--kai-primary); text-decoration: none; &:hover { color: var(--kai
 .app-sidebar {
   width: var(--kai-sidebar-width);
   background: var(--kai-sidebar-bg);
+  backdrop-filter: var(--kai-blur);
+  -webkit-backdrop-filter: var(--kai-blur);
+  border-right: 1px solid var(--kai-border);
   position: fixed;
   top: 0;
   left: 0;
@@ -157,6 +176,8 @@ a { color: var(--kai-primary); text-decoration: none; &:hover { color: var(--kai
 .app-header {
   height: var(--kai-header-height);
   background: var(--kai-header-bg);
+  backdrop-filter: var(--kai-blur);
+  -webkit-backdrop-filter: var(--kai-blur);
   border-bottom: 1px solid var(--kai-border);
   display: flex;
   align-items: center;
@@ -180,7 +201,7 @@ a { color: var(--kai-primary); text-decoration: none; &:hover { color: var(--kai
   align-items: center;
   padding: 0 20px;
   gap: 12px;
-  border-bottom: 1px solid rgba(255,255,255,0.06);
+  border-bottom: 1px solid var(--kai-border);
   flex-shrink: 0;
 
   .sidebar-logo {
@@ -197,7 +218,7 @@ a { color: var(--kai-primary); text-decoration: none; &:hover { color: var(--kai
   }
 
   .sidebar-logo-text {
-    color: #fff;
+    color: var(--kai-text);
     font-weight: 700;
     font-size: 18px;
     letter-spacing: -0.5px;
@@ -211,7 +232,7 @@ a { color: var(--kai-primary); text-decoration: none; &:hover { color: var(--kai
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 1.2px;
-  color: rgba(255,255,255,0.3);
+  color: var(--kai-text-muted);
 }
 
 .sidebar-nav {
@@ -224,26 +245,27 @@ a { color: var(--kai-primary); text-decoration: none; &:hover { color: var(--kai
   align-items: center;
   padding: 10px 12px;
   margin-bottom: 2px;
-  border-radius: var(--kai-radius);
+  border-radius: var(--kai-radius-sm);
   color: var(--kai-sidebar-text);
   gap: 12px;
   transition: var(--kai-transition);
   cursor: pointer;
-  font-size: 13.5px;
+  font-size: 13px;
   font-weight: 500;
 
-  svg { width: 20px; height: 20px; flex-shrink: 0; }
+  svg { width: 18px; height: 18px; flex-shrink: 0; opacity: 0.7; }
 
   &:hover {
-    background: rgba(255,255,255,0.06);
-    color: #fff;
+    background: rgba(0, 0, 0, 0.04);
+    color: var(--kai-text);
   }
 
   &.active {
-    background: rgba(1, 104, 250, 0.15);
-    color: #fff;
+    background: var(--kai-sidebar-active);
+    color: var(--kai-primary);
+    font-weight: 600;
 
-    svg { color: var(--kai-primary); }
+    svg { color: var(--kai-primary); opacity: 1; }
   }
 
   .nav-badge {
@@ -259,6 +281,18 @@ a { color: var(--kai-primary); text-decoration: none; &:hover { color: var(--kai
   }
 }
 
+// ── Glass Surface Utility ──────────────────────────────
+.glass {
+  background: var(--kai-surface);
+  border: 1px solid var(--kai-glass-border);
+
+  @supports (backdrop-filter: blur(1px)) {
+    background: var(--kai-glass-bg);
+    backdrop-filter: var(--kai-blur);
+    -webkit-backdrop-filter: var(--kai-blur);
+  }
+}
+
 // ── Cards ──────────────────────────────────────────────
 .kai-card {
   background: var(--kai-surface);
@@ -267,7 +301,7 @@ a { color: var(--kai-primary); text-decoration: none; &:hover { color: var(--kai
   box-shadow: var(--kai-shadow-sm);
   transition: var(--kai-transition);
 
-  &:hover { box-shadow: var(--kai-shadow); }
+  &:hover { box-shadow: var(--kai-shadow); transform: translateY(-2px); }
 
   &-header {
     padding: 16px 20px;
@@ -370,11 +404,11 @@ a { color: var(--kai-primary); text-decoration: none; &:hover { color: var(--kai
   white-space: nowrap;
 
   &.primary { background: var(--kai-primary-light); color: var(--kai-primary); }
-  &.success { background: #d4edda; color: #155724; }
-  &.warning { background: #fff3cd; color: #856404; }
-  &.danger { background: #f8d7da; color: #721c24; }
-  &.info { background: #d1ecf1; color: #0c5460; }
-  &.secondary { background: #e3e7ed; color: #596882; }
+  &.success { background: rgba(52, 199, 89, 0.12); color: #248A3D; }
+  &.warning { background: rgba(255, 149, 0, 0.12); color: #C93400; }
+  &.danger { background: rgba(255, 59, 48, 0.12); color: #D70015; }
+  &.info { background: rgba(90, 200, 250, 0.12); color: #0071A4; }
+  &.secondary { background: rgba(0, 0, 0, 0.05); color: var(--kai-text-secondary); }
 }
 
 // ── Buttons ────────────────────────────────────────────
@@ -521,7 +555,7 @@ a { color: var(--kai-primary); text-decoration: none; &:hover { color: var(--kai
 .text-danger { color: var(--kai-danger) !important; }
 .text-warning { color: var(--kai-warning) !important; }
 .text-muted { color: var(--kai-text-muted) !important; }
-.font-mono { font-family: 'IBM Plex Mono', monospace; }
+.font-mono { font-family: 'SF Mono', 'Geist Mono', 'Menlo', monospace; }
 .truncate { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 
 // View toggle button

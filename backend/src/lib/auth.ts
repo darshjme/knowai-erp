@@ -16,6 +16,7 @@ export interface JWTPayload {
   email: string;
   role: string;
   workspaceId?: string;
+  tokenVersion?: number;
   iat?: number;
   exp?: number;
 }

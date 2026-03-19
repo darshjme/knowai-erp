@@ -3,6 +3,7 @@ import bcrypt from "bcryptjs";
 import prisma from "@/lib/prisma";
 import { signToken } from "@/lib/auth";
 import { jsonOk, jsonError } from "@/lib/api-utils";
+import { getRoleContext } from "@/lib/roles";
 
 // ── Role-based permission definitions ──
 const ROLE_PERMISSIONS: Record<string, string[]> = {
@@ -214,20 +215,23 @@ export async function POST(req: NextRequest) {
       data: { status: "ONLINE" },
     });
 
-    // JWT payload includes userId, email, role, and workspaceId
+    // JWT payload includes userId, email, role, workspaceId, and tokenVersion
+    // tokenVersion is checked on each request — if the DB version is higher
+    // (e.g., after a role change), this JWT is rejected as stale.
     const token = await signToken({
       userId: user.id,
       email: user.email,
       role: user.role,
       workspaceId: user.workspaceId,
+      tokenVersion: user.tokenVersion ?? 0,
     });
 
     // Build full profile response (strip password)
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const { password: _, ...userWithoutPassword } = user;
 
-    // Resolve permissions from role
-    const permissions = ROLE_PERMISSIONS[user.role] || [];
+    // Resolve role context from single source of truth (lib/roles.ts)
+    const roleContext = getRoleContext(user.role);
 
     const response = jsonOk({
       success: true,
@@ -237,7 +241,7 @@ export async function POST(req: NextRequest) {
           onboardingComplete: user.onboardingComplete,
           profileComplete: user.profileComplete,
           profileDeadline: user.profileDeadline,
-          permissions,
+          ...roleContext,
         },
       },
     });

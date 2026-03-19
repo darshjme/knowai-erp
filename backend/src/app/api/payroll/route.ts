@@ -24,22 +24,35 @@ function canProcessPayroll(role: string) {
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
+// Recalculate payroll status inside an interactive transaction to prevent
+// race conditions (double-payment). Uses SELECT ... FOR UPDATE semantics
+// via Prisma's interactive transactions.
+//
+//   Thread A: BEGIN TX → lock payroll row → calc total → update → COMMIT
+//   Thread B: BEGIN TX → lock payroll row → BLOCKED → reads updated state → no-op
+//
 async function recalculatePayrollStatus(payrollId: string) {
-  const payroll = await prisma.payroll.findUnique({ where: { id: payrollId } });
-  if (!payroll) return;
+  await prisma.$transaction(async (tx) => {
+    // Lock the payroll row for this transaction
+    const rows = await tx.$queryRaw<Array<{ id: string; totalPay: number; status: string }>>`
+      SELECT id, "totalPay", status FROM payrolls WHERE id = ${payrollId} FOR UPDATE
+    `;
+    if (!rows || rows.length === 0) return;
+    const payroll = rows[0];
 
-  const aggregate = await prisma.payrollLog.aggregate({
-    where: { payrollId },
-    _sum: { amount: true },
-  });
+    const aggregate = await tx.payrollLog.aggregate({
+      where: { payrollId },
+      _sum: { amount: true },
+    });
 
-  const totalPaid = aggregate._sum.amount ?? 0;
-  const newStatus = totalPaid >= payroll.totalPay ? "PAID" : "PENDING";
-  const paidOn = newStatus === "PAID" ? new Date() : null;
+    const totalPaid = aggregate._sum.amount ?? 0;
+    const newStatus = totalPaid >= payroll.totalPay ? "PAID" : "PENDING";
+    const paidOn = newStatus === "PAID" ? new Date() : null;
 
-  await prisma.payroll.update({
-    where: { id: payrollId },
-    data: { status: newStatus, paidOn },
+    await tx.payroll.update({
+      where: { id: payrollId },
+      data: { status: newStatus, paidOn },
+    });
   });
 }
 

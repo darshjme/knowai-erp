@@ -329,7 +329,11 @@ export async function PUT(req: NextRequest) {
       if (status && !validStatuses.includes(status)) return err("Invalid status");
 
       const updateData: Record<string, unknown> = {};
-      if (role) updateData.role = role;
+      if (role) {
+        updateData.role = role;
+        // Bump tokenVersion to invalidate existing JWTs with the old role
+        updateData.tokenVersion = { increment: 1 };
+      }
       if (department !== undefined) updateData.department = department || null;
       if (status !== undefined) updateData.status = status;
 
