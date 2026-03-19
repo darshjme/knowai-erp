@@ -22,10 +22,17 @@ export function getAuthFromHeaders(req: Request) {
 export async function getAuthUser(req: Request) {
   const fromHeaders = getAuthFromHeaders(req);
   if (fromHeaders) {
-    return prisma.user.findUnique({
+    const user = await prisma.user.findUnique({
       where: { id: fromHeaders.userId },
       include: { workspace: true },
     });
+    // tokenVersion check: if the JWT was issued before a role change,
+    // the embedded version won't match the DB version — reject as stale.
+    if (user) {
+      const tokenVersion = parseInt(req.headers.get("x-token-version") || "0", 10);
+      if (tokenVersion < (user.tokenVersion ?? 0)) return null;
+    }
+    return user;
   }
   const cookie = req.headers.get("cookie") || "";
   const match = cookie.match(/token=([^;]+)/);
@@ -33,7 +40,10 @@ export async function getAuthUser(req: Request) {
   try {
     const payload = await verifyToken(match[1]);
     if (!payload) return null;
-    return prisma.user.findUnique({ where: { id: payload.userId }, include: { workspace: true } });
+    const user = await prisma.user.findUnique({ where: { id: payload.userId }, include: { workspace: true } });
+    // Check tokenVersion from JWT payload against DB
+    if (user && (payload.tokenVersion ?? 0) < (user.tokenVersion ?? 0)) return null;
+    return user;
   } catch {
     return null;
   }

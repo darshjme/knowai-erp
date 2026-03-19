@@ -171,6 +171,11 @@ export async function PATCH(req: NextRequest) {
       expense.submitter.department &&
       user.department === expense.submitter.department;
 
+    // Prevent self-approval: no one can approve their own expense
+    if ((status === "APPROVED" || status === "REJECTED") && expense.submitterId === user.id) {
+      return jsonError("You cannot approve or reject your own expense", 403);
+    }
+
     if (status === "APPROVED") {
       if (hasFullApproval) {
         // CEO, CFO, ADMIN — approve any amount
