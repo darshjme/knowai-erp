@@ -523,7 +523,7 @@ export async function POST(req: NextRequest) {
       }
 
       // Permission checks for sensitive templates
-      if (templateName === "payroll_processed" && !isExecutive(user.role) && user.role !== "HR" && user.role !== "ACCOUNTING") {
+      if (templateName === "payroll_processed" && !isExecutive(user.role) && user.role !== "HR" && !["SR_ACCOUNTANT", "JR_ACCOUNTANT"].includes(user.role)) {
         return jsonError("Only HR, Accounting, or executives can send payroll emails", 403);
       }
       if (templateName === "leave_approval" && !isExecutive(user.role) && !isManager(user.role) && user.role !== "HR") {

@@ -105,28 +105,24 @@ export async function notifyTaskStatusChange(
 
   switch (changedByUser.role) {
     case "DRIVER":
-    case "USER": {
-      // Notify TEAM_MANAGERs in same department + all PROJECT_MANAGERs
-      const teamManagers = changedByUser.department
+    case "GUY": {
+      // Notify PRODUCT_OWNERs in same department + all ADMIN
+      const productOwners = changedByUser.department
         ? prisma.user.findMany({
-            where: { ...baseFilter, role: "TEAM_MANAGER", department: changedByUser.department },
+            where: { ...baseFilter, role: "PRODUCT_OWNER", department: changedByUser.department },
             select: { id: true },
           })
         : Promise.resolve([]);
-      const projectManagers = prisma.user.findMany({
-        where: { ...baseFilter, role: "PROJECT_MANAGER" },
+      const admins = prisma.user.findMany({
+        where: { ...baseFilter, role: "ADMIN" },
         select: { id: true },
       });
-      const [tms, pms] = await Promise.all([teamManagers, projectManagers]);
-      const superiorIds = [...new Set([...tms.map((u) => u.id), ...pms.map((u) => u.id)])];
+      const [pos, ads] = await Promise.all([productOwners, admins]);
+      const superiorIds = [...new Set([...pos.map((u) => u.id), ...ads.map((u) => u.id)])];
       superiorFilter = { id: { in: superiorIds } };
       break;
     }
-    case "TEAM_MANAGER": {
-      superiorFilter = { ...baseFilter, role: { in: ["PROJECT_MANAGER", "ADMIN"] } };
-      break;
-    }
-    case "PROJECT_MANAGER": {
+    case "PRODUCT_OWNER": {
       superiorFilter = { ...baseFilter, role: "ADMIN" };
       break;
     }

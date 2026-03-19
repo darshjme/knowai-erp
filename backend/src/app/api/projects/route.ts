@@ -9,7 +9,7 @@ const BROAD_ACCESS_ROLES = ["CFO", "HR"];
 // Roles that see only projects they're assigned to (as manager)
 const ASSIGNED_PROJECT_ROLES = ["SR_DEVELOPER"];
 // Roles that see only projects where they have tasks
-const TASK_BASED_ROLES = ["JR_DEVELOPER", "EDITOR", "GRAPHIC_DESIGNER", "CONTENT_STRATEGIST", "BRAND_PARTNER", "BRAND_FACE", "ACCOUNTING"];
+const TASK_BASED_ROLES = ["JR_DEVELOPER", "SR_EDITOR", "JR_EDITOR", "SR_GRAPHIC_DESIGNER", "JR_GRAPHIC_DESIGNER", "SR_CONTENT_STRATEGIST", "JR_CONTENT_STRATEGIST", "BRAND_PARTNER", "BRAND_FACE", "SR_ACCOUNTANT", "JR_ACCOUNTANT", "SR_BRAND_STRATEGIST", "JR_BRAND_STRATEGIST", "SR_SCRIPT_WRITER", "JR_SCRIPT_WRITER"];
 // Roles with NO project access
 const NO_ACCESS_ROLES = ["GUY", "OFFICE_BOY"];
 
@@ -345,7 +345,7 @@ export async function PATCH(req: NextRequest) {
     });
     if (!existing) return jsonError("Project not found", 404);
 
-    if (user.role !== "ADMIN" && user.role !== "PROJECT_MANAGER" && existing.managerId !== user.id) {
+    if (user.role !== "ADMIN" && user.role !== "PRODUCT_OWNER" && existing.managerId !== user.id) {
       return jsonError("Not authorized to update this project", 403);
     }
 

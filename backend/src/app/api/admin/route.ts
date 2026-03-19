@@ -322,7 +322,7 @@ export async function PUT(req: NextRequest) {
       const { userId, role, department, status } = body as { userId?: string; role?: string; department?: string; status?: string };
       if (!userId) return err("userId required");
 
-      const validRoles = ["ADMIN", "HR", "PROJECT_MANAGER", "TEAM_MANAGER", "USER", "DRIVER"];
+      const validRoles = ["CEO", "CTO", "CFO", "BRAND_FACE", "ADMIN", "HR", "PRODUCT_OWNER", "BRAND_PARTNER", "SR_ACCOUNTANT", "JR_ACCOUNTANT", "SR_DEVELOPER", "JR_DEVELOPER", "SR_GRAPHIC_DESIGNER", "JR_GRAPHIC_DESIGNER", "SR_EDITOR", "JR_EDITOR", "SR_CONTENT_STRATEGIST", "JR_CONTENT_STRATEGIST", "SR_SCRIPT_WRITER", "JR_SCRIPT_WRITER", "SR_BRAND_STRATEGIST", "JR_BRAND_STRATEGIST", "DRIVER", "GUY", "OFFICE_BOY"];
       if (role && !validRoles.includes(role)) return err("Invalid role");
 
       const validStatuses = ["ONLINE", "AWAY", "OFFLINE"];
@@ -359,7 +359,7 @@ export async function PUT(req: NextRequest) {
 
       if (password.length < 6) return err("Password must be at least 6 characters");
 
-      const validRoles = ["ADMIN", "HR", "PROJECT_MANAGER", "TEAM_MANAGER", "USER", "DRIVER"];
+      const validRoles = ["CEO", "CTO", "CFO", "BRAND_FACE", "ADMIN", "HR", "PRODUCT_OWNER", "BRAND_PARTNER", "SR_ACCOUNTANT", "JR_ACCOUNTANT", "SR_DEVELOPER", "JR_DEVELOPER", "SR_GRAPHIC_DESIGNER", "JR_GRAPHIC_DESIGNER", "SR_EDITOR", "JR_EDITOR", "SR_CONTENT_STRATEGIST", "JR_CONTENT_STRATEGIST", "SR_SCRIPT_WRITER", "JR_SCRIPT_WRITER", "SR_BRAND_STRATEGIST", "JR_BRAND_STRATEGIST", "DRIVER", "GUY", "OFFICE_BOY"];
       if (!validRoles.includes(role)) return err("Invalid role");
 
       const existing = await prisma.user.findUnique({ where: { email } });

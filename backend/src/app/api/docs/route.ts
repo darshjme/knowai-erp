@@ -3,7 +3,7 @@ import prisma from "@/lib/prisma";
 import { jsonOk, jsonError, getAuthUser } from "@/lib/api-utils";
 
 // Roles that can create and edit ALL docs (not just their own)
-const DOC_EDITOR_ROLES = ["ADMIN", "EDITOR", "CONTENT_STRATEGIST"];
+const DOC_EDITOR_ROLES = ["ADMIN", "SR_EDITOR", "JR_EDITOR", "SR_CONTENT_STRATEGIST", "JR_CONTENT_STRATEGIST"];
 
 // ─── GET: List docs (tree or flat) ──────────────────────────────
 // All roles can read published docs. Unpublished docs visible to

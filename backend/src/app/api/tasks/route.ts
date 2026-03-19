@@ -328,7 +328,7 @@ export async function POST(req: NextRequest) {
       if (existingTasks.length !== taskIds.length) return jsonError("Some tasks not found in workspace", 404);
 
       // Role-based check for non-managers
-      if (user.role === "USER" || user.role === "DRIVER") {
+      if (user.role === "GUY" || user.role === "DRIVER") {
         const notOwned = existingTasks.filter((t) => t.assigneeId !== user.id);
         if (notOwned.length > 0) return jsonError("You can only update your own tasks", 403);
       }
@@ -388,7 +388,7 @@ export async function POST(req: NextRequest) {
         select: { id: true, assigneeId: true },
       });
 
-      if (user.role === "USER" || user.role === "DRIVER") {
+      if (user.role === "GUY" || user.role === "DRIVER") {
         const notOwned = existingTasks.filter((t) => t.assigneeId !== user.id);
         if (notOwned.length > 0) return jsonError("You can only delete your own tasks", 403);
       }
@@ -509,7 +509,7 @@ export async function PATCH(req: NextRequest) {
     if (!existing) return jsonError("Task not found", 404);
 
     // Regular users can only update their own tasks
-    if ((user.role === "USER" || user.role === "DRIVER") && existing.assigneeId !== user.id) {
+    if ((user.role === "GUY" || user.role === "DRIVER") && existing.assigneeId !== user.id) {
       return jsonError("You can only update your own tasks", 403);
     }
 
@@ -532,7 +532,7 @@ export async function PATCH(req: NextRequest) {
       status === "COMPLETED" &&
       existing.status === "IN_REVIEW" &&
       user.id === existing.assigneeId &&
-      (user.role === "USER" || user.role === "DRIVER")
+      (user.role === "GUY" || user.role === "DRIVER")
     ) {
       return jsonError("Only a reviewer or manager can approve task completion", 403);
     }
@@ -635,7 +635,7 @@ export async function DELETE(req: NextRequest) {
     });
     if (!existing) return jsonError("Task not found", 404);
 
-    if ((user.role === "USER" || user.role === "DRIVER") && existing.assigneeId !== user.id) {
+    if ((user.role === "GUY" || user.role === "DRIVER") && existing.assigneeId !== user.id) {
       return jsonError("You can only delete your own tasks", 403);
     }
 

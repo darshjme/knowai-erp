@@ -1,0 +1,62 @@
+{
+  "KnowAI Design Tokens": {
+    "color": {
+      "primary": {
+        "blue": { "value": "#007AFF", "type": "color" },
+        "hover": { "value": "#0066D6", "type": "color" },
+        "tint": { "value": "rgba(0, 122, 255, 0.1)", "type": "color" }
+      },
+      "semantic": {
+        "success": { "value": "#34C759", "type": "color" },
+        "warning": { "value": "#FF9500", "type": "color" },
+        "error": { "value": "#FF3B30", "type": "color" },
+        "info": { "value": "#5AC8FA", "type": "color" }
+      },
+      "neutral": {
+        "text-primary": { "value": "#1D1D1F", "type": "color" },
+        "text-secondary": { "value": "#86868B", "type": "color" },
+        "text-tertiary": { "value": "#AEAEB2", "type": "color" },
+        "background": { "value": "#F5F5F7", "type": "color" },
+        "surface": { "value": "#FFFFFF", "type": "color" }
+      },
+      "dark": {
+        "text-primary": { "value": "#F5F5F7", "type": "color" },
+        "text-secondary": { "value": "#98989D", "type": "color" },
+        "background": { "value": "#000000", "type": "color" },
+        "surface": { "value": "#1C1C1E", "type": "color" },
+        "success": { "value": "#30D158", "type": "color" },
+        "warning": { "value": "#FF9F0A", "type": "color" },
+        "error": { "value": "#FF453A", "type": "color" },
+        "info": { "value": "#64D2FF", "type": "color" }
+      }
+    },
+    "spacing": {
+      "xs": { "value": "4", "type": "spacing" },
+      "sm": { "value": "8", "type": "spacing" },
+      "md": { "value": "16", "type": "spacing" },
+      "lg": { "value": "24", "type": "spacing" },
+      "xl": { "value": "32", "type": "spacing" },
+      "2xl": { "value": "48", "type": "spacing" },
+      "3xl": { "value": "64", "type": "spacing" },
+      "4xl": { "value": "80", "type": "spacing" }
+    },
+    "borderRadius": {
+      "sm": { "value": "8", "type": "borderRadius" },
+      "md": { "value": "12", "type": "borderRadius" },
+      "lg": { "value": "16", "type": "borderRadius" },
+      "xl": { "value": "20", "type": "borderRadius" },
+      "pill": { "value": "50", "type": "borderRadius" }
+    },
+    "fontSize": {
+      "display": { "value": "40", "type": "fontSizes" },
+      "h1": { "value": "28", "type": "fontSizes" },
+      "h2": { "value": "24", "type": "fontSizes" },
+      "h3": { "value": "20", "type": "fontSizes" },
+      "h4": { "value": "17", "type": "fontSizes" },
+      "body": { "value": "15", "type": "fontSizes" },
+      "body-small": { "value": "13", "type": "fontSizes" },
+      "caption": { "value": "11", "type": "fontSizes" },
+      "code": { "value": "14", "type": "fontSizes" }
+    }
+  }
+}

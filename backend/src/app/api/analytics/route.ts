@@ -12,7 +12,8 @@ function getScopeForRole(role: string): AnalyticsScope {
     case "ADMIN":
       return "full";
     case "CFO":
-    case "ACCOUNTING":
+    case "SR_ACCOUNTANT":
+    case "JR_ACCOUNTANT":
       return "financial";
     case "HR":
       return "people";

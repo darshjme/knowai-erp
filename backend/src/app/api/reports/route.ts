@@ -8,7 +8,8 @@ const ROLE_TAB_ACCESS: Record<string, string[]> = {
   CTO: ["executive", "performance", "financial", "project", "hr"],
   ADMIN: ["executive", "performance", "financial", "project", "hr"],
   CFO: ["financial"],
-  ACCOUNTING: ["financial"],
+  SR_ACCOUNTANT: ["financial"],
+  JR_ACCOUNTANT: ["financial"],
   HR: ["hr"],
   PRODUCT_OWNER: ["project"],
 };
@@ -98,7 +99,7 @@ export async function GET(req: NextRequest) {
     if (tab === "auto") {
       // Default tab based on role
       if (["CEO", "CTO", "ADMIN"].includes(user.role)) effectiveTab = "executive";
-      else if (["CFO", "ACCOUNTING"].includes(user.role)) effectiveTab = "financial";
+      else if (["CFO", "SR_ACCOUNTANT", "JR_ACCOUNTANT"].includes(user.role)) effectiveTab = "financial";
       else if (user.role === "HR") effectiveTab = "hr";
       else if (user.role === "PRODUCT_OWNER") effectiveTab = "project";
       else effectiveTab = "personal";

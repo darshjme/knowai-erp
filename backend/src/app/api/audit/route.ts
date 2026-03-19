@@ -12,7 +12,8 @@ const FULL_ACCESS_ROLES = ["CEO", "CTO", "ADMIN"] as const;
 
 const ROLE_ENTITY_ACCESS: Record<string, string[]> = {
   HR: ["USER", "CREDENTIAL"],
-  ACCOUNTING: ["PAYROLL", "EXPENSE", "CONTACT"],
+  SR_ACCOUNTANT: ["PAYROLL", "EXPENSE", "CONTACT"],
+  JR_ACCOUNTANT: ["PAYROLL", "EXPENSE", "CONTACT"],
 };
 
 type AuditAccess =

@@ -342,7 +342,7 @@ export async function GET(req: NextRequest) {
           firstName: "Unknown",
           lastName: "",
           avatar: null,
-          role: "USER",
+          role: "GUY",
           status: "OFFLINE",
         },
         replyTo: m.replyTo

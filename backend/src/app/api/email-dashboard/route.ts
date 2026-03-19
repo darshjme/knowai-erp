@@ -123,7 +123,7 @@ export async function POST(req: NextRequest) {
 
     // ── Send Invoice ──────────────────────────────────────────────────────────
     if (action === "sendInvoice") {
-      if (user.role !== "ADMIN" && user.role !== "PROJECT_MANAGER") {
+      if (user.role !== "ADMIN" && user.role !== "PRODUCT_OWNER") {
         return jsonError("Only Admin or Project Manager can send invoices", 403);
       }
 

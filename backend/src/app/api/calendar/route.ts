@@ -7,7 +7,7 @@ import { jsonOk, jsonError, getAuthUser, getAuthFromHeaders } from "@/lib/api-ut
 // ─── Role helpers ────────────────────────────────────────────────────────────
 
 const EXECUTIVE_ROLES = ["CEO", "CTO", "ADMIN", "CFO"];
-const MANAGER_ROLES = ["HR", "PRODUCT_OWNER", "BRAND_PARTNER", "CONTENT_STRATEGIST"];
+const MANAGER_ROLES = ["HR", "PRODUCT_OWNER", "BRAND_PARTNER", "SR_CONTENT_STRATEGIST", "JR_CONTENT_STRATEGIST"];
 
 function isExecutive(role: string) {
   return EXECUTIVE_ROLES.includes(role);

@@ -151,7 +151,7 @@ export async function POST(req: NextRequest) {
       take: 20,
     });
 
-    const userContext = `Current user: ${user.firstName || "Unknown"} ${user.lastName || ""} (${user.email || "N/A"}), Role: ${user.role || "USER"}, Department: ${user.department || "N/A"}`;
+    const userContext = `Current user: ${user.firstName || "Unknown"} ${user.lastName || ""} (${user.email || "N/A"}), Role: ${user.role || "GUY"}, Department: ${user.department || "N/A"}`;
 
     const messages = [
       { role: "system", content: SYSTEM_PROMPT + "\n\n" + userContext },

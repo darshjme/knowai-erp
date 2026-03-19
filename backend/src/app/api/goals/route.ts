@@ -9,7 +9,7 @@ const COMPANY_GOAL_ROLES = ["CEO", "CTO", "ADMIN", "PRODUCT_OWNER"];
 const TEAM_GOAL_ROLES = [
   "CEO", "CTO", "CFO", "ADMIN", "HR",
   "PRODUCT_OWNER", "BRAND_FACE", "BRAND_PARTNER",
-  "CONTENT_STRATEGIST", "SR_DEVELOPER",
+  "SR_CONTENT_STRATEGIST", "JR_CONTENT_STRATEGIST", "SR_DEVELOPER",
 ];
 
 // ── GET: List goals with filters ──────────────────────────────────────────

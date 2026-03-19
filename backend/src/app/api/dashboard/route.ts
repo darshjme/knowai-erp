@@ -51,7 +51,8 @@ function getRoleGroup(role: string): RoleGroup {
     case "ADMIN":
       return "executive";
     case "CFO":
-    case "ACCOUNTING":
+    case "SR_ACCOUNTANT":
+    case "JR_ACCOUNTANT":
       return "finance";
     case "HR":
       return "hr";
@@ -60,9 +61,12 @@ function getRoleGroup(role: string): RoleGroup {
     case "SR_DEVELOPER":
     case "JR_DEVELOPER":
       return "developer";
-    case "EDITOR":
-    case "GRAPHIC_DESIGNER":
-    case "CONTENT_STRATEGIST":
+    case "SR_EDITOR":
+    case "JR_EDITOR":
+    case "SR_GRAPHIC_DESIGNER":
+    case "JR_GRAPHIC_DESIGNER":
+    case "SR_CONTENT_STRATEGIST":
+    case "JR_CONTENT_STRATEGIST":
       return "content";
     case "BRAND_FACE":
     case "BRAND_PARTNER":

@@ -46,7 +46,7 @@ function seedIfEmpty() {
         { order: 2, title: "Collect Documents", description: "Collect ID proof, address proof, bank details, and education certificates.", assigneeRole: "HR" },
         { order: 3, title: "Setup Workspace", description: "Create email account, Slack workspace, and assign laptop.", assigneeRole: "Tech" },
         { order: 4, title: "Orientation Session", description: "Conduct a 1-hour orientation covering company culture, policies, and tools.", assigneeRole: "HR" },
-        { order: 5, title: "Assign Buddy", description: "Pair the new hire with an existing team member for the first two weeks.", assigneeRole: "TEAM_MANAGER" },
+        { order: 5, title: "Assign Buddy", description: "Pair the new hire with an existing team member for the first two weeks.", assigneeRole: "PRODUCT_OWNER" },
       ],
       status: "ACTIVE",
       version: 2,
@@ -57,10 +57,10 @@ function seedIfEmpty() {
       description: "End-to-end process for publishing content across platforms.",
       department: "Content",
       steps: [
-        { order: 1, title: "Draft Content", description: "Write the initial draft in Google Docs or Notion.", assigneeRole: "USER" },
-        { order: 2, title: "Internal Review", description: "Submit for peer review and incorporate feedback.", assigneeRole: "TEAM_MANAGER" },
-        { order: 3, title: "Client Approval", description: "Share with client for final approval.", assigneeRole: "PROJECT_MANAGER" },
-        { order: 4, title: "Schedule & Publish", description: "Schedule the post using the platform's scheduler.", assigneeRole: "USER" },
+        { order: 1, title: "Draft Content", description: "Write the initial draft in Google Docs or Notion.", assigneeRole: "GUY" },
+        { order: 2, title: "Internal Review", description: "Submit for peer review and incorporate feedback.", assigneeRole: "PRODUCT_OWNER" },
+        { order: 3, title: "Client Approval", description: "Share with client for final approval.", assigneeRole: "PRODUCT_OWNER" },
+        { order: 4, title: "Schedule & Publish", description: "Schedule the post using the platform's scheduler.", assigneeRole: "GUY" },
       ],
       status: "ACTIVE",
       version: 1,
@@ -71,11 +71,11 @@ function seedIfEmpty() {
       description: "Steps to safely deploy code to production servers.",
       department: "Tech",
       steps: [
-        { order: 1, title: "Run Tests", description: "Execute full test suite and ensure all tests pass.", assigneeRole: "USER" },
-        { order: 2, title: "Code Review", description: "Get approval from at least one senior dev.", assigneeRole: "TEAM_MANAGER" },
-        { order: 3, title: "Staging Deploy", description: "Deploy to staging and verify functionality.", assigneeRole: "USER" },
-        { order: 4, title: "Production Deploy", description: "Deploy to production during low-traffic window.", assigneeRole: "TEAM_MANAGER" },
-        { order: 5, title: "Monitor", description: "Watch error rates and performance for 30 minutes post-deploy.", assigneeRole: "USER" },
+        { order: 1, title: "Run Tests", description: "Execute full test suite and ensure all tests pass.", assigneeRole: "GUY" },
+        { order: 2, title: "Code Review", description: "Get approval from at least one senior dev.", assigneeRole: "PRODUCT_OWNER" },
+        { order: 3, title: "Staging Deploy", description: "Deploy to staging and verify functionality.", assigneeRole: "GUY" },
+        { order: 4, title: "Production Deploy", description: "Deploy to production during low-traffic window.", assigneeRole: "PRODUCT_OWNER" },
+        { order: 5, title: "Monitor", description: "Watch error rates and performance for 30 minutes post-deploy.", assigneeRole: "GUY" },
       ],
       status: "DRAFT",
       version: 1,
@@ -130,7 +130,7 @@ export async function POST(req: NextRequest) {
     const user = await getAuthUser(req);
     if (!user) return jsonError("Unauthorized", 401);
 
-    if (!["ADMIN", "PROJECT_MANAGER", "HR"].includes(user.role)) {
+    if (!["ADMIN", "PRODUCT_OWNER", "HR"].includes(user.role)) {
       return jsonError("Only Admin, PM, or HR can create SOPs", 403);
     }
 
@@ -181,7 +181,7 @@ export async function PATCH(req: NextRequest) {
     const user = await getAuthUser(req);
     if (!user) return jsonError("Unauthorized", 401);
 
-    if (!["ADMIN", "PROJECT_MANAGER", "HR"].includes(user.role)) {
+    if (!["ADMIN", "PRODUCT_OWNER", "HR"].includes(user.role)) {
       return jsonError("Only Admin, PM, or HR can update SOPs", 403);
     }
 

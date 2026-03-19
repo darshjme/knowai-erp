@@ -8,7 +8,7 @@ import { jsonOk, jsonError, getAuthUser } from "@/lib/api-utils";
 const EXPENSE_FULL_ACCESS = ["CEO", "CFO", "ADMIN"] as const;
 
 /** See all + approve up to limit */
-const EXPENSE_ACCOUNTING = "ACCOUNTING";
+const EXPENSE_ACCOUNTING_ROLES = ["SR_ACCOUNTANT", "JR_ACCOUNTANT"];
 
 /** Approve team expenses only */
 const EXPENSE_TEAM_APPROVERS = ["HR", "PRODUCT_OWNER"] as const;
@@ -16,7 +16,7 @@ const EXPENSE_TEAM_APPROVERS = ["HR", "PRODUCT_OWNER"] as const;
 function canSeeAllExpenses(role: string) {
   return (
     (EXPENSE_FULL_ACCESS as readonly string[]).includes(role) ||
-    role === EXPENSE_ACCOUNTING
+    EXPENSE_ACCOUNTING_ROLES.includes(role)
   );
 }
 
@@ -162,7 +162,7 @@ export async function PATCH(req: NextRequest) {
 
     // Determine approval authority
     const hasFullApproval = canApproveAll(user.role);
-    const hasAccountingApproval = user.role === EXPENSE_ACCOUNTING;
+    const hasAccountingApproval = EXPENSE_ACCOUNTING_ROLES.includes(user.role);
     const hasTeamApproval = isTeamApprover(user.role);
 
     // Check if this is a team expense (same department)

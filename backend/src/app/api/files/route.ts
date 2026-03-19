@@ -7,7 +7,7 @@ import { randomUUID } from "crypto";
 import { existsSync } from "fs";
 
 // Roles with full file management (create folders, rename, delete any file)
-const FILE_MANAGER_ROLES = ["ADMIN", "EDITOR", "GRAPHIC_DESIGNER"];
+const FILE_MANAGER_ROLES = ["ADMIN", "SR_EDITOR", "JR_EDITOR", "SR_GRAPHIC_DESIGNER", "JR_GRAPHIC_DESIGNER"];
 
 const UPLOAD_DIR = path.join(process.cwd(), "uploads", "files");
 const MAX_FILE_SIZE = 50 * 1024 * 1024; // 50MB
@@ -50,8 +50,8 @@ export async function GET(req: NextRequest) {
     // Others see: own uploads + files uploaded by users in their projects.
     if (
       user.role !== "ADMIN" &&
-      user.role !== "EDITOR" &&
-      user.role !== "GRAPHIC_DESIGNER"
+      !["SR_EDITOR", "JR_EDITOR"].includes(user.role) &&
+      !["SR_GRAPHIC_DESIGNER", "JR_GRAPHIC_DESIGNER"].includes(user.role)
     ) {
       const [assignedTasks, managedProjects] = await Promise.all([
         prisma.task.findMany({

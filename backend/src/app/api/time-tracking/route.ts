@@ -9,7 +9,7 @@ const FULL_ACCESS_ROLES = ["ADMIN", "CEO"];
 // (users who report to them via reportingTo field)
 const MANAGER_ROLES = [
   "CTO", "CFO", "HR", "PRODUCT_OWNER", "BRAND_FACE",
-  "BRAND_PARTNER", "CONTENT_STRATEGIST", "SR_DEVELOPER",
+  "BRAND_PARTNER", "SR_CONTENT_STRATEGIST", "JR_CONTENT_STRATEGIST", "SR_DEVELOPER",
 ];
 
 export async function GET(req: NextRequest) {

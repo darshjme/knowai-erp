@@ -7,9 +7,15 @@ import { jsonOk, jsonError, getAuthUser } from "@/lib/api-utils";
 // All 16 valid roles in the system
 const VALID_ROLES = [
   "CEO", "CTO", "CFO", "BRAND_FACE", "ADMIN", "HR",
-  "ACCOUNTING", "PRODUCT_OWNER", "CONTENT_STRATEGIST", "BRAND_PARTNER",
-  "SR_DEVELOPER", "EDITOR", "GRAPHIC_DESIGNER", "JR_DEVELOPER",
-  "GUY", "OFFICE_BOY",
+  "PRODUCT_OWNER", "BRAND_PARTNER",
+  "SR_ACCOUNTANT", "JR_ACCOUNTANT",
+  "SR_DEVELOPER", "JR_DEVELOPER",
+  "SR_GRAPHIC_DESIGNER", "JR_GRAPHIC_DESIGNER",
+  "SR_EDITOR", "JR_EDITOR",
+  "SR_CONTENT_STRATEGIST", "JR_CONTENT_STRATEGIST",
+  "SR_SCRIPT_WRITER", "JR_SCRIPT_WRITER",
+  "SR_BRAND_STRATEGIST", "JR_BRAND_STRATEGIST",
+  "DRIVER", "GUY", "OFFICE_BOY",
 ] as const;
 
 // Only these roles can create new users (no public signup)

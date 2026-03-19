@@ -26,7 +26,7 @@ function parseCSV(csv: string): Record<string, string>[] {
 // Roles that can see all client data
 const CLIENTS_FULL_ACCESS_ROLES = ["CEO", "CTO", "ADMIN", "PRODUCT_OWNER", "BRAND_FACE", "BRAND_PARTNER"];
 // Roles that can see client financial data only
-const CLIENTS_FINANCIAL_ROLES = ["CFO", "ACCOUNTING"];
+const CLIENTS_FINANCIAL_ROLES = ["CFO", "SR_ACCOUNTANT", "JR_ACCOUNTANT"];
 const CLIENTS_ALL_ALLOWED_ROLES = [...CLIENTS_FULL_ACCESS_ROLES, ...CLIENTS_FINANCIAL_ROLES];
 
 export async function GET(req: NextRequest) {

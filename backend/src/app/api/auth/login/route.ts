@@ -37,7 +37,11 @@ const ROLE_PERMISSIONS: Record<string, string[]> = {
     "documents:manage", "hiring:manage", "complaints:manage",
     "reports:hr", "audit:read",
   ],
-  ACCOUNTING: [
+  SR_ACCOUNTANT: [
+    "finance:read", "payroll:read", "expenses:manage", "invoices:manage",
+    "reports:finance", "credentials:finance",
+  ],
+  JR_ACCOUNTANT: [
     "finance:read", "payroll:read", "expenses:manage", "invoices:manage",
     "reports:finance", "credentials:finance",
   ],
@@ -45,7 +49,11 @@ const ROLE_PERMISSIONS: Record<string, string[]> = {
     "projects:manage", "tasks:manage", "clients:read", "leads:read",
     "reports:projects", "goals:manage", "spaces:manage", "docs:manage",
   ],
-  CONTENT_STRATEGIST: [
+  SR_CONTENT_STRATEGIST: [
+    "projects:read", "tasks:own", "docs:manage", "calendar:manage",
+    "canvas:manage", "files:manage",
+  ],
+  JR_CONTENT_STRATEGIST: [
     "projects:read", "tasks:own", "docs:manage", "calendar:manage",
     "canvas:manage", "files:manage",
   ],
@@ -57,11 +65,19 @@ const ROLE_PERMISSIONS: Record<string, string[]> = {
     "projects:read", "tasks:own", "docs:manage", "canvas:manage",
     "files:manage", "time:own", "credentials:tech",
   ],
-  EDITOR: [
+  SR_EDITOR: [
     "projects:read", "tasks:own", "docs:manage", "canvas:manage",
     "files:manage", "time:own",
   ],
-  GRAPHIC_DESIGNER: [
+  JR_EDITOR: [
+    "projects:read", "tasks:own", "docs:manage", "canvas:manage",
+    "files:manage", "time:own",
+  ],
+  SR_GRAPHIC_DESIGNER: [
+    "projects:read", "tasks:own", "canvas:manage", "files:manage",
+    "time:own",
+  ],
+  JR_GRAPHIC_DESIGNER: [
     "projects:read", "tasks:own", "canvas:manage", "files:manage",
     "time:own",
   ],
