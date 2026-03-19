@@ -153,9 +153,9 @@ export async function GET(req: NextRequest) {
           orderBy: { createdAt: "desc" },
         }),
         prisma.timeEntry.findMany({
-          where: { userId: user.id, ...(dateFrom ? { date: { gte: dateFrom, lte: dateTo } } : {}) },
-          select: { id: true, hours: true, date: true, description: true, task: { select: { title: true, project: { select: { name: true } } } } },
-          orderBy: { date: "desc" },
+          where: { userId: user.id, ...(dateFrom ? { startTime: { gte: dateFrom, lte: dateTo } } : {}) },
+          select: { id: true, duration: true, startTime: true, description: true, task: { select: { title: true, project: { select: { name: true } } } } },
+          orderBy: { startTime: "desc" },
         }),
       ]);
 
@@ -164,7 +164,7 @@ export async function GET(req: NextRequest) {
       const overdueTasks = myTasks.filter((t) => t.status !== "COMPLETED" && t.dueDate && t.dueDate < now).length;
       const inProgressTasks = myTasks.filter((t) => t.status === "IN_PROGRESS").length;
 
-      const totalHours = myTimeEntries.reduce((s, e) => s + e.hours, 0);
+      const totalHours = myTimeEntries.reduce((s, e) => s + (e.duration || 0), 0) / 60;
       const totalExpenseAmount = myExpenses.reduce((s, e) => s + e.amount, 0);
 
       const leaveDays = myLeaves.filter((l) => l.status === "APPROVED").reduce((s, l) => {
@@ -490,7 +490,6 @@ export async function GET(req: NextRequest) {
           id: true, name: true, status: true, progress: true, dueDate: true, createdAt: true,
           manager: { select: { firstName: true, lastName: true } },
           tasks: { select: { id: true, status: true, dueDate: true, assigneeId: true, createdAt: true } },
-          client: { select: { id: true, name: true } },
         },
       });
 
@@ -511,7 +510,7 @@ export async function GET(req: NextRequest) {
         return {
           id: p.id, name: p.name, status: p.status, progress: p.progress, dueDate: p.dueDate, createdAt: p.createdAt,
           manager: p.manager ? `${p.manager.firstName} ${p.manager.lastName}` : "Unassigned",
-          client: p.client?.name || "Internal",
+          client: p.manager ? `${p.manager.firstName} ${p.manager.lastName}` : "Internal",
           totalTasks, completedTasks, overdueTasks, taskCompletion, velocity,
           teamSize: assignees.size,
         };

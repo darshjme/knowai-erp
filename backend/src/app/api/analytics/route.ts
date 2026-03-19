@@ -284,7 +284,7 @@ async function buildProductAnalytics(workspaceId: string, dateFrom: Date | undef
   // Client engagement: tasks and projects per client
   const clientMap: Record<string, { projects: number; tasks: number; completed: number; avgProgress: number; progressSum: number }> = {};
   for (const p of projects) {
-    const clientName = (p as any).client?.name || "Internal";
+    const clientName = p.manager ? `${p.manager.firstName} ${p.manager.lastName}` : "Internal";
     if (!clientMap[clientName]) clientMap[clientName] = { projects: 0, tasks: 0, completed: 0, avgProgress: 0, progressSum: 0 };
     clientMap[clientName].projects++;
     clientMap[clientName].tasks += p.tasks.length;
@@ -320,7 +320,7 @@ async function buildProductAnalytics(workspaceId: string, dateFrom: Date | undef
 
 async function buildPersonalAnalytics(userId: string, workspaceId: string, dateFrom: Date | undefined, dateTo: Date, now: Date) {
   const taskDateFilter = dateFrom ? { createdAt: { gte: dateFrom, lte: dateTo } } : {};
-  const timeFilter = dateFrom ? { date: { gte: dateFrom, lte: dateTo } } : {};
+  const timeFilter = dateFrom ? { startTime: { gte: dateFrom, lte: dateTo } } : {};
 
   const [myTasks, myTimeEntries, myExpenses] = await Promise.all([
     prisma.task.findMany({
@@ -332,7 +332,7 @@ async function buildPersonalAnalytics(userId: string, workspaceId: string, dateF
     }),
     prisma.timeEntry.findMany({
       where: { userId, ...timeFilter },
-      select: { hours: true, date: true, task: { select: { title: true, project: { select: { name: true } } } } },
+      select: { duration: true, startTime: true, task: { select: { title: true, project: { select: { name: true } } } } },
     }),
     prisma.expense.findMany({
       where: { submitterId: userId, ...(dateFrom ? { createdAt: { gte: dateFrom, lte: dateTo } } : {}) },
@@ -343,7 +343,7 @@ async function buildPersonalAnalytics(userId: string, workspaceId: string, dateF
   const totalTasks = myTasks.length;
   const completedTasks = myTasks.filter((t) => t.status === "COMPLETED").length;
   const overdueTasks = myTasks.filter((t) => t.status !== "COMPLETED" && t.dueDate && t.dueDate < now).length;
-  const totalHours = myTimeEntries.reduce((s, e) => s + e.hours, 0);
+  const totalHours = myTimeEntries.reduce((s, e) => s + (e.duration || 0), 0) / 60;
 
   // Productivity trend (tasks completed per week, last 6 weeks)
   const productivityTrend: { week: string; completed: number; hours: number }[] = [];
@@ -354,7 +354,7 @@ async function buildPersonalAnalytics(userId: string, workspaceId: string, dateF
     weekStart.setDate(weekStart.getDate() - 7);
     const label = weekStart.toLocaleString("en-US", { month: "short", day: "numeric" });
     const weekCompleted = myTasks.filter((t) => t.status === "COMPLETED" && t.createdAt >= weekStart && t.createdAt <= weekEnd).length;
-    const weekHours = myTimeEntries.filter((e) => e.date >= weekStart && e.date <= weekEnd).reduce((s, e) => s + e.hours, 0);
+    const weekHours = myTimeEntries.filter((e) => e.startTime >= weekStart && e.startTime <= weekEnd).reduce((s, e) => s + (e.duration || 0), 0) / 60;
     productivityTrend.push({ week: label, completed: weekCompleted, hours: Math.round(weekHours * 10) / 10 });
   }
 
@@ -362,7 +362,7 @@ async function buildPersonalAnalytics(userId: string, workspaceId: string, dateF
   const timeByProject: Record<string, number> = {};
   for (const e of myTimeEntries) {
     const proj = e.task?.project?.name || "Unassigned";
-    timeByProject[proj] = (timeByProject[proj] || 0) + e.hours;
+    timeByProject[proj] = (timeByProject[proj] || 0) + (e.duration || 0) / 60;
   }
 
   // Task distribution by status
@@ -502,7 +502,7 @@ export async function GET(req: NextRequest) {
 
       if (exportFormat === "csv") {
         const rows = product.projectMetrics.map((p) => ({
-          Project: p.name, Status: p.status, Progress: `${p.progress}%`, Client: p.client,
+          Project: p.name, Status: p.status, Progress: `${p.progress}%`, Manager: p.manager,
           Tasks: p.totalTasks, Completed: p.completedTasks, Overdue: p.overdueTasks,
           Velocity: p.velocity, CompletionRate: `${p.completionRate}%`,
         }));
