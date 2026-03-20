@@ -2,11 +2,10 @@
 
 ## P1 — High Priority
 
-### E2E Test Suite (Playwright)
-- **What:** Playwright E2E tests for critical user journeys (auth, payroll, hiring, expenses)
-- **Why:** Catches integration bugs that unit tests miss. Prevents regressions in UI flows. Biggest testing gap after Foundation First completion.
-- **Effort:** M (human: 1 week / CC: ~1 hour)
-- **Depends on:** Foundation First (test framework, rich seed data) — now unblocked
+~~### E2E Test Suite (Playwright)~~ ✅ DONE
+- Playwright E2E tests for auth, navigation, API health, rate limiting
+- 3 test files: auth.spec.ts, navigation.spec.ts, api-health.spec.ts
+- CI pipeline runs API E2E tests with seeded database
 
 ## P2 — Post Foundation First
 
