@@ -9,17 +9,19 @@
 
 ## P2 — Post Foundation First
 
-### API Documentation (OpenAPI)
-- **What:** Generate OpenAPI spec from Zod schemas using zod-to-openapi
-- **Why:** Self-documenting API reduces onboarding time for new developers
-- **Effort:** S (human: 2 days / CC: ~20 min)
-- **Depends on:** Zod validation layer (Foundation First)
+~~### API Documentation (OpenAPI)~~ ✅ DONE
+- OpenAPI 3.1 spec auto-generated from Zod schemas via zod-openapi
+- Served at GET /api/docs/openapi
+- Covers auth, expenses, payroll, invoices, tasks, hiring, onboarding
 
 ### Sentry Alert Rules
-- **What:** Configure Sentry alert rules for error rate spikes, new error types, and p95 latency threshold breaches
-- **Why:** Without alert rules, errors go to Sentry dashboard but nobody gets notified. Errors are invisible until someone manually checks.
-- **Effort:** S (human: 1 day / CC: ~15 min)
-- **Depends on:** Sentry integration (Foundation First PR1)
+- **What:** Configure Sentry alert rules in the Sentry dashboard
+- **Why:** Without alert rules, errors are invisible until someone manually checks
+- **How:** Go to Sentry → Alerts → Create Rule:
+  1. **Error rate spike:** Alert when error count > 10 in 5 minutes
+  2. **New issue:** Alert on first occurrence of any new error type
+  3. **P95 latency:** Alert when p95 transaction duration > 3 seconds
+- **Status:** Requires manual Sentry dashboard configuration — cannot be automated via code
 
 ### Figma Design Tokens Sync
 - **What:** Script to sync DESIGN.md tokens (colors, spacing, typography) to Figma variables via REST API
