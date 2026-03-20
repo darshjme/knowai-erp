@@ -119,7 +119,9 @@ export const GET = createHandler({}, async (req, { user }) => {
   }
 
   // ── List payrolls ─────────────────────────────────────────────────────
-  const where: Record<string, unknown> = {};
+  const where: Record<string, unknown> = {
+    employee: { workspaceId: user.workspaceId },
+  };
 
   if (canSeeAllPayrolls(user.role)) {
     if (employeeId) where.employeeId = employeeId;
@@ -241,8 +243,8 @@ export const POST = createHandler(
     }
     const body = parsed.data;
 
-    // Validate employee exists
-    const employee = await prisma.user.findUnique({ where: { id: body.employeeId } });
+    // Validate employee exists and belongs to same workspace
+    const employee = await prisma.user.findFirst({ where: { id: body.employeeId, workspaceId: user.workspaceId } });
     if (!employee) return jsonError("Employee not found", 404);
 
     const calculatedTotal =
@@ -346,7 +348,7 @@ export const DELETE = createHandler(
     roles: ["CEO", "CFO", "ADMIN"],
     rateLimit: "write",
   },
-  async (req, _ctx) => {
+  async (req, { user }) => {
     const { searchParams } = new URL(req.url);
     const id = searchParams.get("id");
     const logId = searchParams.get("logId");
@@ -371,6 +373,12 @@ export const DELETE = createHandler(
 
     // ── Delete a payroll (existing) ───────────────────────────────────────
     if (!id) return jsonError("Payroll id or logId is required", 400);
+
+    // Verify payroll belongs to same workspace
+    const payrollToDelete = await prisma.payroll.findFirst({
+      where: { id, employee: { workspaceId: user.workspaceId } },
+    });
+    if (!payrollToDelete) return jsonError("Payroll not found", 404);
 
     // Delete associated logs first, then the payroll record
     await prisma.payrollLog.deleteMany({ where: { payrollId: id } });

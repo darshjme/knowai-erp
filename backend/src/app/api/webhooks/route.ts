@@ -1,4 +1,5 @@
 import { NextRequest } from "next/server";
+import crypto from "crypto";
 import { createHandler, jsonOk, jsonError } from "@/lib/create-handler";
 import { webhooksDB } from "@/lib/webhooks-store";
 import { z } from "zod";
@@ -25,7 +26,7 @@ export const POST = createHandler(
       url: body.url,
       events: body.events,
       active: body.active ?? true,
-      secret: "whsec_" + Math.random().toString(36).substring(2, 15),
+      secret: "whsec_" + crypto.randomBytes(32).toString("hex"),
     });
 
     return jsonOk({ success: true, data: newWebhook });

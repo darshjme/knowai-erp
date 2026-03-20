@@ -157,6 +157,11 @@ export const PATCH = createHandler({ rateLimit: "write" }, async (req: NextReque
   const leave = await prisma.leaveRequest.findUnique({ where: { id } });
   if (!leave) return jsonError("Leave request not found", 404);
 
+  // Prevent approving/rejecting your own leave
+  if (leave.employeeId === user.id) {
+    return jsonError("Cannot approve your own leave", 403);
+  }
+
   if (leave.status !== "PENDING") {
     return jsonError(`Cannot ${action} a leave that is already ${leave.status}`, 400);
   }

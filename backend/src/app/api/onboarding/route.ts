@@ -226,7 +226,14 @@ export const POST = createHandler({ rateLimit: "write" }, async (req: NextReques
   });
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const { password: _, secretAnswer: _sa, ...userWithoutSensitive } = updatedUser;
+  const {
+    password: _,
+    secretAnswer: _sa,
+    twoFactorSecret: _tfs,
+    passwordResetToken: _prt,
+    passwordResetExpiry: _pre,
+    ...userWithoutSensitive
+  } = updatedUser;
 
   return jsonOk({
     success: true,

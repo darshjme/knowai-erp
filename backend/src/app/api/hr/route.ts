@@ -68,13 +68,13 @@ export const GET = createHandler(
       }),
 
       prisma.payroll.count({
-        where: { status: "PENDING", month: currentMonth, year: currentYear },
+        where: { status: "PENDING", month: currentMonth, year: currentYear, employee: { workspaceId: user.workspaceId } },
       }),
 
-      prisma.expense.count({ where: { status: "SUBMITTED" } }),
+      prisma.expense.count({ where: { status: "SUBMITTED", submitter: { workspaceId: user.workspaceId } } }),
 
       prisma.payroll.aggregate({
-        where: { month: currentMonth, year: currentYear },
+        where: { month: currentMonth, year: currentYear, employee: { workspaceId: user.workspaceId } },
         _sum: { totalPay: true },
       }),
 
@@ -82,12 +82,13 @@ export const GET = createHandler(
         where: {
           status: "APPROVED",
           expenseDate: { gte: startOfMonth, lte: endOfMonth },
+          submitter: { workspaceId: user.workspaceId },
         },
         _sum: { amount: true },
       }),
 
       // Pending leave requests
-      prisma.leaveRequest.count({ where: { status: "PENDING" } }),
+      prisma.leaveRequest.count({ where: { status: "PENDING", employee: { workspaceId: user.workspaceId } } }),
 
       // Active complaints (OPEN or UNDER_REVIEW or ESCALATED)
       prisma.complaint.count({
@@ -103,6 +104,7 @@ export const GET = createHandler(
           status: "APPROVED",
           startDate: { lte: todayEnd },
           endDate: { gte: todayStart },
+          employee: { workspaceId: user.workspaceId },
         },
         include: {
           employee: {
@@ -113,7 +115,7 @@ export const GET = createHandler(
 
       // Pending identity document verifications
       prisma.identityDocument.count({
-        where: { status: "PENDING" },
+        where: { status: "PENDING", user: { workspaceId: user.workspaceId } },
       }),
 
       // All employees for directory

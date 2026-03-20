@@ -1,4 +1,5 @@
 import { NextRequest } from "next/server";
+import crypto from "crypto";
 import prisma from "@/lib/prisma";
 import { createHandler, jsonOk, jsonError } from "@/lib/create-handler";
 
@@ -6,13 +7,38 @@ import { createHandler, jsonOk, jsonError } from "@/lib/create-handler";
 const C_LEVEL = ["CEO", "CTO", "ADMIN"];
 const CREATE_ROLES = ["CEO", "CTO", "ADMIN", "HR", "PRODUCT_OWNER"];
 
-// Simple encode/decode (production: replace with AES-256-GCM)
-function encryptPassword(plain: string): string {
-  return Buffer.from(plain, "utf-8").toString("base64");
+// AES-256-GCM encryption for credential passwords
+const ENCRYPTION_KEY_RAW = process.env.CREDENTIALS_ENCRYPTION_KEY || process.env.JWT_SECRET || "";
+
+function getEncryptionKey(): Buffer {
+  // Derive a 32-byte key from the raw secret using SHA-256
+  return crypto.createHash("sha256").update(ENCRYPTION_KEY_RAW).digest();
 }
+
+function encryptPassword(plain: string): string {
+  const key = getEncryptionKey();
+  const iv = crypto.randomBytes(12); // 96-bit IV for GCM
+  const cipher = crypto.createCipheriv("aes-256-gcm", key, iv);
+  const encrypted = Buffer.concat([cipher.update(plain, "utf-8"), cipher.final()]);
+  const authTag = cipher.getAuthTag();
+  // Format: base64(iv + authTag + ciphertext) prefixed with "aes:" to distinguish from legacy base64
+  return "aes:" + Buffer.concat([iv, authTag, encrypted]).toString("base64");
+}
+
 function decryptPassword(encoded: string): string {
   try {
-    return Buffer.from(encoded, "base64").toString("utf-8");
+    // Handle legacy base64-only values (migrate on next update)
+    if (!encoded.startsWith("aes:")) {
+      return Buffer.from(encoded, "base64").toString("utf-8");
+    }
+    const key = getEncryptionKey();
+    const raw = Buffer.from(encoded.slice(4), "base64");
+    const iv = raw.subarray(0, 12);
+    const authTag = raw.subarray(12, 28);
+    const ciphertext = raw.subarray(28);
+    const decipher = crypto.createDecipheriv("aes-256-gcm", key, iv);
+    decipher.setAuthTag(authTag);
+    return Buffer.concat([decipher.update(ciphertext), decipher.final()]).toString("utf-8");
   } catch {
     return encoded;
   }
@@ -88,7 +114,7 @@ export const GET = createHandler({}, async (req: NextRequest, { user }) => {
   const isFullAccess = C_LEVEL.includes(user.role);
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const where: any = {};
+  const where: any = { workspaceId: user.workspaceId };
 
   if (!isFullAccess) {
     // Manager sees credentials they manage; others see granted or by accessLevel
@@ -156,6 +182,18 @@ export const POST = createHandler(
   { rateLimit: "write" },
   async (req: NextRequest, { user }) => {
     const body = await req.json();
+
+    // Whitelist allowed fields — reject unknown keys
+    const ALLOWED_POST_FIELDS = [
+      "action", "credentialId", "userId", "canView", "canCopy", "canEdit", "expiresAt",
+      "accessAction", "title", "username", "password", "url", "category", "notes",
+      "projectId", "accessLevel",
+    ];
+    const unknownFields = Object.keys(body).filter((k) => !ALLOWED_POST_FIELDS.includes(k));
+    if (unknownFields.length > 0) {
+      return jsonError(`Unknown fields: ${unknownFields.join(", ")}`, 400);
+    }
+
     const { action } = body;
 
     // ── Grant Access ──
@@ -295,7 +333,7 @@ export const PATCH = createHandler(
     const { id, title, username, password, url, category, notes, accessLevel, projectId } = body;
     if (!id) return jsonError("Credential id is required", 400);
 
-    const existing = await prisma.credential.findUnique({ where: { id } });
+    const existing = await prisma.credential.findFirst({ where: { id, workspaceId: user.workspaceId } });
     if (!existing) return jsonError("Credential not found", 404);
 
     // Only creator or C-level
@@ -345,7 +383,7 @@ export const DELETE = createHandler(
     const id = searchParams.get("id");
     if (!id) return jsonError("Credential id is required", 400);
 
-    const existing = await prisma.credential.findUnique({ where: { id } });
+    const existing = await prisma.credential.findFirst({ where: { id, workspaceId: user.workspaceId } });
     if (!existing) return jsonError("Credential not found", 404);
 
     if (existing.createdById !== user.id && !C_LEVEL.includes(user.role)) {

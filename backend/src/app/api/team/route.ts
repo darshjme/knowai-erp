@@ -281,6 +281,10 @@ export const PATCH = createHandler(
       }
     }
 
+    // Verify target user belongs to same workspace
+    const target = await prisma.user.findFirst({ where: { id, workspaceId: user.workspaceId } });
+    if (!target) return jsonError("User not found", 404);
+
     const data: Record<string, unknown> = {};
     if (role !== undefined) {
       data.role = role;
@@ -314,6 +318,10 @@ export const DELETE = createHandler(
     if (id === user.id) {
       return jsonError("Cannot delete yourself", 403);
     }
+
+    // Verify target user belongs to same workspace
+    const deleteTarget = await prisma.user.findFirst({ where: { id, workspaceId: user.workspaceId } });
+    if (!deleteTarget) return jsonError("User not found", 404);
 
     await prisma.user.delete({ where: { id } });
 

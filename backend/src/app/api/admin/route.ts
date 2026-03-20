@@ -89,6 +89,7 @@ export const GET = createHandler(
 
     if (section === "users") {
       const users = await prisma.user.findMany({
+        where: { workspaceId: user.workspaceId },
         select: {
           id: true, email: true, firstName: true, lastName: true,
           role: true, status: true, department: true, phone: true,
@@ -113,13 +114,13 @@ export const GET = createHandler(
       const weekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
 
       const [userCount, activeProjects, taskCount, tasksThisWeek, invoiceCount, clientCount, leadCount] = await Promise.all([
-        prisma.user.count(),
-        prisma.project.count({ where: { status: "ACTIVE" } }),
-        prisma.task.count(),
-        prisma.task.count({ where: { createdAt: { gte: weekAgo } } }),
-        prisma.invoice.count(),
-        prisma.client.count(),
-        prisma.lead.count(),
+        prisma.user.count({ where: { workspaceId: user.workspaceId } }),
+        prisma.project.count({ where: { status: "ACTIVE", workspaceId: user.workspaceId } }),
+        prisma.task.count({ where: { project: { workspaceId: user.workspaceId } } }),
+        prisma.task.count({ where: { createdAt: { gte: weekAgo }, project: { workspaceId: user.workspaceId } } }),
+        prisma.invoice.count({ where: { createdBy: { workspaceId: user.workspaceId } } }),
+        prisma.client.count({ where: { workspaceId: user.workspaceId } }),
+        prisma.lead.count({ where: { workspaceId: user.workspaceId } }),
       ]);
       const invoiceRevenue = await prisma.invoice.aggregate({ _sum: { total: true }, where: { status: "PAID" } });
       const expenseTotal = await prisma.expense.aggregate({ _sum: { amount: true }, where: { status: "APPROVED" } });
@@ -178,6 +179,7 @@ export const GET = createHandler(
     ]);
 
     const users = await prisma.user.findMany({
+      where: { workspaceId: user.workspaceId },
       select: {
         id: true, email: true, firstName: true, lastName: true,
         role: true, status: true, department: true, phone: true,
@@ -191,10 +193,10 @@ export const GET = createHandler(
     const weekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
 
     const [userCount, activeProjects, taskCount, tasksThisWeek] = await Promise.all([
-      prisma.user.count(),
-      prisma.project.count({ where: { status: "ACTIVE" } }),
-      prisma.task.count(),
-      prisma.task.count({ where: { createdAt: { gte: weekAgo } } }),
+      prisma.user.count({ where: { workspaceId: user.workspaceId } }),
+      prisma.project.count({ where: { status: "ACTIVE", workspaceId: user.workspaceId } }),
+      prisma.task.count({ where: { project: { workspaceId: user.workspaceId } } }),
+      prisma.task.count({ where: { createdAt: { gte: weekAgo }, project: { workspaceId: user.workspaceId } } }),
     ]);
 
     return jsonOk({
@@ -300,6 +302,10 @@ export const PUT = createHandler(
       const { userId, role, department, status } = body as { userId?: string; role?: string; department?: string; status?: string };
       if (!userId) return jsonError("userId required");
 
+      // Verify target user belongs to same workspace
+      const targetUser = await prisma.user.findFirst({ where: { id: userId, workspaceId: user.workspaceId } });
+      if (!targetUser) return jsonError("User not found", 404);
+
       const validRoles = ["CEO", "CTO", "CFO", "BRAND_FACE", "ADMIN", "HR", "PRODUCT_OWNER", "BRAND_PARTNER", "SR_ACCOUNTANT", "JR_ACCOUNTANT", "SR_DEVELOPER", "JR_DEVELOPER", "SR_GRAPHIC_DESIGNER", "JR_GRAPHIC_DESIGNER", "SR_EDITOR", "JR_EDITOR", "SR_CONTENT_STRATEGIST", "JR_CONTENT_STRATEGIST", "SR_SCRIPT_WRITER", "JR_SCRIPT_WRITER", "SR_BRAND_STRATEGIST", "JR_BRAND_STRATEGIST", "DRIVER", "GUY", "OFFICE_BOY"];
       if (role && !validRoles.includes(role)) return jsonError("Invalid role");
 
@@ -371,6 +377,11 @@ export const PUT = createHandler(
       const { userId } = body as { userId?: string };
       if (!userId) return jsonError("userId required");
       if (userId === user.id) return jsonError("Cannot delete yourself");
+
+      // Verify target user belongs to same workspace
+      const deleteTarget = await prisma.user.findFirst({ where: { id: userId, workspaceId: user.workspaceId } });
+      if (!deleteTarget) return jsonError("User not found", 404);
+
       await prisma.user.delete({ where: { id: userId } });
       return jsonOk({ success: true, message: "User deleted" });
     }
@@ -382,7 +393,7 @@ export const PUT = createHandler(
       const filtered = userIds.filter((id: string) => id !== user.id);
       if (filtered.length === 0) return jsonError("Cannot deactivate yourself");
       await prisma.user.updateMany({
-        where: { id: { in: filtered } },
+        where: { id: { in: filtered }, workspaceId: user.workspaceId },
         data: { status: "OFFLINE" },
       });
       return jsonOk({ success: true, message: `${filtered.length} users deactivated` });
@@ -393,7 +404,7 @@ export const PUT = createHandler(
       if (!Array.isArray(userIds) || userIds.length === 0) return jsonError("userIds array required");
       if (department === undefined) return jsonError("department required");
       await prisma.user.updateMany({
-        where: { id: { in: userIds } },
+        where: { id: { in: userIds }, workspaceId: user.workspaceId },
         data: { department: department || null },
       });
       return jsonOk({ success: true, message: `${userIds.length} users updated to ${department || "no department"}` });
@@ -403,6 +414,11 @@ export const PUT = createHandler(
       const { userId, newPassword } = body as { userId?: string; newPassword?: string };
       if (!userId || !newPassword) return jsonError("userId and newPassword required");
       if (newPassword.length < 6) return jsonError("Password must be at least 6 characters");
+
+      // Verify target user belongs to same workspace
+      const resetTarget = await prisma.user.findFirst({ where: { id: userId, workspaceId: user.workspaceId } });
+      if (!resetTarget) return jsonError("User not found", 404);
+
       const bcrypt = await import("bcryptjs");
       const hashed = await bcrypt.default.hash(newPassword, 10);
       await prisma.user.update({ where: { id: userId }, data: { password: hashed } });

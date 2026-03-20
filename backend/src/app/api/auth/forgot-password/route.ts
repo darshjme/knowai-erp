@@ -58,23 +58,13 @@ export const POST = createHandler(
       });
       if (!user) return jsonError("User not found", 404);
 
-      // For now, accept any 6+ digit code if 2FA is enabled (simplified)
-      // In production, validate against actual TOTP
-      if (user.twoFactorEnabled && verificationCode) {
-        // Generate reset token
-        const token = crypto.randomBytes(32).toString("hex");
-        const expiry = new Date(Date.now() + 15 * 60 * 1000); // 15 minutes
-
-        await prisma.user.update({
-          where: { id: userId },
-          data: { passwordResetToken: token, passwordResetExpiry: expiry },
-        });
-
-        return jsonOk({
-          success: true,
-          data: { resetToken: token },
-          message: "Identity verified. You can now reset your password.",
-        });
+      // 2FA verification is not yet supported for password reset flow.
+      // Reject all attempts and direct users to HR for manual reset.
+      if (user.twoFactorEnabled) {
+        return jsonError(
+          "2FA verification not supported for password reset — contact HR.",
+          400
+        );
       }
 
       return jsonError("Verification failed. Please check your code.", 400);
@@ -123,10 +113,15 @@ export const POST = createHandler(
 
       if (!user) return jsonError("No account found with this phone number", 404);
 
+      // Mask email for display: d***h@knowai.biz
+      const maskedEmail = user.email.replace(/(.{1})(.*)(@.*)/, (_, a, b, c) =>
+        a + "*".repeat(Math.min(b.length, 5)) + c
+      );
+
       return jsonOk({
         success: true,
         data: {
-          email: user.email,
+          email: maskedEmail,
           has2FA: user.twoFactorEnabled,
         },
       });

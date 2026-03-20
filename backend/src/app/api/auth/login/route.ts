@@ -151,9 +151,17 @@ export const POST = createHandler(
       tokenVersion: user.tokenVersion ?? 0,
     });
 
-    // Build full profile response (strip password)
+    // Build full profile response (strip sensitive fields)
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    const { password: _, ...userWithoutPassword } = user;
+    const {
+      password: _,
+      twoFactorSecret: _tfs,
+      secretAnswer: _sa,
+      passwordResetToken: _prt,
+      passwordResetExpiry: _pre,
+      passwordHistory: _ph,
+      ...userWithoutPassword
+    } = user;
 
     // Resolve role context from single source of truth (lib/roles.ts)
     const roleContext = getRoleContext(user.role);

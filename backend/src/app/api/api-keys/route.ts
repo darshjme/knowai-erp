@@ -44,7 +44,6 @@ export const GET = createHandler({}, async (req: NextRequest, { user }) => {
       scopes: Array.isArray(parsedScopes) ? parsedScopes : [],
       // Mask the key for security (show only last 4 chars)
       key: key.key ? `sk_...${key.key.slice(-4)}` : "sk_...",
-      fullKey: key.key, // Include full key for copy functionality
     };
   });
 
