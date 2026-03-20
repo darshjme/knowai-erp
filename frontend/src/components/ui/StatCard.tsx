@@ -119,16 +119,22 @@ export default function StatCard({
           line-height: 1;
         }
         .kai-stat-card__value {
-          font-size: 28px;
+          font-size: 26px;
           font-weight: 700;
           color: var(--kai-near-black, #10222F);
           line-height: 1.1;
           letter-spacing: -0.5px;
+          overflow: hidden;
+          text-overflow: ellipsis;
+          white-space: nowrap;
         }
         .kai-stat-card__label {
           font-size: 13px;
           color: var(--kai-silver, #4C5963);
           font-weight: 500;
+          overflow: hidden;
+          text-overflow: ellipsis;
+          white-space: nowrap;
         }
       `}</style>
     </div>
