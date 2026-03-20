@@ -280,8 +280,9 @@ a { color: var(--kai-accent); text-decoration: none; &:hover { color: var(--kai-
 .sidebar-nav-item {
   display: flex;
   align-items: center;
-  padding: 8px 12px;
-  margin-bottom: 1px;
+  padding: 10px 12px;
+  min-height: 40px;
+  margin-bottom: 2px;
   border-radius: var(--kai-radius-sm);
   color: var(--kai-text-secondary);
   gap: 10px;
