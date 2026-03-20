@@ -40,14 +40,11 @@ function calculateCompletion(user: Record<string, unknown>): number {
   return Math.round((filled / ALL_PROFILE_FIELDS.length) * 100);
 }
 
+// Use shared profileComplete logic — single source of truth
+import { isProfileComplete } from "@/lib/profile-complete";
+
 function areMandatoryFieldsFilled(user: Record<string, unknown>): boolean {
-  for (const field of MANDATORY_FIELDS) {
-    const val = user[field];
-    if (!val || (typeof val === "string" && val.trim() === "")) {
-      return false;
-    }
-  }
-  return true;
+  return isProfileComplete(user as { firstName?: string | null; lastName?: string | null; phone?: string | null; address?: string | null; city?: string | null; country?: string | null; about?: string | null; alternateEmail?: string | null });
 }
 
 export const GET = createHandler({}, async (_req: NextRequest, { user }) => {

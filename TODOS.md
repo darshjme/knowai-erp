@@ -28,6 +28,12 @@
 - **Effort:** M (human: 1 week / CC: ~45 min)
 - **Depends on:** DESIGN.md (done), Figma Premium API access
 
+### Cloud File Storage (S3/R2)
+- **What:** Migrate file uploads (resumes, profile photos, gov IDs) from local filesystem to S3 or Cloudflare R2
+- **Why:** Local filesystem storage is lost if server is replaced. Not suitable for horizontal scaling or container deployments.
+- **Effort:** S (human: 2 days / CC: ~30 min)
+- **Depends on:** Onboarding overhaul (file uploads now include photos + gov IDs)
+
 ### Staging Environment
 - **What:** Docker Compose staging environment with separate DB, accessible to team
 - **Why:** Prevents production incidents from untested deployments

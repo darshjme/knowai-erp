@@ -2,6 +2,7 @@ import bcrypt from "bcryptjs";
 import prisma from "@/lib/prisma";
 import { createHandler, jsonOk, jsonError } from "@/lib/create-handler";
 import { adminCreateUserSchema } from "@/schemas/auth";
+import { sendEmail, welcomeEmailHtml } from "@/lib/email";
 
 // Only these roles can create new users (no public signup)
 const ALLOWED_CREATOR_ROLES = ["ADMIN", "HR", "CEO"];
@@ -42,12 +43,12 @@ export const POST = createHandler(
 
     const hashedPassword = await bcrypt.hash(password, 12);
 
-    // Auto-generate companyEmail: firstname.lastname@knowai.com
-    const baseCompanyEmail = `${firstName.toLowerCase().replace(/\s+/g, '')}.${lastName.toLowerCase().replace(/\s+/g, '')}@knowai.com`;
+    // Auto-generate companyEmail: firstname.lastname@knowai.biz
+    const baseCompanyEmail = `${firstName.toLowerCase().replace(/\s+/g, '')}.${lastName.toLowerCase().replace(/\s+/g, '')}@knowai.biz`;
     let companyEmail = baseCompanyEmail;
     let emailSuffix = 2;
     while (await prisma.user.findUnique({ where: { companyEmail } })) {
-      companyEmail = `${firstName.toLowerCase().replace(/\s+/g, '')}.${lastName.toLowerCase().replace(/\s+/g, '')}${emailSuffix}@knowai.com`;
+      companyEmail = `${firstName.toLowerCase().replace(/\s+/g, '')}.${lastName.toLowerCase().replace(/\s+/g, '')}${emailSuffix}@knowai.biz`;
       emailSuffix++;
     }
 
@@ -92,6 +93,15 @@ export const POST = createHandler(
 
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const { password: _, ...userWithoutPassword } = user;
+
+    // Fire-and-forget: send welcome email to employee's personal email
+    sendEmail(
+      email,
+      "Welcome to KnowAI — Your Account is Ready",
+      welcomeEmailHtml(`${firstName} ${lastName}`, companyEmail, password)
+    ).catch((err) => {
+      console.error(`[SIGNUP] Failed to send welcome email to ${email}:`, err);
+    });
 
     // Return the created user (no auto-login token — the new user is not the caller)
     return jsonOk(

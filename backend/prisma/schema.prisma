@@ -212,16 +212,19 @@ model User {
   chatBotConversations ChatBotConversation[] @relation("UserChatBotConversations")
 
   onboardingComplete Boolean  @default(false)
+  onboardingStep    Int       @default(0) // Last completed wizard step (0-3)
   dateOfBirth       DateTime?
   bio               String?
   resumeUrl         String?
+  govIdUrl          String?   // Government ID document URL
   secretQuestion    String?
   secretAnswer      String?  // bcrypt hashed
-  companyEmail      String?  @unique // auto-generated: firstname.lastname@knowai.com
+  companyEmail      String?  @unique // auto-generated: firstname.lastname@knowai.biz
 
   // Profile completion
   profileComplete     Boolean   @default(false)
   profileDeadline     DateTime? // 14 days from account creation
+  lastReminderSentAt  DateTime? // Prevents duplicate daily reminder emails
   accountDisabled     Boolean   @default(false)
   accountDisabledAt   DateTime?
   disableReason       String?

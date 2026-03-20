@@ -45,23 +45,48 @@ export function invoiceEmailHtml(data: { clientName: string; invoiceNumber: stri
   </div>`;
 }
 
-export function welcomeEmailHtml(name: string, email: string, tempPassword?: string) {
+export function welcomeEmailHtml(name: string, companyEmail: string, password?: string) {
   return `<div style="font-family:-apple-system,BlinkMacSystemFont,'SF Pro Text',sans-serif;max-width:600px;margin:0 auto;padding:32px">
     <div style="text-align:center;margin-bottom:32px">
       <div style="display:inline-block;background:#007AFF;color:#fff;font-weight:700;font-size:16px;width:40px;height:40px;line-height:40px;border-radius:12px">K</div>
       <h2 style="color:#1D1D1F;margin:16px 0 0;font-size:20px">Welcome to KnowAI!</h2>
     </div>
     <p style="color:#1D1D1F">Hi ${name},</p>
-    <p style="color:#1D1D1F">Your KnowAI ERP account has been created. Here are your login details:</p>
+    <p style="color:#1D1D1F">Your KnowAI ERP account has been created. Here are your details:</p>
     <div style="background:#F5F5F7;border-radius:12px;padding:20px;margin:20px 0">
+      <p style="margin:0 0 8px;color:#86868B;font-size:13px">Company Email</p>
+      <p style="margin:0 0 16px;color:#007AFF;font-weight:600">${companyEmail}</p>
       <p style="margin:0 0 8px;color:#86868B;font-size:13px">Login URL</p>
       <p style="margin:0 0 16px;color:#007AFF;font-weight:600">https://crm.knowai.club</p>
-      <p style="margin:0 0 8px;color:#86868B;font-size:13px">Email</p>
-      <p style="margin:0 0 16px;color:#1D1D1F;font-weight:500">${email}</p>
-      ${tempPassword ? `<p style="margin:0 0 8px;color:#86868B;font-size:13px">Temporary Password</p>
-      <p style="margin:0;color:#1D1D1F;font-weight:500;font-family:monospace">${tempPassword}</p>` : ""}
+      ${password ? `<p style="margin:0 0 8px;color:#86868B;font-size:13px">Password</p>
+      <p style="margin:0;color:#1D1D1F;font-weight:500;font-family:monospace">${password}</p>` : ""}
     </div>
-    <p style="color:#1D1D1F">Please log in and complete your profile within 14 days.</p>
+    <p style="color:#1D1D1F">Please log in and complete your profile within <strong>14 days</strong>.</p>
+    <p style="color:#86868B;font-size:13px">Your account will be disabled if your profile is not completed by the deadline.</p>
+    <hr style="border:none;border-top:1px solid rgba(0,0,0,0.06);margin:24px 0"/>
+    <p style="color:#86868B;font-size:13px">KnowAI Team &middot; crm.knowai.club</p>
+  </div>`;
+}
+
+export function onboardingReminderEmailHtml(name: string, daysRemaining: number) {
+  const urgency = daysRemaining <= 1 ? "final" : daysRemaining <= 3 ? "urgent" : "reminder";
+  const bgColor = urgency === "final" ? "#FF3B30" : urgency === "urgent" ? "#FF9500" : "#007AFF";
+  const title = urgency === "final"
+    ? "Final Warning: Complete Your Profile Today"
+    : urgency === "urgent"
+    ? "Urgent: Your Profile Deadline is Approaching"
+    : "Reminder: Complete Your KnowAI Profile";
+
+  return `<div style="font-family:-apple-system,BlinkMacSystemFont,'SF Pro Text',sans-serif;max-width:600px;margin:0 auto;padding:32px">
+    <div style="text-align:center;margin-bottom:32px">
+      <div style="display:inline-block;background:${bgColor};color:#fff;font-weight:700;font-size:16px;width:40px;height:40px;line-height:40px;border-radius:12px">K</div>
+      <h2 style="color:#1D1D1F;margin:16px 0 0;font-size:20px">${title}</h2>
+    </div>
+    <p style="color:#1D1D1F">Hi ${name},</p>
+    <p style="color:#1D1D1F">You have <strong>${daysRemaining} day${daysRemaining === 1 ? "" : "s"}</strong> remaining to complete your KnowAI profile. Your account will be disabled if your profile is not completed by the deadline.</p>
+    <div style="text-align:center;margin:32px 0">
+      <a href="https://crm.knowai.club/settings" style="display:inline-block;background:${bgColor};color:#fff;font-weight:600;padding:12px 32px;border-radius:12px;text-decoration:none;font-size:15px">Complete Profile Now</a>
+    </div>
     <hr style="border:none;border-top:1px solid rgba(0,0,0,0.06);margin:24px 0"/>
     <p style="color:#86868B;font-size:13px">KnowAI Team &middot; crm.knowai.club</p>
   </div>`;
