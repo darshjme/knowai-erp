@@ -239,7 +239,7 @@ export default function Files() {
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 20, flexWrap: 'wrap', gap: 12 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: 14 }}>
           <button onClick={() => navigateToBreadcrumb(-1)} style={{
-            background: 'none', border: 'none', cursor: 'pointer', color: path.length > 0 ? '#146DF7' : '#10222F',
+            background: 'none', border: 'none', cursor: 'pointer', color: path.length > 0 ? '#3B82F6' : '#10222F',
             fontWeight: 600, fontSize: 14, padding: '4px 8px', borderRadius: 6,
           }}>
             Files
@@ -249,7 +249,7 @@ export default function Files() {
               <ChevronRight size={14} style={{ color: '#9CA3AF' }} />
               <button onClick={() => navigateToBreadcrumb(i)} style={{
                 background: 'none', border: 'none', cursor: 'pointer',
-                color: i === path.length - 1 ? '#10222F' : '#146DF7',
+                color: i === path.length - 1 ? '#10222F' : '#3B82F6',
                 fontWeight: i === path.length - 1 ? 600 : 400, fontSize: 14, padding: '4px 8px', borderRadius: 6,
               }}>
                 {p.name}
@@ -294,13 +294,13 @@ export default function Files() {
           <div style={{ display: 'flex', border: '1px solid #E8EBED', borderRadius: 8, overflow: 'hidden' }}>
             <button onClick={() => setViewMode('grid')} style={{
               padding: '6px 10px', border: 'none', cursor: 'pointer',
-              background: viewMode === 'grid' ? '#146DF7' : '#fff', color: viewMode === 'grid' ? '#fff' : '#5B6B76',
+              background: viewMode === 'grid' ? '#111827' : '#fff', color: viewMode === 'grid' ? '#fff' : '#5B6B76',
             }}>
               <Grid size={16} />
             </button>
             <button onClick={() => setViewMode('list')} style={{
               padding: '6px 10px', border: 'none', cursor: 'pointer',
-              background: viewMode === 'list' ? '#146DF7' : '#fff', color: viewMode === 'list' ? '#fff' : '#5B6B76',
+              background: viewMode === 'list' ? '#111827' : '#fff', color: viewMode === 'list' ? '#fff' : '#5B6B76',
             }}>
               <List size={16} />
             </button>
@@ -343,19 +343,19 @@ export default function Files() {
       {/* Upload Dropzone */}
       <div onDrop={handleDrop} onDragOver={handleDragOver} onDragLeave={handleDragLeave}
         style={{
-          border: `2px dashed ${dragOver ? '#146DF7' : '#E8EBED'}`, borderRadius: 12,
+          border: `2px dashed ${dragOver ? '#3B82F6' : '#E8EBED'}`, borderRadius: 12,
           padding: dragOver ? 40 : 24, textAlign: 'center', marginBottom: 20,
-          background: dragOver ? '#EBF3FE' : '#FAFAFA', transition: 'all 0.2s', cursor: 'pointer',
+          background: dragOver ? 'var(--kai-primary-light, #EBF3FE)' : '#FAFAFA', transition: 'all 0.2s', cursor: 'pointer',
         }}
         onClick={() => fileInputRef.current?.click()}>
         {uploading ? (
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10 }}>
-            <Loader2 size={24} style={{ animation: 'spin 1s linear infinite', color: '#146DF7' }} />
-            <span style={{ color: '#146DF7', fontWeight: 500 }}>Uploading...</span>
+            <Loader2 size={24} style={{ animation: 'spin 1s linear infinite', color: '#111827' }} />
+            <span style={{ color: '#111827', fontWeight: 500 }}>Uploading...</span>
           </div>
         ) : (
           <>
-            <UploadCloud size={32} style={{ color: dragOver ? '#146DF7' : '#9CA3AF', marginBottom: 8 }} />
+            <UploadCloud size={32} style={{ color: dragOver ? '#3B82F6' : '#9CA3AF', marginBottom: 8 }} />
             <p style={{ color: '#5B6B76', fontSize: 14, margin: 0 }}>
               {dragOver ? 'Drop files here' : 'Drag and drop files here, or click to browse (max 50MB)'}
             </p>
@@ -366,7 +366,7 @@ export default function Files() {
       {/* Files Display */}
       {loading ? (
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 60 }}>
-          <Loader2 size={28} style={{ animation: 'spin 1s linear infinite', color: '#146DF7' }} />
+          <Loader2 size={28} style={{ animation: 'spin 1s linear infinite', color: '#111827' }} />
         </div>
       ) : sortedFiles.length === 0 ? (
         <div className="kai-card">
@@ -399,7 +399,7 @@ export default function Files() {
                     {isFolder ? `${file._count?.children || file.count || 0} items` : formatSize(file.size)}
                   </div>
                   {file.project && (
-                    <div style={{ fontSize: 10, color: '#146DF7', marginBottom: 4, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                    <div style={{ fontSize: 10, color: '#3B82F6', marginBottom: 4, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                       {file.project.name}
                     </div>
                   )}
@@ -460,7 +460,7 @@ export default function Files() {
                       <td style={{ padding: '10px 16px', fontSize: 13, color: '#5B6B76' }}>
                         {isFolder ? `${file._count?.children || file.count || 0} items` : formatSize(file.size)}
                       </td>
-                      <td style={{ padding: '10px 16px', fontSize: 13, color: '#146DF7' }}>
+                      <td style={{ padding: '10px 16px', fontSize: 13, color: '#3B82F6' }}>
                         {file.project?.name || '-'}
                       </td>
                       <td style={{ padding: '10px 16px', fontSize: 13, color: '#5B6B76' }}>

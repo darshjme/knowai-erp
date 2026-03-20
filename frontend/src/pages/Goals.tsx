@@ -310,7 +310,7 @@ export default function Goals() {
               </div>
               <input type="range" min={0} max={100} value={selectedGoal.progress || 0}
                 onChange={e => handleUpdateProgress(selectedGoal, parseInt(e.target.value))}
-                style={{ width: '100%', marginTop: 8, accentColor: '#146DF7' }} />
+                style={{ width: '100%', marginTop: 8, accentColor: '#3B82F6' }} />
             </div>
 
             {/* Key Results */}
@@ -348,7 +348,7 @@ export default function Goals() {
       {/* Goals List */}
       {loading ? (
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 60 }}>
-          <Loader2 size={28} style={{ animation: 'spin 1s linear infinite', color: '#146DF7' }} />
+          <Loader2 size={28} style={{ animation: 'spin 1s linear infinite', color: '#111827' }} />
         </div>
       ) : goals.length === 0 ? (
         <div className="kai-card">
@@ -369,7 +369,7 @@ export default function Goals() {
 
             return (
               <div key={id} className="kai-card" style={{
-                cursor: 'pointer', border: isSelected ? '2px solid #146DF7' : '2px solid transparent',
+                cursor: 'pointer', border: isSelected ? '2px solid var(--kai-primary)' : '2px solid transparent',
                 transition: 'border-color 0.15s',
               }}
                 onClick={() => setSelectedGoal(goal)}>

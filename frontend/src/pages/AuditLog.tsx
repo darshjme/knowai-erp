@@ -307,7 +307,7 @@ export default function AuditLog() {
         <div className="kai-card-body" style={{ padding: 0 }}>
           {loading ? (
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 60 }}>
-              <Loader2 size={28} style={{ animation: 'spin 1s linear infinite', color: '#007AFF' }} />
+              <Loader2 size={28} style={{ animation: 'spin 1s linear infinite', color: '#111827' }} />
             </div>
           ) : logs.length === 0 ? (
             <div style={{ textAlign: 'center', padding: 60, color: '#5B6B76' }}>
@@ -419,9 +419,9 @@ export default function AuditLog() {
                     padding: '6px 12px',
                     fontSize: 13,
                     fontWeight: p === page ? 600 : 400,
-                    background: p === page ? '#007AFF' : undefined,
+                    background: p === page ? '#111827' : undefined,
                     color: p === page ? '#fff' : undefined,
-                    borderColor: p === page ? '#007AFF' : undefined,
+                    borderColor: p === page ? '#111827' : undefined,
                   }}
                 >
                   {p}

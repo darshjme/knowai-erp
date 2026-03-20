@@ -12,7 +12,7 @@ import {
 } from 'lucide-react';
 import { videoReviewsApi, projectsApi, teamApi } from '../services/api';
 
-const BRAND = '#146DF7';
+const BRAND = '#111827';
 
 const STATUS_CONFIG = {
   PENDING_REVIEW: { label: 'Pending Review', bg: '#FEF3C7', color: '#92400E', border: '#FDE68A' },

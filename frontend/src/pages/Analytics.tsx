@@ -19,7 +19,7 @@ import { reportsApi } from '../services/api';
 
 const KPI_CONFIG = [
   { key: 'totalRevenue', label: 'Total Revenue', icon: DollarSign, color: '#16A34A', bg: '#E8F9EF', format: 'currency' },
-  { key: 'clientGrowth', label: 'Client Growth', icon: Users, color: '#146DF7', bg: '#EBF3FF', format: 'percent' },
+  { key: 'clientGrowth', label: 'Client Growth', icon: Users, color: '#3B82F6', bg: '#EBF5FF', format: 'percent' },
   { key: 'taskCompletionRate', label: 'Task Completion Rate', icon: CheckCircle2, color: '#8B3FE9', bg: '#F3EAFF', format: 'percent' },
   { key: 'avgProjectDuration', label: 'Avg Project Duration', icon: Clock, color: '#EA580C', bg: '#FFF4ED', format: 'days' },
 ];
@@ -124,7 +124,7 @@ export default function Analytics() {
   // Revenue trend area chart
   const revenueTrendOptions = {
     chart: { type: 'area', toolbar: { show: false }, fontFamily: 'inherit', zoom: { enabled: false } },
-    colors: ['#146DF7'],
+    colors: ['#3B82F6'],
     fill: { type: 'gradient', gradient: { shadeIntensity: 1, opacityFrom: 0.4, opacityTo: 0.05, stops: [0, 100] } },
     dataLabels: { enabled: false },
     stroke: { curve: 'smooth', width: 2.5 },
@@ -152,7 +152,7 @@ export default function Analytics() {
   // Tasks by status bar chart
   const taskStatusLabels = tasksByStatus.map((t) => t.status || t.label || t.name || '');
   const taskStatusValues = tasksByStatus.map((t) => t.count || t.value || 0);
-  const taskStatusColors = ['#EA580C', '#146DF7', '#8B3FE9', '#16A34A', '#2563EB', '#CB3939'];
+  const taskStatusColors = ['#EA580C', '#3B82F6', '#8B3FE9', '#16A34A', '#2563EB', '#CB3939'];
 
   const taskBarOptions = {
     chart: { type: 'bar', toolbar: { show: false }, fontFamily: 'inherit' },
@@ -174,7 +174,7 @@ export default function Analytics() {
   // Expenses pie chart
   const expenseLabels = expensesByCategory.map((e) => e.category || e.label || e.name || '');
   const expenseValues = expensesByCategory.map((e) => e.amount || e.value || e.total || 0);
-  const expensePieColors = ['#146DF7', '#8B3FE9', '#16A34A', '#EA580C', '#CB3939', '#2563EB', '#5B6B76'];
+  const expensePieColors = ['#3B82F6', '#8B3FE9', '#16A34A', '#EA580C', '#CB3939', '#2563EB', '#5B6B76'];
 
   const expensePieOptions = {
     chart: { type: 'pie', fontFamily: 'inherit' },
@@ -360,7 +360,7 @@ export default function Analytics() {
                     const hours = member.hoursLogged ?? member.hours ?? 0;
                     const efficiency = member.efficiencyScore ?? member.efficiency ?? 0;
                     const initials = name.split(' ').map((n) => n[0]).join('').slice(0, 2).toUpperCase();
-                    const avatarColors = ['#146DF7', '#8B3FE9', '#16A34A', '#EA580C', '#2563EB', '#CB3939'];
+                    const avatarColors = ['#111827', '#8B3FE9', '#16A34A', '#EA580C', '#2563EB', '#CB3939'];
                     const avatarColor = avatarColors[idx % avatarColors.length];
 
                     let effBadgeClass = 'secondary';

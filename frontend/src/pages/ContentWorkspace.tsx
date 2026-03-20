@@ -18,7 +18,7 @@ function Avatar({ u, size = 28 }) {
   if (!u) return <div style={{ width: size, height: size, borderRadius: '50%', background: '#e2e8f0' }} />;
   if (u.avatar) return <img src={u.avatar} alt="" style={{ width: size, height: size, borderRadius: '50%', objectFit: 'cover' }} />;
   const i = ((u.firstName?.[0] || '') + (u.lastName?.[0] || '')).toUpperCase();
-  return <div style={{ width: size, height: size, borderRadius: '50%', background: '#146DF7', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: size * 0.4, fontWeight: 600 }}>{i}</div>;
+  return <div style={{ width: size, height: size, borderRadius: '50%', background: '#111827', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: size * 0.4, fontWeight: 600 }}>{i}</div>;
 }
 
 function fmtBytes(b) { if (!b) return ''; if (b < 1024) return b + ' B'; if (b < 1048576) return (b / 1024).toFixed(1) + ' KB'; return (b / 1048576).toFixed(1) + ' MB'; }
@@ -159,14 +159,14 @@ export default function ContentWorkspace() {
             <h5 className="mb-0 fw-bold">{collectionDetail.name}</h5>
             <small className="text-muted">{ct.label} &middot; {collectionDetail._count?.assets || collectionDetail.assets?.length || 0} assets</small>
           </div>
-          <Button className="ms-auto" style={{ background: '#146DF7', border: 'none' }} onClick={() => setShowAddAsset(true)}>
+          <Button className="ms-auto" style={{ background: '#111827', border: 'none' }} onClick={() => setShowAddAsset(true)}>
             <i className="bi bi-plus-lg me-1" />Add Asset
           </Button>
         </div>
 
         {collectionDetail.description && <p className="text-muted mb-3">{collectionDetail.description}</p>}
 
-        {detailLoading ? <div className="text-center py-5"><Spinner style={{ color: '#146DF7' }} /></div> : (
+        {detailLoading ? <div className="text-center py-5"><Spinner style={{ color: '#111827' }} /></div> : (
           <Row className="g-3">
             {(!collectionDetail.assets || collectionDetail.assets.length === 0) ? (
               <Col><Card className="kai-card text-center py-5"><Card.Body>
@@ -246,7 +246,7 @@ export default function ContentWorkspace() {
           </Modal.Body>
           <Modal.Footer>
             <Button variant="secondary" onClick={() => setShowAddAsset(false)}>Cancel</Button>
-            <Button style={{ background: '#146DF7', border: 'none' }} onClick={handleAddAsset} disabled={submitting}>
+            <Button style={{ background: '#111827', border: 'none' }} onClick={handleAddAsset} disabled={submitting}>
               {submitting ? <Spinner size="sm" /> : 'Add Asset'}
             </Button>
           </Modal.Footer>
@@ -289,7 +289,7 @@ export default function ContentWorkspace() {
               <Button variant="outline-danger" size="sm" onClick={() => { handleDeleteAsset(showPreview.id); setShowPreview(null); }}>
                 <i className="bi bi-trash me-1" />Delete
               </Button>
-              <a href={showPreview.fileUrl} download target="_blank" rel="noopener noreferrer" className="btn btn-primary btn-sm" style={{ background: '#146DF7', border: 'none' }}>
+              <a href={showPreview.fileUrl} download target="_blank" rel="noopener noreferrer" className="btn btn-primary btn-sm" style={{ background: '#111827', border: 'none' }}>
                 <i className="bi bi-download me-1" />Download
               </a>
             </Modal.Footer>
@@ -315,7 +315,7 @@ export default function ContentWorkspace() {
             <Form.Control placeholder="Search assets..." value={search} onChange={e => setSearch(e.target.value)} />
           </InputGroup>
           {canCreate && (
-            <Button style={{ background: '#146DF7', border: 'none' }} onClick={() => setShowNewCollection(true)}>
+            <Button style={{ background: '#111827', border: 'none' }} onClick={() => setShowNewCollection(true)}>
               <i className="bi bi-plus-lg me-1" />New Collection
             </Button>
           )}
@@ -325,7 +325,7 @@ export default function ContentWorkspace() {
       {/* Type filter */}
       <div className="d-flex gap-2 mb-3 flex-wrap">
         <Button size="sm" variant={filterType === 'ALL' ? 'primary' : 'outline-secondary'} onClick={() => setFilterType('ALL')}
-          style={filterType === 'ALL' ? { background: '#146DF7', border: 'none' } : {}}>All</Button>
+          style={filterType === 'ALL' ? { background: '#111827', border: 'none' } : {}}>All</Button>
         {COLLECTION_TYPES.map(ct => (
           <Button key={ct.value} size="sm" variant={filterType === ct.value ? 'primary' : 'outline-secondary'}
             onClick={() => setFilterType(ct.value)}
@@ -358,13 +358,13 @@ export default function ContentWorkspace() {
       )}
 
       {/* Collections Grid */}
-      {loading ? <div className="text-center py-5"><Spinner style={{ color: '#146DF7' }} /></div> : (
+      {loading ? <div className="text-center py-5"><Spinner style={{ color: '#111827' }} /></div> : (
         <Row className="g-3">
           {filteredCollections.length === 0 ? (
             <Col><Card className="kai-card text-center py-5"><Card.Body>
               <i className="bi bi-inbox" style={{ fontSize: 48, color: '#94a3b8' }} />
               <p className="text-muted mt-2">No collections yet</p>
-              {canCreate && <Button style={{ background: '#146DF7', border: 'none' }} onClick={() => setShowNewCollection(true)}>Create First Collection</Button>}
+              {canCreate && <Button style={{ background: '#111827', border: 'none' }} onClick={() => setShowNewCollection(true)}>Create First Collection</Button>}
             </Card.Body></Card></Col>
           ) : filteredCollections.map(c => {
             const ct = COLLECTION_TYPES.find(t => t.value === c.type) || COLLECTION_TYPES[0];
@@ -422,7 +422,7 @@ export default function ContentWorkspace() {
         </Modal.Body>
         <Modal.Footer>
           <Button variant="secondary" onClick={() => setShowNewCollection(false)}>Cancel</Button>
-          <Button style={{ background: '#146DF7', border: 'none' }} onClick={handleCreateCollection} disabled={submitting}>
+          <Button style={{ background: '#111827', border: 'none' }} onClick={handleCreateCollection} disabled={submitting}>
             {submitting ? <Spinner size="sm" /> : 'Create Collection'}
           </Button>
         </Modal.Footer>

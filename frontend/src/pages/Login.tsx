@@ -142,7 +142,7 @@ export default function Login() {
   // Render forgot password flows
   const renderForgotFlow = () => {
     const backBtn = (
-      <button type="button" onClick={resetForgot} style={{ display: 'flex', alignItems: 'center', gap: 6, background: 'none', border: 'none', color: '#146DF7', cursor: 'pointer', fontSize: 13, marginBottom: 24, padding: 0 }}>
+      <button type="button" onClick={resetForgot} style={{ display: 'flex', alignItems: 'center', gap: 6, background: 'none', border: 'none', color: '#3B82F6', cursor: 'pointer', fontSize: 13, marginBottom: 24, padding: 0 }}>
         <ArrowLeft size={16} /> Back to sign in
       </button>
     );
@@ -191,7 +191,7 @@ export default function Login() {
             </button>
           </form>
           <p style={{ textAlign: 'center', marginTop: 16, fontSize: 13 }}>
-            <button type="button" onClick={() => setForgotMode('lookupEmail')} style={{ background: 'none', border: 'none', color: '#146DF7', cursor: 'pointer', fontSize: 13 }}>
+            <button type="button" onClick={() => setForgotMode('lookupEmail')} style={{ background: 'none', border: 'none', color: '#3B82F6', cursor: 'pointer', fontSize: 13 }}>
               Forgot email? Use phone number
             </button>
           </p>
@@ -256,13 +256,13 @@ export default function Login() {
     <div style={{ display: 'flex', minHeight: '100vh', flexWrap: 'wrap' }}>
       {/* Left - Brand */}
       <div className="hide-mobile" style={{
-        flex: 1, minWidth: 320, background: 'linear-gradient(135deg, #05121B 0%, #0148A7 50%, #146DF7 100%)',
+        flex: 1, minWidth: 320, background: 'linear-gradient(135deg, #05121B 0%, #1E3A5F 50%, #111827 100%)',
         display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
         padding: 48, position: 'relative', overflow: 'hidden'
       }}>
-        <div style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, opacity: 0.05, background: 'radial-gradient(circle at 30% 70%, #146DF7 0%, transparent 50%)' }} />
+        <div style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, opacity: 0.05, background: 'radial-gradient(circle at 30% 70%, #3B82F6 0%, transparent 50%)' }} />
         <div style={{ position: 'relative', zIndex: 1, textAlign: 'center' }}>
-          <div style={{ width: 72, height: 72, background: '#146DF7', borderRadius: 16, display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 24px', fontSize: 28, fontWeight: 800, color: '#fff' }}>K</div>
+          <div style={{ width: 72, height: 72, background: '#111827', borderRadius: 16, display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 24px', fontSize: 28, fontWeight: 800, color: '#fff' }}>K</div>
           <h1 style={{ color: '#fff', fontSize: 42, fontWeight: 800, margin: '0 0 8px', letterSpacing: -1 }}>Know<span style={{ color: '#CFF0FF', fontWeight: 400 }}>AI</span></h1>
           <p style={{ color: '#A6B5BF', fontSize: 16, maxWidth: 360, lineHeight: 1.6 }}>
             Empowering people to work with AI. Enterprise management that scales with your team.
@@ -303,7 +303,7 @@ export default function Login() {
                   <label style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 13, color: '#4C5963', cursor: 'pointer' }}>
                     <input type="checkbox" /> Remember me
                   </label>
-                  <button type="button" onClick={() => setForgotMode('find')} style={{ background: 'none', border: 'none', fontSize: 13, color: '#146DF7', cursor: 'pointer' }}>Forgot password?</button>
+                  <button type="button" onClick={() => setForgotMode('find')} style={{ background: 'none', border: 'none', fontSize: 13, color: '#3B82F6', cursor: 'pointer' }}>Forgot password?</button>
                 </div>
                 <button type="submit" className="kai-btn kai-btn-primary kai-btn-lg" style={{ width: '100%' }} disabled={loading}>
                   {loading ? 'Signing in...' : <>Sign In <ArrowRight size={18} /></>}

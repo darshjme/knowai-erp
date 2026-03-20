@@ -212,7 +212,7 @@ export default function Leads() {
       {/* Stats */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 16, marginBottom: 24 }}>
         <div className="stat-card">
-          <div className="stat-icon" style={{ background: 'rgba(20,109,247,0.1)', color: 'var(--kai-primary)', marginBottom: 12 }}>
+          <div className="stat-icon" style={{ background: 'var(--kai-primary-light, rgba(17,24,39,0.08))', color: 'var(--kai-primary)', marginBottom: 12 }}>
             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
           </div>
           <div className="stat-value">{stats.total}</div>
@@ -282,7 +282,7 @@ export default function Leads() {
                         ref={provided.innerRef}
                         {...provided.droppableProps}
                         style={{
-                          background: snapshot.isDraggingOver ? 'rgba(20,109,247,0.04)' : 'var(--kai-bg)',
+                          background: snapshot.isDraggingOver ? 'var(--kai-primary-light, rgba(17,24,39,0.04))' : 'var(--kai-bg)',
                           borderRadius: 'var(--kai-radius-lg)',
                           padding: 8,
                           minHeight: 200,

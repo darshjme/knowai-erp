@@ -9,7 +9,7 @@ import {
 const REPORT_TYPES = [
   { key: 'financial', label: 'Financial', icon: DollarSign, color: '#10B981' },
   { key: 'team', label: 'Team', icon: Users, color: '#8B5CF6' },
-  { key: 'project', label: 'Project', icon: Briefcase, color: '#146DF7' },
+  { key: 'project', label: 'Project', icon: Briefcase, color: '#111827' },
   { key: 'client', label: 'Client', icon: TrendingUp, color: '#F59E0B' },
 ];
 
@@ -109,7 +109,7 @@ export default function Reports() {
           const active = reportType === rt.key;
           return (
             <button key={rt.key} onClick={() => setReportType(rt.key)} className="kai-card" style={{
-              cursor: 'pointer', border: `2px solid ${active ? '#146DF7' : 'transparent'}`,
+              cursor: 'pointer', border: `2px solid ${active ? '#111827' : 'transparent'}`,
               background: active ? '#EBF3FE' : '#fff', transition: 'all 0.15s', textAlign: 'left',
             }}>
               <div className="kai-card-body" style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
@@ -200,7 +200,7 @@ export default function Reports() {
                         <span style={{ fontSize: 11, color: '#5B6B76', fontWeight: 500 }}>{val.toLocaleString()}</span>
                         <div style={{
                           width: '100%', maxWidth: 48, height: Math.max(height, 4), borderRadius: '6px 6px 0 0',
-                          background: `linear-gradient(180deg, #146DF7 0%, #0148A7 100%)`, transition: 'height 0.3s',
+                          background: `linear-gradient(180deg, #111827 0%, #1E3A5F 100%)`, transition: 'height 0.3s',
                         }} />
                         <span style={{ fontSize: 10, color: '#5B6B76', textAlign: 'center', lineHeight: 1.2 }}>
                           {d.label || d.name || d.month || `#${i + 1}`}
@@ -264,7 +264,7 @@ export default function Reports() {
       {!report && !loading && !error && (
         <div className="kai-card">
           <div className="kai-card-body" style={{ textAlign: 'center', padding: 80, color: '#5B6B76' }}>
-            <BarChart3 size={48} style={{ marginBottom: 16, opacity: 0.3, color: '#146DF7' }} />
+            <BarChart3 size={48} style={{ marginBottom: 16, opacity: 0.3, color: '#111827' }} />
             <p style={{ fontSize: 17, fontWeight: 600, color: '#10222F', marginBottom: 6 }}>Select a report type and generate</p>
             <p style={{ fontSize: 14 }}>Choose a report type above, set your date range, and click Generate Report</p>
           </div>

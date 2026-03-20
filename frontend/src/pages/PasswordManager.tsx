@@ -282,7 +282,7 @@ export default function PasswordManager() {
       {/* Stats Row */}
       <div className="row g-3 mb-4">
         {[
-          { label: 'Total Credentials', value: stats.total, icon: Lock, color: '#146DF7' },
+          { label: 'Total Credentials', value: stats.total, icon: Lock, color: '#111827' },
           { label: 'Shared With Me', value: stats.shared, icon: Users, color: '#8B5CF6' },
           { label: 'Categories', value: stats.categories, icon: Key, color: '#F59E0B' },
           { label: 'Recent Access', value: stats.recentAccess, icon: Clock, color: '#10B981' },
@@ -326,9 +326,9 @@ export default function PasswordManager() {
                   onClick={() => setActiveCategory(cat.key)}
                   className="btn btn-sm"
                   style={{
-                    background: isActive ? '#146DF7' : 'var(--kai-bg-secondary)',
+                    background: isActive ? '#111827' : 'var(--kai-bg-secondary)',
                     color: isActive ? '#fff' : 'var(--kai-text-secondary)',
-                    border: `1px solid ${isActive ? '#146DF7' : 'var(--kai-border)'}`,
+                    border: `1px solid ${isActive ? '#111827' : 'var(--kai-border)'}`,
                     borderRadius: 8, fontSize: 13, padding: '5px 12px',
                     display: 'flex', alignItems: 'center', gap: 6,
                   }}
@@ -348,7 +348,7 @@ export default function PasswordManager() {
             )}
             {canCreate && (
               <button className="btn btn-sm" onClick={openCreate}
-                style={{ background: '#146DF7', color: '#fff', border: 'none', borderRadius: 8, fontSize: 13, padding: '5px 14px', display: 'flex', alignItems: 'center', gap: 6 }}>
+                style={{ background: '#111827', color: '#fff', border: 'none', borderRadius: 8, fontSize: 13, padding: '5px 14px', display: 'flex', alignItems: 'center', gap: 6 }}>
                 <Plus size={14} /> Add Credential
               </button>
             )}
@@ -363,7 +363,7 @@ export default function PasswordManager() {
         <div className="kai-card p-5 text-center">
           <Lock size={48} style={{ color: 'var(--kai-text-secondary)', opacity: 0.4 }} />
           <p className="mt-3" style={{ color: 'var(--kai-text-secondary)' }}>No credentials found</p>
-          {canCreate && <button className="btn btn-sm mt-2" onClick={openCreate} style={{ background: '#146DF7', color: '#fff', border: 'none', borderRadius: 8, padding: '6px 16px' }}>Add First Credential</button>}
+          {canCreate && <button className="btn btn-sm mt-2" onClick={openCreate} style={{ background: '#111827', color: '#fff', border: 'none', borderRadius: 8, padding: '6px 16px' }}>Add First Credential</button>}
         </div>
       ) : (
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: 16 }}>
@@ -375,7 +375,7 @@ export default function PasswordManager() {
               <div key={cred.id} style={{ flex: '1 1 320px', maxWidth: '100%', minWidth: 0 }}>
                 <div className="kai-card p-3 h-100" style={{ cursor: 'pointer', transition: 'all 0.15s', border: '1px solid var(--kai-border)' }}
                   onClick={() => openDetail(cred)}
-                  onMouseEnter={e => { e.currentTarget.style.borderColor = '#146DF7'; e.currentTarget.style.transform = 'translateY(-1px)'; }}
+                  onMouseEnter={e => { e.currentTarget.style.borderColor = '#3B82F6'; e.currentTarget.style.transform = 'translateY(-1px)'; }}
                   onMouseLeave={e => { e.currentTarget.style.borderColor = 'var(--kai-border)'; e.currentTarget.style.transform = 'none'; }}
                 >
                   <div className="d-flex align-items-start gap-3">
@@ -393,7 +393,7 @@ export default function PasswordManager() {
                         {cred.username ? `${'*'.repeat(Math.min(cred.username.length, 3))}${cred.username.slice(3)}` : 'No username'}
                       </div>
                       {cred.url && (
-                        <div style={{ fontSize: 12, color: '#146DF7', marginTop: 2 }} className="text-truncate">
+                        <div style={{ fontSize: 12, color: '#3B82F6', marginTop: 2 }} className="text-truncate">
                           <Globe size={11} style={{ marginRight: 4 }} />{cred.url.replace(/^https?:\/\//, '')}
                         </div>
                       )}
@@ -438,7 +438,7 @@ export default function PasswordManager() {
             {/* URL */}
             {showDetail.url && (
               <a href={showDetail.url} target="_blank" rel="noopener noreferrer"
-                style={{ display: 'flex', alignItems: 'center', gap: 8, color: '#146DF7', fontSize: 14, textDecoration: 'none' }}>
+                style={{ display: 'flex', alignItems: 'center', gap: 8, color: '#3B82F6', fontSize: 14, textDecoration: 'none' }}>
                 <ExternalLink size={14} />{showDetail.url}
               </a>
             )}
@@ -480,7 +480,7 @@ export default function PasswordManager() {
               <span style={{ fontSize: 12, padding: '4px 10px', borderRadius: 6, background: `${CATEGORY_COLORS[showDetail.category] || '#6B7280'}18`, color: CATEGORY_COLORS[showDetail.category] || '#6B7280', fontWeight: 600 }}>
                 {showDetail.category || 'Other'}
               </span>
-              <span style={{ fontSize: 12, padding: '4px 10px', borderRadius: 6, background: '#146DF715', color: '#146DF7', fontWeight: 600 }}>
+              <span style={{ fontSize: 12, padding: '4px 10px', borderRadius: 6, background: '#3B82F615', color: '#3B82F6', fontWeight: 600 }}>
                 {accessLevelLabel(showDetail.accessLevel)}
               </span>
               <span style={{ fontSize: 12, padding: '4px 10px', borderRadius: 6, background: 'var(--kai-bg-secondary)', color: 'var(--kai-text-secondary)' }}>
@@ -500,7 +500,7 @@ export default function PasswordManager() {
                 <span style={{ fontWeight: 600, fontSize: 14, color: 'var(--kai-text)' }}>Who Has Access ({(showDetail.accessGrants || []).length})</span>
                 {(showDetail.createdById === user?.id || isAdmin) && (
                   <button className="btn btn-sm" onClick={() => { setShowGrantModal(true); setGrantForm({ userId: '', canView: true, canCopy: false, canEdit: false, expiresAt: '' }); }}
-                    style={{ background: '#146DF7', color: '#fff', border: 'none', borderRadius: 8, fontSize: 12, padding: '4px 12px', display: 'flex', alignItems: 'center', gap: 4 }}>
+                    style={{ background: '#111827', color: '#fff', border: 'none', borderRadius: 8, fontSize: 12, padding: '4px 12px', display: 'flex', alignItems: 'center', gap: 4 }}>
                     <UserPlus size={12} /> Grant
                   </button>
                 )}
@@ -593,7 +593,7 @@ export default function PasswordManager() {
                     </button>
                   </div>
                   <button type="button" className="btn btn-sm" onClick={() => setForm(f => ({ ...f, password: generatePassword() }))}
-                    style={{ background: 'var(--kai-bg-secondary)', border: '1px solid var(--kai-border)', color: '#146DF7', borderRadius: 8, whiteSpace: 'nowrap', fontSize: 13, padding: '4px 12px' }}>
+                    style={{ background: 'var(--kai-bg-secondary)', border: '1px solid var(--kai-border)', color: '#3B82F6', borderRadius: 8, whiteSpace: 'nowrap', fontSize: 13, padding: '4px 12px' }}>
                     Generate
                   </button>
                 </div>
@@ -633,7 +633,7 @@ export default function PasswordManager() {
                   Cancel
                 </button>
                 <button type="submit" disabled={saving} className="btn btn-sm"
-                  style={{ background: '#146DF7', color: '#fff', border: 'none', borderRadius: 8, padding: '6px 20px', opacity: saving ? 0.7 : 1 }}>
+                  style={{ background: '#111827', color: '#fff', border: 'none', borderRadius: 8, padding: '6px 20px', opacity: saving ? 0.7 : 1 }}>
                   {saving ? 'Saving...' : editingId ? 'Update' : 'Create'}
                 </button>
               </div>
@@ -673,7 +673,7 @@ export default function PasswordManager() {
                     <label key={perm.key} className="d-flex align-items-center gap-2" style={{ fontSize: 13, cursor: 'pointer', color: 'var(--kai-text)' }}>
                       <input type="checkbox" checked={grantForm[perm.key]}
                         onChange={e => setGrantForm(f => ({ ...f, [perm.key]: e.target.checked }))}
-                        style={{ accentColor: '#146DF7' }} />
+                        style={{ accentColor: '#3B82F6' }} />
                       {perm.label}
                     </label>
                   ))}
@@ -691,7 +691,7 @@ export default function PasswordManager() {
                   Cancel
                 </button>
                 <button type="submit" disabled={saving} className="btn btn-sm"
-                  style={{ background: '#146DF7', color: '#fff', border: 'none', borderRadius: 8, padding: '6px 20px', opacity: saving ? 0.7 : 1 }}>
+                  style={{ background: '#111827', color: '#fff', border: 'none', borderRadius: 8, padding: '6px 20px', opacity: saving ? 0.7 : 1 }}>
                   {saving ? 'Granting...' : 'Grant Access'}
                 </button>
               </div>
@@ -707,7 +707,7 @@ export default function PasswordManager() {
           <div style={{ position: 'relative', width: 700, maxWidth: '95vw', maxHeight: '85vh', overflowY: 'auto', background: 'var(--kai-bg)', borderRadius: 16, padding: 24, boxShadow: '0 16px 48px rgba(0,0,0,0.2)' }}>
             <div className="d-flex align-items-center justify-content-between mb-4">
               <h5 style={{ margin: 0, fontWeight: 700, color: 'var(--kai-text)' }}>
-                <Shield size={18} style={{ marginRight: 8, color: '#146DF7' }} />
+                <Shield size={18} style={{ marginRight: 8, color: '#3B82F6' }} />
                 Access Audit Report
               </h5>
               <button className="btn btn-sm" onClick={() => setShowLogs(false)} style={{ background: 'none', border: 'none', color: 'var(--kai-text-secondary)' }}><X size={18} /></button>

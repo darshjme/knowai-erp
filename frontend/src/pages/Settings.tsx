@@ -386,7 +386,7 @@ export default function Settings() {
   const SectionHeader = ({ icon: Icon, title, subtitle, optional }) => (
     <div style={{ marginBottom: 20, marginTop: 8 }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
-        <Icon size={18} style={{ color: '#146DF7' }} />
+        <Icon size={18} style={{ color: '#3B82F6' }} />
         <h4 style={{ fontSize: 15, fontWeight: 600, color: 'var(--kai-text)', margin: 0 }}>{title}</h4>
         {optional && <span style={{ fontSize: 11, color: 'var(--kai-text-muted)', fontWeight: 500, background: 'var(--kai-bg)', padding: '2px 8px', borderRadius: 8 }}>Optional</span>}
       </div>
@@ -399,7 +399,7 @@ export default function Settings() {
       <span style={{ fontSize: 14, color: 'var(--kai-text)', fontWeight: 500 }}>{label}</span>
       <button type="button" onClick={onChange} style={{
         width: 44, height: 24, borderRadius: 12, border: 'none', cursor: 'pointer',
-        background: checked ? '#146DF7' : '#CBD5E0', position: 'relative', transition: 'background 0.2s',
+        background: checked ? '#111827' : '#CBD5E0', position: 'relative', transition: 'background 0.2s',
       }}>
         <span style={{
           position: 'absolute', top: 2, left: checked ? 22 : 2,
@@ -424,7 +424,7 @@ export default function Settings() {
   if (loading) {
     return (
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: 400 }}>
-        <Loader2 size={32} style={{ animation: 'spin 1s linear infinite', color: '#146DF7' }} />
+        <Loader2 size={32} style={{ animation: 'spin 1s linear infinite', color: '#111827' }} />
       </div>
     );
   }
@@ -459,8 +459,8 @@ export default function Settings() {
                 <button key={tab.key} onClick={() => setActiveTab(tab.key)} style={{
                   display: 'flex', alignItems: 'center', gap: 10, width: '100%',
                   padding: '10px 14px', border: 'none', borderRadius: 8, cursor: 'pointer',
-                  background: active ? 'rgba(20,109,247,0.1)' : 'transparent',
-                  color: active ? '#146DF7' : 'var(--kai-text-secondary)',
+                  background: active ? 'var(--kai-primary-light, rgba(17,24,39,0.08))' : 'transparent',
+                  color: active ? '#111827' : 'var(--kai-text-secondary)',
                   fontWeight: active ? 600 : 400, fontSize: 14, textAlign: 'left', marginBottom: 2,
                 }}>
                   <Icon size={18} />
@@ -944,12 +944,12 @@ export default function Settings() {
                       return (
                         <button key={opt.key} onClick={() => handleSaveAppearance(opt.key, null)} style={{
                           flex: 1, padding: '20px 16px', borderRadius: 12, cursor: 'pointer',
-                          border: `2px solid ${active ? '#146DF7' : 'var(--kai-border)'}`,
-                          background: active ? 'rgba(20,109,247,0.1)' : 'var(--kai-surface)',
+                          border: `2px solid ${active ? '#111827' : 'var(--kai-border)'}`,
+                          background: active ? 'var(--kai-primary-light, rgba(17,24,39,0.08))' : 'var(--kai-surface)',
                           display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8,
                         }}>
                           <Icon size={24} style={{ color: active ? 'var(--kai-primary)' : 'var(--kai-text-secondary)' }} />
-                          <span style={{ fontSize: 14, fontWeight: active ? 600 : 400, color: active ? '#146DF7' : 'var(--kai-text-secondary)' }}>{opt.label}</span>
+                          <span style={{ fontSize: 14, fontWeight: active ? 600 : 400, color: active ? '#111827' : 'var(--kai-text-secondary)' }}>{opt.label}</span>
                         </button>
                       );
                     })}
@@ -970,12 +970,12 @@ export default function Settings() {
                       return (
                         <button key={opt.key} onClick={() => handleSaveAppearance(null, opt.key)} style={{
                           flex: 1, maxWidth: 200, padding: '20px 16px', borderRadius: 12, cursor: 'pointer',
-                          border: `2px solid ${active ? '#146DF7' : 'var(--kai-border)'}`,
-                          background: active ? 'rgba(20,109,247,0.1)' : 'var(--kai-surface)',
+                          border: `2px solid ${active ? '#111827' : 'var(--kai-border)'}`,
+                          background: active ? 'var(--kai-primary-light, rgba(17,24,39,0.08))' : 'var(--kai-surface)',
                           display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8,
                         }}>
                           <Icon size={24} style={{ color: active ? 'var(--kai-primary)' : 'var(--kai-text-secondary)' }} />
-                          <span style={{ fontSize: 14, fontWeight: active ? 600 : 400, color: active ? '#146DF7' : 'var(--kai-text-secondary)' }}>{opt.label}</span>
+                          <span style={{ fontSize: 14, fontWeight: active ? 600 : 400, color: active ? '#111827' : 'var(--kai-text-secondary)' }}>{opt.label}</span>
                         </button>
                       );
                     })}

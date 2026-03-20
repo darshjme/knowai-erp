@@ -5,9 +5,9 @@ import { toast } from 'react-toastify';
    CONSTANTS
    ======================================================================== */
 
-const BRAND_COLOR = '#146DF7';
+const BRAND_COLOR = '#111827';
 const BRAND_DARK = '#10222F';
-const BRAND_GRADIENT = 'linear-gradient(135deg, #146DF7 0%, #10222F 100%)';
+const BRAND_GRADIENT = 'linear-gradient(135deg, #111827 0%, #10222F 100%)';
 
 const JOB_TYPE_STYLES = {
   'full-time':  { bg: '#D1FAE5', color: '#065F46', label: 'Full-time' },
@@ -288,7 +288,7 @@ export default function Careers() {
                         style={{
                           padding: '12px 32px', borderRadius: 10, border: 'none', background: BRAND_COLOR,
                           color: '#fff', fontSize: 15, fontWeight: 600, cursor: 'pointer',
-                          transition: 'opacity 0.2s', boxShadow: '0 2px 8px rgba(20,109,247,0.3)',
+                          transition: 'opacity 0.2s', boxShadow: '0 2px 8px var(--kai-primary-light, rgba(17,24,39,0.2))',
                           display: 'flex', alignItems: 'center', gap: 8,
                         }}
                         onMouseEnter={e => e.currentTarget.style.opacity = '0.9'}
@@ -351,7 +351,7 @@ export default function Careers() {
                         style={{
                           padding: '12px 40px', borderRadius: 10, border: 'none', background: BRAND_COLOR,
                           color: '#fff', fontSize: 15, fontWeight: 600, cursor: 'pointer',
-                          boxShadow: '0 2px 8px rgba(20,109,247,0.3)', display: 'inline-flex', alignItems: 'center', gap: 8,
+                          boxShadow: '0 2px 8px var(--kai-primary-light, rgba(17,24,39,0.2))', display: 'inline-flex', alignItems: 'center', gap: 8,
                         }}>
                         <i className="bi bi-send" /> Apply Now
                       </button>
@@ -372,7 +372,7 @@ export default function Careers() {
                         cursor: 'pointer', transition: 'all 0.2s', position: 'relative',
                       }}
                       onClick={() => setSelectedJob(job)}
-                      onMouseEnter={e => { e.currentTarget.style.borderColor = BRAND_COLOR; e.currentTarget.style.boxShadow = '0 4px 16px rgba(20,109,247,0.1)'; }}
+                      onMouseEnter={e => { e.currentTarget.style.borderColor = BRAND_COLOR; e.currentTarget.style.boxShadow = '0 4px 16px var(--kai-primary-light, rgba(17,24,39,0.08))'; }}
                       onMouseLeave={e => { e.currentTarget.style.borderColor = '#E5E7EB'; e.currentTarget.style.boxShadow = 'none'; }}>
 
                       {/* Department Icon */}

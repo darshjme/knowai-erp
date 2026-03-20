@@ -8,12 +8,12 @@ import { teamApi } from '../services/api';
 const ROLES = ['All', 'Manager', 'Engineer', 'Designer', 'HR', 'Finance', 'Marketing', 'Intern'];
 const DEPARTMENTS = ['All', 'Engineering', 'Design', 'Human Resources', 'Finance', 'Marketing', 'Operations', 'Sales'];
 const ROLE_COLORS = {
-  Manager: '#8B3FE9', Engineer: '#146DF7', Designer: '#EA580C',
+  Manager: '#8B3FE9', Engineer: '#3B82F6', Designer: '#EA580C',
   HR: '#16A34A', Finance: '#2563EB', Marketing: '#CB3939', Intern: '#5B6B76',
 };
 
 const avatarBg = (name) => {
-  const colors = ['#146DF7','#8B3FE9','#16A34A','#EA580C','#CB3939','#2563EB'];
+  const colors = ['#111827','#8B3FE9','#16A34A','#EA580C','#CB3939','#2563EB'];
   let hash = 0;
   for (let i = 0; i < (name || '').length; i++) hash = name.charCodeAt(i) + ((hash << 5) - hash);
   return colors[Math.abs(hash) % colors.length];
@@ -120,7 +120,7 @@ export default function Team() {
       {/* Stats Row */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 16, marginBottom: 24 }}>
         {[
-          { label: 'Total Members', value: stats.total, color: '#146DF7', icon: 'M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2M9 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75' },
+          { label: 'Total Members', value: stats.total, color: '#3B82F6', icon: 'M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2M9 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75' },
           { label: 'Managers', value: stats.managers, color: '#8B3FE9', icon: 'M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z' },
           { label: 'Engineers', value: stats.engineers, color: '#16A34A', icon: 'M4 19.5A2.5 2.5 0 0 1 6.5 17H20M4 19.5V4.5A2.5 2.5 0 0 1 6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5z' },
           { label: 'HR Team', value: stats.hr, color: '#EA580C', icon: 'M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z' },
@@ -195,7 +195,7 @@ export default function Team() {
                         <VerifiedBadge verified={member.verified} size={14} />
                       </div>
                     </td>
-                    <td><span className="kai-badge" style={{ background: `${ROLE_COLORS[member.role] || '#146DF7'}15`, color: ROLE_COLORS[member.role] || '#146DF7' }}>{member.role || 'Member'}</span></td>
+                    <td><span className="kai-badge" style={{ background: `${ROLE_COLORS[member.role] || '#3B82F6'}15`, color: ROLE_COLORS[member.role] || '#3B82F6' }}>{member.role || 'Member'}</span></td>
                     <td>{member.department || '-'}</td>
                     <td>{member.email || '-'}</td>
                     <td>{member.phone || '-'}</td>
@@ -233,7 +233,7 @@ export default function Team() {
                 </div>
 
                 <h6 style={{ margin: '0 0 6px', fontSize: 15, fontWeight: 600, color: 'var(--kai-text)', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}>{member.name} <VerifiedBadge verified={member.verified} size={14} /></h6>
-                <span className="kai-badge primary" style={{ marginBottom: 10, background: `${ROLE_COLORS[member.role] || '#146DF7'}15`, color: ROLE_COLORS[member.role] || '#146DF7' }}>
+                <span className="kai-badge primary" style={{ marginBottom: 10, background: `${ROLE_COLORS[member.role] || '#3B82F6'}15`, color: ROLE_COLORS[member.role] || '#3B82F6' }}>
                   {member.role || 'Member'}
                 </span>
 

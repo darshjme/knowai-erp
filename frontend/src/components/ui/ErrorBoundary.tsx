@@ -45,7 +45,7 @@ class ErrorBoundary extends React.Component<ErrorBoundaryProps, ErrorBoundarySta
             color: '#1D1D1F',
             padding: '2rem',
             fontFamily:
-              "-apple-system, BlinkMacSystemFont, 'SF Pro Display', 'SF Pro Text', 'Geist', 'Helvetica Neue', sans-serif",
+              "'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
           }}
         >
           {/* Glass card container */}
@@ -109,7 +109,7 @@ class ErrorBoundary extends React.Component<ErrorBoundaryProps, ErrorBoundarySta
             <button
               onClick={this.handleReload}
               style={{
-                background: '#007AFF',
+                background: '#111827',
                 color: '#fff',
                 border: 'none',
                 borderRadius: 8,
@@ -121,10 +121,10 @@ class ErrorBoundary extends React.Component<ErrorBoundaryProps, ErrorBoundarySta
                 minHeight: 44,
               }}
               onMouseOver={(e) => {
-                (e.currentTarget as HTMLButtonElement).style.background = '#0066D6';
+                (e.currentTarget as HTMLButtonElement).style.background = '#1F2937';
               }}
               onMouseOut={(e) => {
-                (e.currentTarget as HTMLButtonElement).style.background = '#007AFF';
+                (e.currentTarget as HTMLButtonElement).style.background = '#111827';
               }}
             >
               Reload Page
@@ -165,7 +165,7 @@ class ErrorBoundary extends React.Component<ErrorBoundaryProps, ErrorBoundarySta
                   color: '#86868B',
                   margin: '8px 0 0',
                   lineHeight: 1.5,
-                  fontFamily: "'SF Mono', 'Geist Mono', 'Menlo', monospace",
+                  fontFamily: "'JetBrains Mono', 'Fira Code', 'Menlo', monospace",
                 }}
               >
                 {this.state.error.toString()}

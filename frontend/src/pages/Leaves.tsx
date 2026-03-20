@@ -12,7 +12,7 @@ const LEAVE_TYPES = [
   { value: 'WORK_FROM_HOME', label: 'Work From Home' },
 ];
 const TYPE_COLORS = {
-  'PAID': '#146DF7', 'Paid Leave': '#146DF7',
+  'PAID': '#3B82F6', 'Paid Leave': '#3B82F6',
   'SICK': '#CB3939', 'Sick Leave': '#CB3939',
   'WORK_FROM_HOME': '#8B3FE9', 'WFH': '#8B3FE9',
   'HALF_DAY': '#EA580C', 'Half Day': '#EA580C',
@@ -154,7 +154,7 @@ export default function Leaves() {
           { label: 'Pending', value: stats.pending, color: '#EA580C' },
           { label: 'Approved', value: stats.approved, color: '#16A34A' },
           { label: 'Rejected', value: stats.rejected, color: '#CB3939' },
-          { label: 'On Leave Today', value: stats.onLeaveToday, color: '#146DF7' },
+          { label: 'On Leave Today', value: stats.onLeaveToday, color: '#3B82F6' },
         ].map((s, i) => (
           <div className="stat-card" key={i}>
             <div className="stat-value" style={{ color: s.color }}>{s.value}</div>
@@ -255,7 +255,7 @@ export default function Leaves() {
                 return (
                   <div key={i} onClick={() => day && dayLeaves.length > 0 && setExpandedDay(expandedDay === day ? null : day)} style={{
                     minHeight: 80, padding: 6, borderRadius: 6, cursor: day && dayLeaves.length > 0 ? 'pointer' : 'default',
-                    background: day ? (isExpanded ? '#EBF3FE' : isCurrentDay ? 'var(--kai-primary-light)' : 'var(--kai-bg)') : 'transparent',
+                    background: day ? (isExpanded ? 'var(--kai-accent-light)' : isCurrentDay ? 'var(--kai-primary-light)' : 'var(--kai-bg)') : 'transparent',
                     border: isExpanded ? '2px solid var(--kai-primary)' : isCurrentDay ? '2px solid var(--kai-primary)' : '1px solid transparent',
                     gridColumn: isExpanded ? '1 / -1' : undefined,
                   }}>
@@ -272,8 +272,8 @@ export default function Leaves() {
                         {!isExpanded && dayLeaves.slice(0, 2).map((l, j) => (
                           <div key={j} style={{
                             fontSize: 10, padding: '2px 4px', borderRadius: 3, marginBottom: 2,
-                            background: `${TYPE_COLORS[l.type] || '#146DF7'}15`,
-                            color: TYPE_COLORS[l.type] || '#146DF7',
+                            background: `${TYPE_COLORS[l.type] || '#3B82F6'}15`,
+                            color: TYPE_COLORS[l.type] || '#3B82F6',
                             whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis',
                           }}>{l.employeeName || (l.employee ? `${l.employee.firstName} ${l.employee.lastName}` : 'Employee')}</div>
                         ))}
@@ -283,7 +283,7 @@ export default function Leaves() {
                         {isExpanded && (
                           <div style={{ display: 'flex', flexDirection: 'column', gap: 6, marginTop: 6 }}>
                             {dayLeaves.map((l, j) => {
-                              const tc = TYPE_COLORS[l.type] || '#146DF7';
+                              const tc = TYPE_COLORS[l.type] || '#3B82F6';
                               const st = STATUS_STYLES[l.status] || STATUS_STYLES.PENDING;
                               return (
                                 <div key={j} style={{

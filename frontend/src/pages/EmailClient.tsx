@@ -209,7 +209,7 @@ export default function EmailClient() {
                   padding: '10px 12px',
                   borderRadius: 'var(--kai-radius)',
                   cursor: 'pointer',
-                  background: isActive ? 'rgba(20, 109, 247, 0.08)' : 'transparent',
+                  background: isActive ? 'var(--kai-primary-light, rgba(17,24,39,0.06))' : 'transparent',
                   color: isActive ? 'var(--kai-primary)' : 'var(--kai-text)',
                   fontWeight: isActive ? 600 : 500,
                   fontSize: 13.5,
@@ -217,7 +217,7 @@ export default function EmailClient() {
                   marginBottom: 2,
                 }}
                 onMouseEnter={e => { if (!isActive) e.currentTarget.style.background = 'var(--kai-surface-hover)'; }}
-                onMouseLeave={e => { if (!isActive) e.currentTarget.style.background = isActive ? 'rgba(20,109,247,0.08)' : 'transparent'; }}
+                onMouseLeave={e => { if (!isActive) e.currentTarget.style.background = isActive ? 'var(--kai-primary-light, rgba(17,24,39,0.06))' : 'transparent'; }}
               >
                 {folder.icon}
                 <span style={{ flex: 1 }}>{folder.label}</span>
@@ -294,13 +294,13 @@ export default function EmailClient() {
                       padding: '12px 16px',
                       cursor: 'pointer',
                       borderBottom: '1px solid var(--kai-border-light)',
-                      background: isActive ? 'rgba(20,109,247,0.06)' : isUnread ? 'rgba(20,109,247,0.02)' : 'transparent',
+                      background: isActive ? 'var(--kai-primary-light, rgba(17,24,39,0.05))' : isUnread ? 'rgba(17,24,39,0.02)' : 'transparent',
                       borderLeft: isActive ? '3px solid var(--kai-primary)' : '3px solid transparent',
                       transition: 'var(--kai-transition)',
                     }}
                     onClick={() => handleSelectEmail(email)}
                     onMouseEnter={e => { if (!isActive) e.currentTarget.style.background = 'var(--kai-surface-hover)'; }}
-                    onMouseLeave={e => { if (!isActive) e.currentTarget.style.background = isActive ? 'rgba(20,109,247,0.06)' : isUnread ? 'rgba(20,109,247,0.02)' : 'transparent'; }}
+                    onMouseLeave={e => { if (!isActive) e.currentTarget.style.background = isActive ? 'var(--kai-primary-light, rgba(17,24,39,0.05))' : isUnread ? 'rgba(17,24,39,0.02)' : 'transparent'; }}
                   >
                     <input
                       type="checkbox"
@@ -355,7 +355,7 @@ export default function EmailClient() {
                   </div>
                 </div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                  <div className="kai-avatar" style={{ background: '#146DF7' }}>
+                  <div className="kai-avatar" style={{ background: '#111827' }}>
                     {(selectedEmail.from || selectedEmail.sender || '?')[0]?.toUpperCase()}
                   </div>
                   <div style={{ flex: 1 }}>

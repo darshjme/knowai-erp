@@ -14,7 +14,7 @@ interface EmptyStateProps {
 /**
  * EmptyState - Empty state placeholder with icon, title, description, and action button.
  * Styled per DESIGN.md: centered layout, icon in tinted circle, warm friendly copy,
- * primary #007AFF CTA button, secondary text #86868B.
+ * primary #111827 CTA button, secondary text #86868B.
  */
 export default function EmptyState({
   icon: Icon = Inbox,
@@ -63,7 +63,7 @@ export default function EmptyState({
           width: 80px;
           height: 80px;
           border-radius: 50%;
-          background: rgba(0, 122, 255, 0.08);
+          background: var(--kai-primary-light, rgba(17, 24, 39, 0.06));
           display: flex;
           align-items: center;
           justify-content: center;
@@ -97,14 +97,14 @@ export default function EmptyState({
           font-weight: 600;
           font-family: inherit;
           color: #fff;
-          background: #007AFF;
+          background: #111827;
           border: none;
           border-radius: 8px;
           cursor: pointer;
           transition: background 0.15s, transform 0.15s;
         }
         .kai-empty-state__btn:hover {
-          background: #0066D6;
+          background: #1F2937;
           transform: translateY(-1px);
         }
         .kai-empty-state__btn:active {

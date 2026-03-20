@@ -52,7 +52,7 @@ const FILTER_TABS = [
 ];
 
 const AVATAR_COLORS = [
-  '#146DF7', '#8B3FE9', '#16A34A', '#EA580C', '#CB3939',
+  '#111827', '#8B3FE9', '#16A34A', '#EA580C', '#CB3939',
   '#2563EB', '#7C3AED', '#059669', '#D97706', '#DC2626',
 ];
 
@@ -206,7 +206,7 @@ export default function Projects() {
         <Col xs={6} md={3}>
           <div className="stat-card">
             <div className="flex-between mb-2">
-              <div className="stat-icon" style={{ background: 'rgba(20,109,247,0.1)', color: 'var(--kai-primary)' }}>
+              <div className="stat-icon" style={{ background: 'var(--kai-primary-light, rgba(17,24,39,0.08))', color: 'var(--kai-primary)' }}>
                 <FolderKanban />
               </div>
             </div>

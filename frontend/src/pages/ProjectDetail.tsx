@@ -54,7 +54,7 @@ const KANBAN_COLUMNS = [
 ];
 
 const AVATAR_COLORS = [
-  '#146DF7', '#8B3FE9', '#16A34A', '#EA580C', '#CB3939',
+  '#111827', '#8B3FE9', '#16A34A', '#EA580C', '#CB3939',
   '#2563EB', '#7C3AED', '#059669', '#D97706', '#DC2626',
 ];
 
@@ -588,7 +588,7 @@ export default function ProjectDetail() {
                           padding: 8,
                           flex: 1,
                           minHeight: 120,
-                          background: snapshot.isDraggingOver ? 'rgba(20,109,247,0.04)' : 'transparent',
+                          background: snapshot.isDraggingOver ? 'var(--kai-primary-light, rgba(17,24,39,0.04))' : 'transparent',
                           borderRadius: '0 0 var(--kai-radius-lg) var(--kai-radius-lg)',
                           transition: 'background 0.2s ease',
                         }}

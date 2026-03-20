@@ -122,7 +122,7 @@ function DashboardSkeleton() {
 }
 
 const STAT_CARD_CONFIG = [
-  { key: 'totalTeam', label: 'Total Team', icon: Users, color: '#146DF7', bg: '#EBF3FF', widget: 'team' },
+  { key: 'totalTeam', label: 'Total Team', icon: Users, color: '#111827', bg: '#F3F4F6', widget: 'team' },
   { key: 'activeProjects', label: 'Active Projects', icon: FolderKanban, color: '#8B3FE9', bg: '#F3EAFF', widget: 'projects' },
   { key: 'openTasks', label: 'Open Tasks', icon: CheckSquare, color: '#EA580C', bg: '#FFF4ED', widget: 'tasks' },
   { key: 'revenue', label: 'Revenue', icon: DollarSign, color: '#16A34A', bg: '#E8F9EF', format: 'currency', widget: 'revenue' },
@@ -206,7 +206,7 @@ export default function Dashboard() {
     { label: 'New Project', icon: <FolderKanban size={16} />, path: '/projects', color: '#8B3FE9', widget: 'projects' },
     { label: 'Add Task', icon: <Plus size={16} />, path: '/tasks', color: '#EA580C', widget: 'tasks' },
     { label: 'New Invoice', icon: <FileText size={16} />, path: '/invoices', color: '#16A34A', widget: 'revenue' },
-    { label: 'Add Team Member', icon: <UserPlus size={16} />, path: '/team', color: '#146DF7', widget: 'team' },
+    { label: 'Add Team Member', icon: <UserPlus size={16} />, path: '/team', color: '#111827', widget: 'team' },
   ];
 
   const quickActions = useMemo(() => {
@@ -301,7 +301,7 @@ export default function Dashboard() {
   // Revenue bar chart config
   const revenueChartOptions = {
     chart: { type: 'bar', toolbar: { show: false }, fontFamily: 'inherit' },
-    colors: ['#146DF7'],
+    colors: ['#111827'],
     plotOptions: { bar: { borderRadius: 6, columnWidth: '50%' } },
     dataLabels: { enabled: false },
     xaxis: {
@@ -340,7 +340,7 @@ export default function Dashboard() {
 
   const taskDonutOptions = {
     chart: { type: 'donut', fontFamily: 'inherit' },
-    colors: ['#EA580C', '#146DF7', '#8B3FE9', '#16A34A'],
+    colors: ['#EA580C', '#3B82F6', '#8B3FE9', '#16A34A'],
     labels: taskLabels,
     legend: { position: 'bottom', fontSize: '13px', labels: { colors: 'var(--kai-text-secondary)' } },
     dataLabels: { enabled: true, formatter: (val) => `${val.toFixed(0)}%` },
@@ -366,7 +366,7 @@ export default function Dashboard() {
       case 'project': return '#8B3FE9';
       case 'task': return '#EA580C';
       case 'invoice': return '#16A34A';
-      case 'team': return '#146DF7';
+      case 'team': return '#111827';
       case 'leave': return '#CB3939';
       default: return '#5B6B76';
     }
@@ -442,7 +442,7 @@ export default function Dashboard() {
     <div>
       {/* Greeting Widget */}
       <div style={{
-        background: 'linear-gradient(135deg, #146DF7 0%, #0148A7 60%, #05121B 100%)',
+        background: 'linear-gradient(135deg, #111827 0%, #0F172A 60%, #020617 100%)',
         borderRadius: 16, padding: '28px 32px', marginBottom: 24, color: '#fff', position: 'relative', overflow: 'hidden',
       }}>
         <div style={{ position: 'absolute', top: -40, right: -40, width: 200, height: 200, borderRadius: '50%', background: 'rgba(255,255,255,0.05)' }} />
@@ -488,8 +488,8 @@ export default function Dashboard() {
             alignItems: 'center',
             gap: 16,
             padding: '14px 20px',
-            background: 'linear-gradient(90deg, #146DF710 0%, #8B3FE910 100%)',
-            border: '1px solid #146DF730',
+            background: 'linear-gradient(90deg, var(--kai-primary-light) 0%, #8B3FE910 100%)',
+            border: '1px solid var(--kai-accent-light)',
             borderRadius: 12,
             marginBottom: 20,
           }}
@@ -499,7 +499,7 @@ export default function Dashboard() {
               width: 40,
               height: 40,
               borderRadius: '50%',
-              background: 'linear-gradient(135deg, #146DF7, #8B3FE9)',
+              background: 'linear-gradient(135deg, #111827, #8B3FE9)',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
@@ -545,18 +545,18 @@ export default function Dashboard() {
       {/* Identity Verification Banner */}
       {verificationStatus && !user?.verified && (
         <div style={{
-          background: 'linear-gradient(135deg, rgba(20,109,247,0.08), rgba(124,58,237,0.08))',
-          border: '1px solid rgba(20,109,247,0.2)',
+          background: 'linear-gradient(135deg, var(--kai-primary-light), rgba(124,58,237,0.08))',
+          border: '1px solid var(--kai-accent-light)',
           borderRadius: 12, padding: '14px 20px', marginBottom: 20,
           display: 'flex', alignItems: 'center', gap: 12,
         }}>
-          <i className="bi bi-shield-check" style={{ fontSize: 24, color: '#146DF7' }} />
+          <i className="bi bi-shield-check" style={{ fontSize: 24, color: '#3B82F6' }} />
           <div style={{ flex: 1 }}>
             <div style={{ fontWeight: 600, fontSize: 14, color: 'var(--kai-text)' }}>Verify Your Identity</div>
             <div style={{ fontSize: 12, color: 'var(--kai-text-muted)' }}>Upload your government ID and PAN card to get verified</div>
           </div>
           <button onClick={() => navigate('/settings')} style={{
-            background: '#146DF7', color: '#fff', border: 'none', borderRadius: 8,
+            background: '#111827', color: '#fff', border: 'none', borderRadius: 8,
             padding: '6px 16px', fontSize: 13, fontWeight: 600, cursor: 'pointer',
           }}>Verify Now</button>
         </div>

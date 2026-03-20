@@ -155,7 +155,7 @@ export default function Sidebar() {
           ))}
         </nav>
 
-        <div style={{ padding: '8px 12px', borderTop: '1px solid rgba(255,255,255,0.06)', marginTop: 'auto' }}>
+        <div style={{ padding: '8px 12px', borderTop: '1px solid var(--kai-border)', marginTop: 'auto' }}>
           <button
             className="sidebar-nav-item sidebar-help-btn"
             onClick={() => {
@@ -177,8 +177,8 @@ export default function Sidebar() {
               fontSize: 14,
               transition: 'background 0.15s',
             }}
-            onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(255,255,255,0.08)'; }}
-            onMouseLeave={(e) => { e.currentTarget.style.background = 'none'; }}
+            onMouseEnter={(e) => { e.currentTarget.style.background = 'var(--kai-surface-hover)'; }}
+            onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent'; }}
             title="Help & Guide"
           >
             <HelpCircle size={20} style={{ opacity: 0.85 }} />
@@ -186,9 +186,9 @@ export default function Sidebar() {
           </button>
         </div>
 
-        <div style={{ padding: '8px 12px 16px', borderTop: '1px solid rgba(255,255,255,0.06)' }}>
+        <div style={{ padding: '8px 12px 16px', borderTop: '1px solid var(--kai-border)' }}>
           <div className="sidebar-nav-item" style={{ opacity: 0.7 }}>
-            <div className="kai-avatar kai-avatar-sm" style={{ background: '#146DF7' }}>
+            <div className="kai-avatar kai-avatar-sm" style={{ background: '#111827' }}>
               {user?.firstName?.[0] || 'U'}
             </div>
             <span className="nav-text" style={{ fontSize: 13, display: 'flex', flexDirection: 'column', gap: 2 }}>

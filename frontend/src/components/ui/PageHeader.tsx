@@ -79,7 +79,7 @@ export default function PageHeader({
         }
 
         .kai-page-header__crumb-link {
-          color: var(--kai-primary, #146DF7);
+          color: var(--kai-accent, #3B82F6);
           text-decoration: none;
           transition: opacity 0.15s;
         }

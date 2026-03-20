@@ -155,7 +155,7 @@ export default function Docs() {
             display: 'flex', alignItems: 'center', gap: 6, padding: '8px 12px',
             paddingLeft: 12 + depth * 20, cursor: 'pointer', borderRadius: 6,
             background: isSelected ? '#EBF3FE' : 'transparent',
-            color: isSelected ? '#146DF7' : '#4C5963',
+            color: isSelected ? '#3B82F6' : '#4C5963',
             fontSize: 13, fontWeight: isSelected ? 600 : 400,
             transition: 'background 0.1s',
           }}
@@ -261,7 +261,7 @@ export default function Docs() {
             </div>
             {loading ? (
               <div style={{ display: 'flex', justifyContent: 'center', padding: 30 }}>
-                <Loader2 size={22} style={{ animation: 'spin 1s linear infinite', color: '#146DF7' }} />
+                <Loader2 size={22} style={{ animation: 'spin 1s linear infinite', color: '#111827' }} />
               </div>
             ) : tree.length === 0 ? (
               <div style={{ textAlign: 'center', padding: 24, color: '#5B6B76', fontSize: 13 }}>
@@ -283,7 +283,7 @@ export default function Docs() {
                 {/* Editor toolbar */}
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16, paddingBottom: 16, borderBottom: '1px solid #E8EBED' }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                    <Edit3 size={18} style={{ color: '#146DF7' }} />
+                    <Edit3 size={18} style={{ color: '#3B82F6' }} />
                     <span style={{ fontSize: 14, color: '#5B6B76' }}>Editing</span>
                   </div>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
@@ -339,7 +339,7 @@ export default function Docs() {
             <div className="kai-card" style={{ height: '100%' }}>
               <div className="kai-card-body" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%', minHeight: 400 }}>
                 <div style={{ textAlign: 'center', color: '#5B6B76' }}>
-                  <BookOpen size={48} style={{ marginBottom: 16, opacity: 0.3, color: '#146DF7' }} />
+                  <BookOpen size={48} style={{ marginBottom: 16, opacity: 0.3, color: '#111827' }} />
                   <p style={{ fontSize: 17, fontWeight: 600, color: '#10222F', marginBottom: 6 }}>Select a document</p>
                   <p style={{ fontSize: 14 }}>Choose a document from the sidebar or create a new one</p>
                 </div>

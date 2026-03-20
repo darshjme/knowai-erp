@@ -21,7 +21,7 @@ const SIZES = {
 // Deterministic color from string
 function stringToColor(str) {
   const COLORS = [
-    '#146DF7', '#7C3AED', '#059669', '#D97706', '#DC2626',
+    '#111827', '#7C3AED', '#059669', '#D97706', '#DC2626',
     '#DB2777', '#0891B2', '#4F46E5', '#EA580C', '#0D9488',
   ];
   let hash = 0;

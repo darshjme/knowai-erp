@@ -149,7 +149,7 @@ export default function KanbanBoard({
         }
 
         .kai-kanban__drop-zone--over {
-          background: rgba(20, 109, 247, 0.04);
+          background: var(--kai-primary-light, rgba(17, 24, 39, 0.04));
         }
 
         .kai-kanban__card {

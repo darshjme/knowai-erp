@@ -85,8 +85,8 @@ export default function UserProfile() {
     <div style={{ maxWidth: 900, margin: '0 auto' }}>
       {/* Cover + Avatar */}
       <div style={{ position: 'relative', borderRadius: 'var(--kai-radius-lg)', overflow: 'hidden', marginBottom: 24 }}>
-        <div style={{ height: 180, background: `linear-gradient(135deg, ${roleColor}22 0%, #146DF720 50%, ${roleColor}15 100%)`, position: 'relative' }}>
-          <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(135deg, #05121B08 0%, #146DF710 100%)' }} />
+        <div style={{ height: 180, background: `linear-gradient(135deg, ${roleColor}22 0%, #11182720 50%, ${roleColor}15 100%)`, position: 'relative' }}>
+          <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(135deg, #05121B08 0%, #11182710 100%)' }} />
         </div>
         <div className="kai-card" style={{ margin: '-60px 24px 0', padding: 24, position: 'relative' }}>
           <div style={{ display: 'flex', gap: 20, alignItems: 'flex-end', flexWrap: 'wrap' }}>

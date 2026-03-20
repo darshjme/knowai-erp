@@ -154,7 +154,7 @@ export default function Payroll() {
 
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 16, marginBottom: 24 }}>
         {[
-          { label: 'Total Payroll', value: currency(stats.total), color: '#146DF7' },
+          { label: 'Total Payroll', value: currency(stats.total), color: '#3B82F6' },
           { label: 'Paid', value: currency(stats.paid), color: '#16A34A' },
           { label: 'Pending', value: currency(stats.pending), color: '#EA580C' },
           { label: 'Failed', value: stats.failed, color: '#CB3939' },
@@ -355,7 +355,7 @@ export default function Payroll() {
           onClick={e => e.target === e.currentTarget && setSelectedRecord(null)}>
           <div style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.5)' }} onClick={() => setSelectedRecord(null)} />
           <div className="kai-card" style={{ position: 'relative', width: 560, maxWidth: '95vw', maxHeight: '85vh', overflow: 'auto', zIndex: 1 }}>
-            <div className="kai-card-header" style={{ background: '#146DF7', color: '#fff' }}>
+            <div className="kai-card-header" style={{ background: '#111827', color: '#fff' }}>
               <div>
                 <h6 style={{ margin: 0, color: '#fff' }}>Salary Slip</h6>
                 <div style={{ fontSize: 12, opacity: 0.8 }}>{MONTHS[selectedRecord.month - 1] || MONTHS[month]} {selectedRecord.year || year}</div>
@@ -365,7 +365,7 @@ export default function Payroll() {
             <div className="kai-card-body">
               {/* Employee Info */}
               <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 20, padding: 12, background: 'var(--kai-bg)', borderRadius: 8 }}>
-                <div className="kai-avatar" style={{ background: '#146DF7', width: 48, height: 48, fontSize: 18 }}>
+                <div className="kai-avatar" style={{ background: '#111827', width: 48, height: 48, fontSize: 18 }}>
                   {(selectedRecord.employee?.firstName || '?')[0]}{(selectedRecord.employee?.lastName || '')[0]}
                 </div>
                 <div>
@@ -407,7 +407,7 @@ export default function Payroll() {
                     )}
                     <tr style={{ borderTop: '2px solid var(--kai-border)' }}>
                       <td style={{ padding: '10px 0', fontWeight: 800, fontSize: 16 }}>Net Pay</td>
-                      <td style={{ padding: '10px 0', textAlign: 'right', fontWeight: 800, fontSize: 18, fontFamily: 'monospace', color: '#146DF7' }}>
+                      <td style={{ padding: '10px 0', textAlign: 'right', fontWeight: 800, fontSize: 18, fontFamily: 'monospace', color: '#3B82F6' }}>
                         {currency(selectedRecord.totalPay || ((selectedRecord.basicPay || 0) + (selectedRecord.hra || 0) + (selectedRecord.transport || 0) + (selectedRecord.bonus || 0) - (selectedRecord.deductions || 0)))}
                       </td>
                     </tr>

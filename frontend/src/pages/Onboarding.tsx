@@ -18,8 +18,8 @@ const SECRET_QUESTIONS = [
   "What was your first school?",
 ];
 
-const PRIMARY = '#007AFF';
-const PRIMARY_HOVER = '#0066D6';
+const PRIMARY = '#111827';
+const PRIMARY_HOVER = '#1F2937';
 
 export default function Onboarding() {
   const [step, setStep] = useState(0);

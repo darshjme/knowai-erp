@@ -192,7 +192,7 @@ export default function Invoices() {
       {/* Stats */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: 16, marginBottom: 24 }}>
         {[
-          { label: 'Total Invoiced', value: stats.totalInvoiced, color: 'var(--kai-primary)', bg: 'rgba(20,109,247,0.1)', icon: <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/>, iconExtra: <><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></> },
+          { label: 'Total Invoiced', value: stats.totalInvoiced, color: 'var(--kai-primary)', bg: 'var(--kai-primary-light, rgba(17,24,39,0.08))', icon: <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/>, iconExtra: <><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></> },
           { label: 'Paid', value: stats.paid, color: 'var(--kai-success)', bg: 'rgba(22,163,74,0.1)', icon: <path d="M22 11.08V12a10 10 0 11-5.93-9.14"/>, iconExtra: <polyline points="22 4 12 14.01 9 11.01"/> },
           { label: 'Pending', value: stats.pending, color: 'var(--kai-warning)', bg: 'rgba(234,88,12,0.1)', icon: <circle cx="12" cy="12" r="10"/>, iconExtra: <><polyline points="12 6 12 12 16 14"/></> },
           { label: 'Overdue', value: stats.overdue, color: 'var(--kai-danger)', bg: 'rgba(203,57,57,0.1)', icon: <path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/>, iconExtra: <><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></> },
@@ -307,7 +307,7 @@ export default function Invoices() {
               {/* Invoice Header */}
               <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 32 }}>
                 <div>
-                  <div style={{ fontSize: 28, fontWeight: 800, color: '#146DF7', letterSpacing: -1 }}>INVOICE</div>
+                  <div style={{ fontSize: 28, fontWeight: 800, color: '#111827', letterSpacing: -1 }}>INVOICE</div>
                   <div style={{ fontSize: 14, color: '#5B6B76', marginTop: 4 }}>{showPreview.invoiceNumber || showPreview.invoice_number || `INV-${showPreview.id}`}</div>
                 </div>
                 <div style={{ textAlign: 'right' }}>
@@ -329,7 +329,7 @@ export default function Invoices() {
               {/* Line Items */}
               <table style={{ width: '100%', borderCollapse: 'collapse', marginBottom: 24 }}>
                 <thead>
-                  <tr style={{ borderBottom: '2px solid #146DF7' }}>
+                  <tr style={{ borderBottom: '2px solid #111827' }}>
                     <th style={{ textAlign: 'left', padding: '8px 0', fontSize: 11, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.8, color: '#5B6B76' }}>Description</th>
                     <th style={{ textAlign: 'right', padding: '8px 0', fontSize: 11, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.8, color: '#5B6B76', width: 60 }}>Qty</th>
                     <th style={{ textAlign: 'right', padding: '8px 0', fontSize: 11, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.8, color: '#5B6B76', width: 100 }}>Rate</th>
@@ -373,7 +373,7 @@ export default function Invoices() {
                   )}
                   <div style={{ display: 'flex', justifyContent: 'space-between', padding: '10px 0', fontSize: 16, fontWeight: 800, borderTop: '2px solid #10222F', marginTop: 6 }}>
                     <span>Total</span>
-                    <span style={{ color: '#146DF7' }}>{formatCurrency(showPreview.total || showPreview.amount)}</span>
+                    <span style={{ color: '#111827' }}>{formatCurrency(showPreview.total || showPreview.amount)}</span>
                   </div>
                 </div>
               </div>

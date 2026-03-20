@@ -12,7 +12,7 @@ const AXIS_LABELS = {
 };
 
 const AXIS_COLORS = {
-  EI: '#146DF7',
+  EI: '#3B82F6',
   SN: '#8B3FE9',
   TF: '#16A34A',
   JP: '#EA580C',
@@ -140,7 +140,7 @@ export default function PersonalityTest() {
   if (loading) {
     return (
       <div className="flex-center" style={{ minHeight: 400 }}>
-        <Spinner animation="border" style={{ color: '#146DF7' }} />
+        <Spinner animation="border" style={{ color: '#111827' }} />
       </div>
     );
   }
@@ -170,7 +170,7 @@ export default function PersonalityTest() {
             flexDirection: 'column',
             alignItems: 'center',
             padding: '48px 24px',
-            background: 'linear-gradient(135deg, #146DF720 0%, #8B3FE920 100%)',
+            background: 'linear-gradient(135deg, #3B82F620 0%, #8B3FE920 100%)',
             borderRadius: 16,
             marginBottom: 24,
             textAlign: 'center',
@@ -181,12 +181,12 @@ export default function PersonalityTest() {
               width: 120,
               height: 120,
               borderRadius: '50%',
-              background: 'linear-gradient(135deg, #146DF7, #8B3FE9)',
+              background: 'linear-gradient(135deg, #3B82F6, #8B3FE9)',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
               marginBottom: 24,
-              boxShadow: '0 8px 32px rgba(20,109,247,0.3)',
+              boxShadow: '0 8px 32px rgba(59,130,246,0.3)',
             }}
           >
             <span style={{ fontSize: 36, fontWeight: 800, color: '#fff', letterSpacing: 2 }}>{personalityType}</span>
@@ -300,7 +300,7 @@ export default function PersonalityTest() {
             margin: '0 auto',
             textAlign: 'center',
             padding: '48px 32px',
-            background: 'linear-gradient(135deg, #146DF710 0%, #8B3FE910 100%)',
+            background: 'linear-gradient(135deg, #3B82F610 0%, #8B3FE910 100%)',
             borderRadius: 20,
           }}
         >
@@ -309,7 +309,7 @@ export default function PersonalityTest() {
               width: 80,
               height: 80,
               borderRadius: '50%',
-              background: 'linear-gradient(135deg, #146DF7, #8B3FE9)',
+              background: 'linear-gradient(135deg, #3B82F6, #8B3FE9)',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
@@ -339,7 +339,7 @@ export default function PersonalityTest() {
             }}
           >
             {[
-              { axis: 'E / I', label: 'Extraversion vs Introversion', desc: 'Where you focus your energy', color: '#146DF7' },
+              { axis: 'E / I', label: 'Extraversion vs Introversion', desc: 'Where you focus your energy', color: '#3B82F6' },
               { axis: 'S / N', label: 'Sensing vs iNtuition', desc: 'How you take in information', color: '#8B3FE9' },
               { axis: 'T / F', label: 'Thinking vs Feeling', desc: 'How you make decisions', color: '#16A34A' },
               { axis: 'J / P', label: 'Judging vs Perceiving', desc: 'How you organize your life', color: '#EA580C' },
@@ -387,7 +387,7 @@ export default function PersonalityTest() {
   const answeredCount = answers.filter(Boolean).length;
   const allAnswered = answeredCount === questions.length;
   const currentAxis = q?.axis;
-  const axisColor = AXIS_COLORS[currentAxis] || '#146DF7';
+  const axisColor = AXIS_COLORS[currentAxis] || '#3B82F6';
 
   return (
     <div>
@@ -417,7 +417,7 @@ export default function PersonalityTest() {
             style={{
               width: `${progress}%`,
               height: '100%',
-              background: `linear-gradient(90deg, #146DF7, ${axisColor})`,
+              background: `linear-gradient(90deg, #3B82F6, ${axisColor})`,
               borderRadius: 3,
               transition: 'width 0.3s ease',
             }}

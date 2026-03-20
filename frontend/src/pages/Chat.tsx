@@ -33,7 +33,7 @@ const ROOM_ICONS = {
   ),
 };
 
-const AVATAR_COLORS = ['#146DF7', '#8B3FE9', '#16A34A', '#EA580C', '#CB3939', '#2563EB', '#D946EF', '#0891B2'];
+const AVATAR_COLORS = ['#111827', '#8B3FE9', '#16A34A', '#EA580C', '#CB3939', '#2563EB', '#D946EF', '#0891B2'];
 
 function getAvatarColor(name) {
   let hash = 0;
@@ -71,7 +71,7 @@ function renderMessageText(text) {
   const parts = text.split(/(@\w[\w\s]*?)(?=\s|$|@)/g);
   return parts.map((part, i) => {
     if (part.startsWith('@')) {
-      return <span key={i} style={{ background: 'rgba(20,109,247,0.15)', color: '#146DF7', padding: '1px 4px', borderRadius: 4, fontWeight: 600, fontSize: 13 }}>{part}</span>;
+      return <span key={i} style={{ background: 'var(--kai-accent-light, rgba(59,130,246,0.15))', color: '#3B82F6', padding: '1px 4px', borderRadius: 4, fontWeight: 600, fontSize: 13 }}>{part}</span>;
     }
     return part;
   });
@@ -345,7 +345,7 @@ export default function Chat() {
                       gap: 12,
                       padding: '10px 16px',
                       cursor: 'pointer',
-                      background: isActive ? 'rgba(20, 109, 247, 0.08)' : 'transparent',
+                      background: isActive ? 'var(--kai-primary-light, rgba(17,24,39,0.06))' : 'transparent',
                       borderLeft: isActive ? '3px solid var(--kai-primary)' : '3px solid transparent',
                       transition: 'var(--kai-transition)',
                     }}
@@ -789,7 +789,7 @@ export default function Chat() {
                             padding: '8px 10px',
                             cursor: 'pointer',
                             borderRadius: 'var(--kai-radius-sm)',
-                            background: selected ? 'rgba(20,109,247,0.08)' : 'transparent',
+                            background: selected ? 'var(--kai-primary-light, rgba(17,24,39,0.06))' : 'transparent',
                           }}
                         >
                           <div style={{

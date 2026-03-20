@@ -14,14 +14,14 @@ const FILTER_TABS = [
 ];
 
 const TYPE_CONFIG = {
-  task: { icon: 'bi-check2-square', color: '#146DF7', bg: 'rgba(20, 109, 247, 0.1)' },
-  task_assigned: { icon: 'bi-person-check', color: '#146DF7', bg: 'rgba(20, 109, 247, 0.1)' },
-  TASK_ASSIGNED: { icon: 'bi-person-check', color: '#146DF7', bg: 'rgba(20, 109, 247, 0.1)' },
+  task: { icon: 'bi-check2-square', color: '#3B82F6', bg: 'var(--kai-accent-light)' },
+  task_assigned: { icon: 'bi-person-check', color: '#3B82F6', bg: 'var(--kai-accent-light)' },
+  TASK_ASSIGNED: { icon: 'bi-person-check', color: '#3B82F6', bg: 'var(--kai-accent-light)' },
   task_completed: { icon: 'bi-check-circle', color: '#16A34A', bg: 'rgba(22, 163, 74, 0.1)' },
   TASK_COMPLETED: { icon: 'bi-check-circle', color: '#16A34A', bg: 'rgba(22, 163, 74, 0.1)' },
   task_overdue: { icon: 'bi-exclamation-triangle', color: '#CB3939', bg: 'rgba(203, 57, 57, 0.1)' },
   TASK_OVERDUE: { icon: 'bi-exclamation-triangle', color: '#CB3939', bg: 'rgba(203, 57, 57, 0.1)' },
-  TASK_COMMENT: { icon: 'bi-chat-dots', color: '#146DF7', bg: 'rgba(20, 109, 247, 0.1)' },
+  TASK_COMMENT: { icon: 'bi-chat-dots', color: '#3B82F6', bg: 'var(--kai-accent-light)' },
   hr: { icon: 'bi-people', color: '#8B3FE9', bg: 'rgba(139, 63, 233, 0.1)' },
   leave: { icon: 'bi-calendar-event', color: '#EA580C', bg: 'rgba(234, 88, 12, 0.1)' },
   LEAVE_APPROVED: { icon: 'bi-calendar-check', color: '#16A34A', bg: 'rgba(22, 163, 74, 0.1)' },
@@ -31,7 +31,7 @@ const TYPE_CONFIG = {
   SYSTEM: { icon: 'bi-gear', color: '#5B6B76', bg: 'rgba(91, 107, 118, 0.1)' },
   CHAT_MENTION: { icon: 'bi-at', color: '#2563EB', bg: 'rgba(37, 99, 235, 0.1)' },
   mention: { icon: 'bi-at', color: '#2563EB', bg: 'rgba(37, 99, 235, 0.1)' },
-  comment: { icon: 'bi-chat-dots', color: '#146DF7', bg: 'rgba(20, 109, 247, 0.1)' },
+  comment: { icon: 'bi-chat-dots', color: '#3B82F6', bg: 'var(--kai-accent-light)' },
   project: { icon: 'bi-folder', color: '#EA580C', bg: 'rgba(234, 88, 12, 0.1)' },
   LEAD_ASSIGNED: { icon: 'bi-person-lines-fill', color: '#7C3AED', bg: 'rgba(124, 58, 237, 0.1)' },
   DOCUMENT_VERIFIED: { icon: 'bi-file-earmark-check', color: '#16A34A', bg: 'rgba(22, 163, 74, 0.1)' },
@@ -352,12 +352,12 @@ export default function Notifications() {
                         padding: '14px 20px',
                         borderBottom: '1px solid var(--kai-border-light)',
                         cursor: 'pointer',
-                        background: isUnread ? 'rgba(20, 109, 247, 0.02)' : 'transparent',
-                        borderLeft: isUnread ? '3px solid #146DF7' : '3px solid transparent',
+                        background: isUnread ? 'rgba(59, 130, 246, 0.02)' : 'transparent',
+                        borderLeft: isUnread ? '3px solid var(--kai-primary)' : '3px solid transparent',
                         transition: 'var(--kai-transition)',
                       }}
                       onMouseEnter={e => e.currentTarget.style.background = 'var(--kai-surface-hover)'}
-                      onMouseLeave={e => e.currentTarget.style.background = isUnread ? 'rgba(20,109,247,0.02)' : 'transparent'}
+                      onMouseLeave={e => e.currentTarget.style.background = isUnread ? 'rgba(59,130,246,0.02)' : 'transparent'}
                     >
                       {/* Icon */}
                       <div style={{
@@ -426,7 +426,7 @@ export default function Notifications() {
                             </span>
                           )}
                           {notification.linkUrl && (
-                            <span className="kai-badge" style={{ fontSize: 10, background: 'rgba(20,109,247,0.08)', color: '#146DF7' }}>
+                            <span className="kai-badge" style={{ fontSize: 10, background: 'var(--kai-accent-light)', color: '#3B82F6' }}>
                               <i className="bi bi-box-arrow-up-right" style={{ marginRight: 3, fontSize: 9 }} />
                               View
                             </span>

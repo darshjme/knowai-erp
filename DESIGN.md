@@ -7,149 +7,126 @@
 - **Project type:** Web app / dashboard / internal tool
 
 ## Aesthetic Direction
-- **Direction:** Luxury/Refined with Apple Glassmorphism
-- **Decoration level:** Intentional — glassmorphism IS the decoration. Frosted glass panels, subtle vibrancy effects, light borders on translucent surfaces. No flat cards — surfaces have depth through translucency and blur.
-- **Mood:** Premium, calm, professional. Think macOS Ventura control panels — every surface feels considered, every interaction feels precise. The tool should make your team feel like they're using something built with care.
-- **Reference:** Apple macOS Ventura, iOS 17, visionOS design language
+- **Direction:** Clean, flat, minimal — professional data-driven UI
+- **Decoration level:** None. Surfaces are solid white with subtle borders. Visual hierarchy comes from typography weight, spacing, and restrained color — not effects.
+- **Mood:** Focused, efficient, professional. Think Linear, Notion, Figma app — tools that get out of your way and let data speak. Every pixel serves a purpose.
+- **Reference:** Linear, Notion, Figma, Vercel Dashboard, Stripe Dashboard
 
 ## Typography
 
 ### Font Stack
-- **Display/Hero:** SF Pro Display — Apple's system display font
-- **Body/UI:** SF Pro Text — optimized for readability at small sizes
-- **Data/Tables:** SF Pro with `font-feature-settings: 'tnum'` — tabular numbers for financial column alignment
-- **Code:** SF Mono — Apple's monospace
-- **Fallback chain:** `-apple-system, BlinkMacSystemFont, 'SF Pro Display', 'SF Pro Text', 'Geist', 'Helvetica Neue', sans-serif`
-- **Mono fallback:** `'SF Mono', 'Geist Mono', 'Menlo', monospace`
-- **Loading:** System font stack — no CDN required. Geist loaded from Google Fonts as cross-platform fallback.
+- **Headings/Display:** Manrope — geometric, modern, excellent for dashboards
+- **Body/UI:** Inter — highly legible at all sizes, designed for screens
+- **Data/Tables:** Inter with `font-feature-settings: 'tnum'` — tabular numbers for financial column alignment
+- **Code:** JetBrains Mono — clean monospace with ligature support
+- **Body fallback:** `'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif`
+- **Heading fallback:** `'Manrope', 'Inter', -apple-system, sans-serif`
+- **Mono fallback:** `'JetBrains Mono', 'Fira Code', 'Menlo', monospace`
+- **Loading:** Google Fonts CDN for Inter (400, 500, 600) + Manrope (600, 700, 800)
 
 ### Type Scale
-| Level | Size | Weight | Usage |
-|-------|------|--------|-------|
-| Display | 40px | 700 | Page hero headings |
-| H1 | 28px | 700 | Page titles |
-| H2 | 24px | 700 | Section headings |
-| H3 | 20px | 600 | Card titles |
-| H4 | 17px | 600 | Sub-section headings |
-| Body | 15px | 400 | Default body text |
-| Body Small | 13px | 400 | Secondary text, metadata, captions |
-| Caption | 11px | 600 | Table headers, section labels (uppercase, 0.5-1px tracking) |
-| Code | 14px | 400 | Inline code, code blocks |
+| Level | Size | Weight | Font | Usage |
+|-------|------|--------|------|-------|
+| Display | 36px | 800 | Manrope | Page hero headings |
+| H1 | 28px | 700 | Manrope | Page titles |
+| H2 | 22px | 700 | Manrope | Section headings |
+| H3 | 18px | 600 | Manrope | Card titles |
+| H4 | 16px | 600 | Inter | Sub-section headings |
+| Body | 14px | 400 | Inter | Default body text |
+| Body Small | 13px | 400 | Inter | Secondary text, metadata, captions |
+| Caption | 11px | 600 | Inter | Table headers, section labels (uppercase, 0.5px tracking) |
+| Code | 13px | 400 | JetBrains Mono | Inline code, code blocks |
 
 ### Typography Rules
-- Letter-spacing: -0.3px to -1.5px for headlines (tighter at larger sizes)
+- Letter-spacing: -0.2px to -0.8px for Manrope headlines (tighter at larger sizes)
+- Inter body text: default letter-spacing (0)
 - Line-height: 1.1 for display, 1.3 for headings, 1.5 for body
-- Section labels: 11px, 600 weight, uppercase, 0.5-1px letter-spacing, secondary color
+- Section labels: 11px, 600 weight, uppercase, 0.5px letter-spacing, secondary color
 - Financial numbers always use `font-variant-numeric: tabular-nums`
 
 ## Color
 
-### Approach: Restrained (Apple System Palette)
+### Approach: Restrained and Semantic
 Color is meaningful — status, alerts, data visualization. Never decorative.
 
 ### Core Palette
 | Token | Hex | Usage |
 |-------|-----|-------|
-| Primary | `#007AFF` | Actions, links, active states, primary buttons |
-| Primary Hover | `#0066D6` | Hover state for primary elements |
-| Primary Tint | `rgba(0, 122, 255, 0.1)` | Selected rows, active sidebar items, focus rings |
+| Primary | `#111827` | Actions, buttons, active states, primary fill |
+| Primary Hover | `#1F2937` | Hover state for primary elements |
+| Primary Tint | `rgba(17, 24, 39, 0.06)` | Selected rows, active sidebar items |
+| Accent | `#3B82F6` | Links, info highlights, accent elements |
+| Accent Hover | `#2563EB` | Hover state for accent elements |
+| Accent Tint | `rgba(59, 130, 246, 0.08)` | Focus rings, accent backgrounds |
 
 ### Semantic Colors
 | Token | Hex | Usage |
 |-------|-----|-------|
-| Success | `#34C759` | Approved, active, completed, positive delta |
-| Warning | `#FF9500` | Pending, on-leave, attention needed |
-| Error | `#FF3B30` | Rejected, failed, negative delta, destructive actions |
-| Info | `#5AC8FA` | In review, informational, neutral status |
+| Success | `#16A34A` | Approved, active, completed, positive delta |
+| Warning | `#F59E0B` | Pending, on-leave, attention needed |
+| Danger | `#DC2626` | Rejected, failed, negative delta, destructive actions |
+| Info | `#0EA5E9` | In review, informational, neutral status |
 
 ### Neutrals
 | Token | Hex | Usage |
 |-------|-----|-------|
-| Text Primary | `#1D1D1F` | Headlines, body text, primary content |
-| Text Secondary | `#86868B` | Metadata, captions, sidebar labels |
-| Text Tertiary | `#AEAEB2` | Placeholders, disabled text |
-| Background | `#F5F5F7` | Page background |
-| Surface Solid | `#FFFFFF` | Elevated solid surfaces |
-| Border | `rgba(0, 0, 0, 0.06)` | Subtle dividers |
-| Divider | `rgba(0, 0, 0, 0.08)` | Table row borders |
+| Text Primary | `#111827` | Headlines, body text, primary content |
+| Text Secondary | `#6B7280` | Metadata, captions, sidebar labels |
+| Text Muted | `#9CA3AF` | Placeholders, disabled text |
+| Background | `#F9FAFB` | Page background |
+| Surface | `#FFFFFF` | Cards, panels, content areas |
+| Border | `#E5E7EB` | Card borders, dividers, input borders |
+| Divider | `#F3F4F6` | Table row separators, subtle dividers |
 
 ### Dark Mode
-Strategy: Redesign surfaces, not just invert.
+Strategy: Slate-based palette. Redesign surfaces, not just invert.
 
 | Token | Light | Dark |
 |-------|-------|------|
-| Text Primary | `#1D1D1F` | `#F5F5F7` |
-| Text Secondary | `#86868B` | `#98989D` |
-| Text Tertiary | `#AEAEB2` | `#636366` |
-| Background | `#F5F5F7` | `#000000` |
-| Surface Solid | `#FFFFFF` | `#1C1C1E` |
-| Glass Surface | `rgba(255,255,255,0.72)` | `rgba(44,44,46,0.72)` |
-| Glass Border | `rgba(255,255,255,0.18)` | `rgba(255,255,255,0.1)` |
-| Border | `rgba(0,0,0,0.06)` | `rgba(255,255,255,0.08)` |
-| Shadows | Lower opacity | Higher opacity |
+| Text Primary | `#111827` | `#F9FAFB` |
+| Text Secondary | `#6B7280` | `#94A3B8` |
+| Text Muted | `#9CA3AF` | `#475569` |
+| Background | `#F9FAFB` | `#0F172A` |
+| Surface | `#FFFFFF` | `#1E293B` |
+| Border | `#E5E7EB` | `#334155` |
+| Divider | `#F3F4F6` | `#1E293B` |
 
-Dark mode semantic colors: success `#30D158`, warning `#FF9F0A`, error `#FF453A`, info `#64D2FF`
+Dark mode semantic colors: success `#22C55E`, warning `#FBBF24`, danger `#EF4444`, info `#38BDF8`
 
-### Glassmorphism Recipe
+### Surface Styling
+All surfaces are solid — no transparency, no blur, no backdrop-filter.
 ```css
-/* Light mode glass surface */
-.glass {
-  background: rgba(255, 255, 255, 0.72);
-  backdrop-filter: blur(20px) saturate(180%);
-  -webkit-backdrop-filter: blur(20px) saturate(180%);
-  border: 1px solid rgba(255, 255, 255, 0.18);
+/* Standard card surface */
+.card {
+  background: #FFFFFF;
+  border: 1px solid #E5E7EB;
+  border-radius: 10px;
 }
 
-/* Dark mode glass surface */
-[data-theme="dark"] .glass {
-  background: rgba(44, 44, 46, 0.72);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+/* Dark mode surface */
+[data-theme="dark"] .card {
+  background: #1E293B;
+  border: 1px solid #334155;
 }
 
-/* Glass hover state */
-.glass:hover {
-  background: rgba(255, 255, 255, 0.85);
-}
-
-[data-theme="dark"] .glass:hover {
-  background: rgba(58, 58, 60, 0.85);
+/* Elevated surface (dropdowns, modals) */
+.elevated {
+  background: #FFFFFF;
+  border: 1px solid #E5E7EB;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.07);
 }
 ```
-
-### When to use glass vs. solid
-- **Glass:** Stat cards, sidebar, modals, dropdowns, tooltips, floating elements
-- **Solid:** Data tables (performance), code blocks, form containers with many inputs
-- **Rule:** If the element renders >20 rows of data, use solid background. Glass blur on large surfaces hurts scroll performance.
-
-### Graceful Fallback
-For browsers/devices without `backdrop-filter` support:
-```css
-.glass {
-  /* Fallback: solid semi-transparent, no blur */
-  background: rgba(255, 255, 255, 0.92);
-}
-
-@supports (backdrop-filter: blur(1px)) {
-  .glass {
-    background: rgba(255, 255, 255, 0.72);
-    backdrop-filter: blur(20px) saturate(180%);
-    -webkit-backdrop-filter: blur(20px) saturate(180%);
-  }
-}
-```
-This ensures the app is usable on all devices while looking premium on modern ones.
 
 ### Accessibility Requirements
 - **Touch targets:** Minimum 44x44px for all interactive elements
 - **Color contrast:** All text meets WCAG AA (4.5:1 for body, 3:1 for large text)
-- **Keyboard navigation:** All interactive elements focusable via Tab. Focus ring: 2px solid primary, 2px offset
+- **Keyboard navigation:** All interactive elements focusable via Tab. Focus ring: 2px solid `#3B82F6`, 2px offset
 - **Screen readers:** ARIA landmarks on sidebar (nav), main content (main), header (banner)
 - **Reduced motion:** `prefers-reduced-motion: reduce` disables all transforms and animations, keeps opacity transitions
-- **Glass + contrast:** Semi-transparent surfaces must maintain text contrast. Test with busy backgrounds.
 
 ## Spacing
 - **Base unit:** 8px
-- **Density:** Spacious — Apple-style generous padding
+- **Density:** Moderate — balanced between spacious and compact. Enough breathing room for clarity without wasting screen space.
 - **Scale:**
 
 | Token | Value | Usage |
@@ -161,96 +138,116 @@ This ensures the app is usable on all devices while looking premium on modern on
 | xl | 32px | Page section gaps |
 | 2xl | 48px | Major section breaks |
 | 3xl | 64px | Page-level vertical rhythm |
-| 4xl | 80px | Hero sections |
 
 ## Layout
-- **Approach:** Grid-disciplined, spacious
+- **Approach:** Grid-disciplined, moderate density
 - **Grid:** 12-column on desktop (>1024px), 6-column on tablet (768-1024px), 4-column on mobile (<768px)
 - **Max content width:** 1200px
-- **Sidebar:** 240px (expanded), 64px (collapsed), translucent glass background
-- **Header:** 64px height
+- **Sidebar:** 240px (expanded), 64px (collapsed), solid white background with right border
+- **Header:** 56px height, solid white background with bottom border
+- **Responsive breakpoints:**
+  - Mobile: <768px — sidebar hidden, overlay on toggle
+  - Tablet: 768-1024px — sidebar collapsed (64px icons only)
+  - Desktop: >1024px — sidebar expanded (240px)
+  - Large: >1440px — wider content area
 
 ### Border Radius
-Apple's signature rounded corners, hierarchical:
+Clean, consistent corners — not overly rounded:
 
 | Token | Value | Usage |
 |-------|-------|-------|
-| sm | 8px | Buttons, inputs, badges, small cards |
-| md | 12px | Cards, table containers, dropdowns |
-| lg | 16px | Stat cards, glass panels, modals |
-| xl | 20px | Full-page containers, hero sections |
-| pill | 50px | Pill buttons, status badges |
+| xs | 4px | Small badges, tiny elements |
+| sm | 6px | Buttons, inputs, badges |
+| md | 8px | Default — dropdowns, alerts, small cards |
+| lg | 10px | Cards, table containers, modals |
+| xl | 16px | Large panels, hero sections |
+| pill | 100px | Pill buttons, status badges |
 | full | 50% | Avatars, circular icons |
 
+### Shadows
+Very subtle, used sparingly for elevation:
+
+| Token | Value | Usage |
+|-------|-------|-------|
+| sm | `0 1px 2px rgba(0, 0, 0, 0.05)` | Buttons, inputs on focus |
+| md | `0 1px 3px rgba(0, 0, 0, 0.1)` | Dropdowns, popovers |
+| lg | `0 4px 6px rgba(0, 0, 0, 0.07)` | Modals, floating panels |
+
 ## Motion
-- **Approach:** Intentional with spring physics
-- **Philosophy:** Every motion aids comprehension. No motion for decoration.
+- **Approach:** Minimal and functional
+- **Philosophy:** Motion should be nearly invisible. Quick, subtle transitions that confirm interaction without drawing attention.
 
 ### Timing
 | Token | Duration | Easing | Usage |
 |-------|----------|--------|-------|
-| Micro | 150-200ms | `cubic-bezier(0.25, 0.46, 0.45, 0.94)` | Hover, focus, toggle states |
-| Short | 250ms | `ease-out` | Dropdowns, tooltips, badge transitions |
-| Medium | 350ms | `cubic-bezier(0.4, 0, 0.2, 1)` | Page transitions, sidebar toggle |
-| Long | 400ms | `cubic-bezier(0.4, 0, 0.2, 1)` | Modals (scale 0.95 -> 1.0 + fade), off-canvas panels |
+| Micro | 150ms | `ease` | Hover, focus, toggle states, color changes |
+| Short | 200ms | `ease-out` | Dropdowns, tooltips, badge transitions |
+| Medium | 250ms | `ease-out` | Sidebar toggle, panel open/close |
+| Long | 300ms | `ease-out` | Modals (fade + slight translate), page transitions |
 
 ### Motion Rules
-- Hover: `translateY(-2px)` + shadow increase, 150ms
-- Cards: scale(1.02) on hover, never on click
-- Modals: fade-in + scale-up from 95%, dismiss with fade-out + scale-down
-- Sidebar: slide with 250ms ease-out
-- No spring physics on data-heavy interactions (table sort, filter) — instant response
-- Reduced-motion: respect `prefers-reduced-motion: reduce` — disable transforms, keep opacity transitions
+- Hover: color/background change only, 150ms. No translateY, no scale, no shadow lift.
+- Cards: No hover animation. No scale. No lift. Static until clicked.
+- Modals: fade-in + translateY(-8px to 0), dismiss with fade-out
+- Sidebar: width transition 250ms ease-out
+- No spring physics. No bouncing. No scale transforms on interactive elements.
+- Reduced-motion: respect `prefers-reduced-motion: reduce` — disable all transitions
 
 ## Component Patterns
 
 ### Status Badges
-Always use pill shape with tinted background:
+Pill shape with tinted background:
 ```css
 .badge {
-  padding: 3px 10px;
-  border-radius: 50px;
+  padding: 2px 8px;
+  border-radius: 100px;
   font-size: 12px;
   font-weight: 500;
-  /* Color: semantic background at 12% opacity, text at full semantic color */
+  /* Color: semantic background at 10% opacity, text at full semantic color */
 }
 ```
 
 ### Stat Cards
-Glass surface, 20px padding, tabular numbers, delta indicator (green up / red down).
+Solid white surface with border, 20px padding, tabular numbers, delta indicator (green up / red down). No hover effects. No shadow lift.
 
 ### Data Tables
-Solid background container with glass-style border. Rows separated by subtle dividers. Hover: primary tint background. Headers: 11px uppercase, secondary color.
+Solid white container with border. Clean header row (gray-50 background, uppercase 11px labels). Rows separated by subtle dividers. Hover: faint gray background. No fancy effects.
+
+### Buttons
+- **Primary:** `#111827` fill, white text, 6px radius. Hover: `#1F2937`.
+- **Secondary:** White fill, `#E5E7EB` border, dark text. Hover: `#F9FAFB` fill.
+- **Danger:** `#DC2626` fill, white text. Hover: `#B91C1C`.
+- **Ghost:** No background, no border. Hover: faint gray background.
 
 ### Alerts
-Full-width, no border, tinted background at 12% opacity. Icon + message. Border-radius: sm (8px).
+Full-width, subtle border, tinted background at 8% opacity. Icon + message. Border-radius: 8px.
 
 ### Avatars
 Gradient backgrounds (unique per user), white initials, border-radius: full.
 
 ## Surface Hierarchy
-Glass treatment depends on the element's layer in the visual stack:
+All surfaces are flat and solid. Hierarchy comes from borders and subtle shadows:
 
 | Layer | Element | Treatment | Rationale |
 |-------|---------|-----------|-----------|
-| 0 | Page background | Solid `#F5F5F7` / `#000000` | Base canvas, no blur needed |
-| 1 | Sidebar, Header | Glass (translucent + blur) | Always visible, establishes depth |
-| 2 | Stat cards, filter panels, action bars | Glass | Floating on page background |
-| 3 | Data tables, forms with >5 inputs | Solid surface | Performance — blur on large surfaces causes jank |
-| 4 | Modals, dropdowns, tooltips, toasts | Glass | Floating above everything |
+| 0 | Page background | Solid `#F9FAFB` / `#0F172A` | Base canvas |
+| 1 | Sidebar, Header | Solid white, border separators | Fixed navigation chrome |
+| 2 | Cards, stat panels, filter bars | Solid white, 1px border `#E5E7EB` | Content containers |
+| 3 | Data tables, forms | Solid white, 1px border | Data-dense views |
+| 4 | Modals, dropdowns, tooltips, toasts | Solid white, border + shadow-lg | Elevated floating elements |
 
 ## Interaction State Kit
 Every page follows these standard patterns. No per-page design decisions needed.
 
 ### Loading State
-- **Skeleton loaders** that match the glass surface style — translucent rectangles with a subtle shimmer animation
+- **Skeleton loaders** — solid gray rectangles (#F3F4F6) with a subtle shimmer animation
 - Skeleton shapes mimic the content layout (stat cards = rounded rectangles, table rows = horizontal bars, etc.)
 - Animation: horizontal shimmer gradient, 1.5s duration, ease-in-out, infinite
 - Never use a raw spinner for page-level loading. Spinners only for inline actions (button submit, etc.)
 
 ### Empty State
 Every empty state has 3 elements:
-1. **Icon** — Lucide icon at 48px, secondary text color, 0.5 opacity
+1. **Icon** — Lucide icon at 48px, text-muted color, 0.5 opacity
 2. **Message** — Warm, human language. NOT "No items found." Examples:
    - Payroll: "No payroll records yet. Create your first payroll run to get started."
    - Hiring: "No job postings yet. Post your first opening to start building your team."
@@ -260,13 +257,13 @@ Every empty state has 3 elements:
 Empty state container: centered vertically and horizontally, max-width 400px, padding 48px.
 
 ### Error State
-- **Alert component** — error style (red tint background, error text color)
+- **Alert component** — danger style (red tint background, danger text color)
 - Message format: "Something went wrong loading [resource]. Please try again."
 - Always include a "Retry" button
 - Never show raw error messages or stack traces to users
 
 ### Success State
-- **Toast notification** — slides in from top-right, glass surface, success tint
+- **Toast notification** — slides in from top-right, solid white surface with border + shadow
 - Auto-dismiss after 4 seconds
 - Includes dismiss button (X)
 - Format: "[Action] successful." e.g., "Payroll created successfully."
@@ -281,34 +278,29 @@ Real-time notifications arrive via Server-Sent Events and display in two places:
 
 ### Notification Bell (Header)
 - Lucide Bell icon in header
-- Unread count: red badge (Apple style — min-width 18px, centered number, pill shape)
+- Unread count: red badge (min-width 18px, centered number, pill shape)
 - Click opens notification panel (dropdown or slide-in panel)
 
 ### Notification Toast
 - New notifications trigger a toast in the top-right corner
-- Glass surface, 360px max-width, border-radius lg (16px)
+- Solid white surface with border and shadow, 360px max-width, border-radius 10px
 - Icon (by notification type) + title + message + timestamp
 - Auto-dismiss after 5 seconds, stack up to 3 visible
-- Subtle notification sound (already exists in Header.jsx)
 
 ### Notification Panel
 - Dropdown from bell icon, 400px wide, max-height 500px, scrollable
-- Glass surface with blur
+- Solid white surface with border and shadow
 - Each item: icon + title + message + relative time ("2m ago")
-- Unread items have primary tint background
+- Unread items have accent tint background
 - "Mark all as read" link at top
 - "View all" link at bottom → /notifications page
 
 ## Decisions Log
 | Date | Decision | Rationale |
 |------|----------|-----------|
-| 2026-03-19 | Apple glassmorphism direction | User requested Apple-inspired design with glassmorphism, SF Pro fonts, and Apple color palette |
-| 2026-03-19 | SF Pro + Geist fallback | SF Pro renders on Apple devices (likely majority of creative agency team). Geist is the closest cross-platform fallback. |
-| 2026-03-19 | Dropped purple secondary (#8B3FE9) | Single-accent (Apple blue) reduces visual noise. Color is semantic only. |
-| 2026-03-19 | Glass for cards, solid for tables | Performance: backdrop-filter blur on 50+ row tables causes jank. Solid bg for data-dense views. |
-| 2026-03-19 | 8px base unit (up from 4px) | Apple uses generous spacing. Spacious density matches premium glassmorphism feel. |
+| 2026-03-19 | Apple glassmorphism direction | Initial design direction based on user request |
+| 2026-03-19 | SF Pro + Geist fallback | Initial typography choice for Apple aesthetic |
+| 2026-03-19 | 8px base unit | Balanced spacing for dashboard density |
 | 2026-03-19 | Standard interaction state kit | Skeleton loaders, warm empty states with CTAs, error alerts with retry, toast success |
-| 2026-03-19 | Surface hierarchy (5 layers) | Glass for floating elements, solid for data-dense views. Performance-driven. |
-| 2026-03-19 | Glass sidebar in light, opaque in dark | Matches Apple Finder/Notes behavior. Avoids visual noise in dark mode. |
-| 2026-03-19 | Graceful glass fallback | @supports query — solid semi-transparent when backdrop-filter unavailable |
-| 2026-03-19 | Notification UI spec | Toast (top-right, glass, auto-dismiss 5s), bell badge (red pill), notification panel (glass dropdown 400px) |
+| 2026-03-19 | Notification UI spec | Toast (top-right, auto-dismiss 5s), bell badge (red pill), notification panel (dropdown 400px) |
+| 2026-03-20 | **Redesign: Glassmorphism → Clean Flat Design** | Complete redesign based on Figma implementation. Replaced glassmorphism with clean, flat, solid surfaces. Rationale: glassmorphism added visual complexity without improving usability, caused performance issues with backdrop-filter on data-heavy views, and conflicted with the data-driven nature of an ERP. New direction inspired by Linear/Notion/Figma — professional tools that prioritize content clarity over visual effects. Typography changed from SF Pro to Inter + Manrope (openly licensed, cross-platform consistent, loaded via Google Fonts). Colors shifted from Apple blue (#007AFF) to dark primary (#111827) + blue accent (#3B82F6) for a more neutral, professional palette. All translucency, blur, and glass effects removed. Borders changed from rgba to solid hex values. Border radii reduced for a tighter, more utilitarian feel. Motion simplified — no hover lifts, no scale transforms, just color transitions. |

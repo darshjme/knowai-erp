@@ -189,7 +189,7 @@ export default function Subscriptions() {
       {/* Stats Row */}
       <div className="row g-3 mb-4">
         {[
-          { label: 'Total Monthly Cost', value: formatCurrency(totals.monthly), icon: DollarSign, color: '#146DF7' },
+          { label: 'Total Monthly Cost', value: formatCurrency(totals.monthly), icon: DollarSign, color: '#111827' },
           { label: 'Active Subscriptions', value: totals.activeCount, icon: Zap, color: '#10B981' },
           { label: 'Expiring in 30 Days', value: totals.expiringSoon, icon: AlertTriangle, color: '#F59E0B' },
           { label: 'Total Yearly Cost', value: formatCurrency(totals.yearly), icon: TrendingUp, color: '#8B5CF6' },
@@ -234,7 +234,7 @@ export default function Subscriptions() {
           </select>
           {canCreate && (
             <button className="btn btn-sm ms-auto" onClick={openCreate}
-              style={{ background: '#146DF7', color: '#fff', border: 'none', borderRadius: 8, fontSize: 13, padding: '6px 16px', display: 'flex', alignItems: 'center', gap: 6 }}>
+              style={{ background: '#111827', color: '#fff', border: 'none', borderRadius: 8, fontSize: 13, padding: '6px 16px', display: 'flex', alignItems: 'center', gap: 6 }}>
               <Plus size={14} /> Add Subscription
             </button>
           )}
@@ -248,7 +248,7 @@ export default function Subscriptions() {
         <div className="kai-card p-5 text-center">
           <CreditCard size={48} style={{ color: 'var(--kai-text-secondary)', opacity: 0.4 }} />
           <p className="mt-3" style={{ color: 'var(--kai-text-secondary)' }}>No subscriptions found</p>
-          {canCreate && <button className="btn btn-sm mt-2" onClick={openCreate} style={{ background: '#146DF7', color: '#fff', border: 'none', borderRadius: 8, padding: '6px 16px' }}>Add First Subscription</button>}
+          {canCreate && <button className="btn btn-sm mt-2" onClick={openCreate} style={{ background: '#111827', color: '#fff', border: 'none', borderRadius: 8, padding: '6px 16px' }}>Add First Subscription</button>}
         </div>
       ) : (
         <div className="kai-card" style={{ overflow: 'hidden' }}>
@@ -450,7 +450,7 @@ export default function Subscriptions() {
               </div>
               <div className="mb-3">
                 <label className="d-flex align-items-center gap-2" style={{ fontSize: 13, cursor: 'pointer', color: 'var(--kai-text)' }}>
-                  <input type="checkbox" checked={form.autoRenew} onChange={e => setForm(f => ({ ...f, autoRenew: e.target.checked }))} style={{ accentColor: '#146DF7' }} />
+                  <input type="checkbox" checked={form.autoRenew} onChange={e => setForm(f => ({ ...f, autoRenew: e.target.checked }))} style={{ accentColor: '#111827' }} />
                   Auto-renew enabled
                 </label>
               </div>
@@ -460,7 +460,7 @@ export default function Subscriptions() {
                   Cancel
                 </button>
                 <button type="submit" disabled={saving} className="btn btn-sm"
-                  style={{ background: '#146DF7', color: '#fff', border: 'none', borderRadius: 8, padding: '6px 20px', opacity: saving ? 0.7 : 1 }}>
+                  style={{ background: '#111827', color: '#fff', border: 'none', borderRadius: 8, padding: '6px 20px', opacity: saving ? 0.7 : 1 }}>
                   {saving ? 'Saving...' : editingId ? 'Update' : 'Create'}
                 </button>
               </div>

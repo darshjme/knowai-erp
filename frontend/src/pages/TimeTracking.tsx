@@ -240,7 +240,7 @@ export default function TimeTracking() {
         <div className="kai-card-body">
           <div style={{ display: 'flex', alignItems: 'center', gap: 16, flexWrap: 'wrap' }}>
             <div style={{
-              fontSize: 36, fontWeight: 700, fontFamily: 'monospace', color: timerRunning ? '#146DF7' : '#10222F',
+              fontSize: 36, fontWeight: 700, fontFamily: 'monospace', color: timerRunning ? '#3B82F6' : '#10222F',
               minWidth: 160, letterSpacing: 1,
             }}>
               {formatDuration(timerSeconds)}
@@ -283,7 +283,7 @@ export default function TimeTracking() {
           {loading ? (
             <div className="kai-card">
               <div className="kai-card-body" style={{ display: 'flex', justifyContent: 'center', padding: 40 }}>
-                <Loader2 size={24} style={{ animation: 'spin 1s linear infinite', color: '#146DF7' }} />
+                <Loader2 size={24} style={{ animation: 'spin 1s linear infinite', color: '#111827' }} />
               </div>
             </div>
           ) : entries.length === 0 ? (
@@ -314,7 +314,7 @@ export default function TimeTracking() {
                             )}
                           </div>
                           <div style={{ display: 'flex', alignItems: 'center', gap: 12, fontSize: 12, color: '#5B6B76' }}>
-                            {entry.project && <span style={{ color: '#146DF7', fontWeight: 500 }}>{typeof entry.project === 'object' ? entry.project?.name : entry.project}</span>}
+                            {entry.project && <span style={{ color: '#3B82F6', fontWeight: 500 }}>{typeof entry.project === 'object' ? entry.project?.name : entry.project}</span>}
                             {entry.description && <span>{entry.description}</span>}
                             {entry.startTime && (
                               <span>
@@ -359,13 +359,13 @@ export default function TimeTracking() {
                       <div style={{
                         width: '100%', maxWidth: 36, height: Math.max(height, 4), borderRadius: '6px 6px 0 0',
                         background: isToday
-                          ? 'linear-gradient(180deg, #146DF7 0%, #0148A7 100%)'
+                          ? 'linear-gradient(180deg, #3B82F6 0%, #1E40AF 100%)'
                           : day.minutes > 0 ? '#CBD5E0' : '#F0F2F4',
                         transition: 'height 0.3s',
                       }} />
                       <span style={{
                         fontSize: 11, fontWeight: isToday ? 700 : 400,
-                        color: isToday ? '#146DF7' : '#5B6B76',
+                        color: isToday ? '#3B82F6' : '#5B6B76',
                       }}>
                         {day.day}
                       </span>
@@ -430,7 +430,7 @@ export default function TimeTracking() {
                 {logFormDuration !== null && (
                   <div style={{
                     padding: '8px 14px', borderRadius: 8, marginBottom: 16, fontSize: 13, fontWeight: 600,
-                    background: '#EBF3FE', color: '#146DF7', display: 'flex', alignItems: 'center', gap: 8,
+                    background: 'var(--kai-accent-light)', color: '#3B82F6', display: 'flex', alignItems: 'center', gap: 8,
                   }}>
                     <Clock size={16} /> Duration: {formatDurationHM(logFormDuration)}
                   </div>
@@ -445,7 +445,7 @@ export default function TimeTracking() {
                   <label style={{ display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer', fontSize: 14, color: '#4C5963' }}>
                     <div style={{
                       width: 40, height: 22, borderRadius: 11, cursor: 'pointer', position: 'relative',
-                      background: logForm.billable ? '#146DF7' : '#CBD5E0', transition: 'background 0.2s',
+                      background: logForm.billable ? '#111827' : '#CBD5E0', transition: 'background 0.2s',
                     }}
                       onClick={() => setLogForm(f => ({ ...f, billable: !f.billable }))}>
                       <span style={{

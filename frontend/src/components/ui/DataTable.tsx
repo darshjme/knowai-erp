@@ -367,12 +367,12 @@ export default function DataTable({
         }
         .kai-data-table__page-btn:hover:not(:disabled) {
           background: var(--kai-canvas, #FAFAFA);
-          border-color: var(--kai-primary, #146DF7);
+          border-color: var(--kai-primary, #111827);
         }
         .kai-data-table__page-btn.active {
-          background: var(--kai-primary, #146DF7);
+          background: var(--kai-primary, #111827);
           color: #fff;
-          border-color: var(--kai-primary, #146DF7);
+          border-color: var(--kai-primary, #111827);
         }
         .kai-data-table__page-btn:disabled {
           opacity: 0.4;

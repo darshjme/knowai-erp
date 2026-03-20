@@ -2,7 +2,7 @@ import { TrendingUp, TrendingDown } from 'lucide-react';
 
 const VARIANT_STYLES = {
   primary: {
-    iconBg: 'var(--kai-primary, #146DF7)',
+    iconBg: 'var(--kai-primary, #111827)',
     iconColor: '#fff',
   },
   success: {
@@ -84,16 +84,15 @@ export default function StatCard({
         .kai-stat-card {
           background: var(--kai-card-bg, #fff);
           border: 1px solid var(--kai-border, #E5E7EB);
-          border-radius: 12px;
+          border-radius: 10px;
           padding: 20px;
           display: flex;
           flex-direction: column;
           gap: 12px;
-          transition: box-shadow 0.2s, transform 0.2s;
+          transition: box-shadow 0.2s;
         }
         .kai-stat-card:hover {
-          box-shadow: 0 4px 12px rgba(0,0,0,0.06);
-          transform: translateY(-1px);
+          box-shadow: var(--kai-shadow);
         }
         .kai-stat-card__header {
           display: flex;
@@ -116,7 +115,7 @@ export default function StatCard({
           font-size: 12px;
           font-weight: 600;
           padding: 3px 8px;
-          border-radius: 6px;
+          border-radius: 100px;
           line-height: 1;
         }
         .kai-stat-card__value {

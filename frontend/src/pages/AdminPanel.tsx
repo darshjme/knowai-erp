@@ -89,7 +89,7 @@ export default function AdminPanel() {
       <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 24 }}>
         <div style={{
           width: 44, height: 44, borderRadius: 12,
-          background: 'linear-gradient(135deg, #146DF7 0%, #0D4FBF 100%)',
+          background: 'linear-gradient(135deg, #111827 0%, #0F172A 100%)',
           display: 'flex', alignItems: 'center', justifyContent: 'center'
         }}>
           <Shield size={22} color="#fff" />
@@ -117,7 +117,7 @@ export default function AdminPanel() {
                 style={{
                   width: '100%', display: 'flex', alignItems: 'center', gap: 10,
                   padding: '10px 12px', borderRadius: 8, border: 'none', cursor: 'pointer',
-                  background: isActive ? '#146DF7' : 'transparent',
+                  background: isActive ? '#111827' : 'transparent',
                   color: isActive ? '#fff' : '#374151',
                   fontSize: 14, fontWeight: isActive ? 600 : 500,
                   transition: 'all 0.15s',
@@ -168,7 +168,7 @@ function Card({ title, icon: Icon, children, style }) {
     }}>
       {title && (
         <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 16 }}>
-          {Icon && <Icon size={18} color="#146DF7" />}
+          {Icon && <Icon size={18} color="#3B82F6" />}
           <h3 style={{ margin: 0, fontSize: 16, fontWeight: 600, color: '#10222F' }}>{title}</h3>
         </div>
       )}
@@ -202,7 +202,7 @@ function Input({ value, onChange, type = 'text', placeholder, disabled, style: e
         fontSize: 14, outline: 'none', transition: 'border-color 0.15s',
         background: disabled ? '#F3F4F6' : '#fff', ...extraStyle,
       }}
-      onFocus={(e) => { e.target.style.borderColor = '#146DF7'; }}
+      onFocus={(e) => { e.target.style.borderColor = '#3B82F6'; }}
       onBlur={(e) => { e.target.style.borderColor = '#D1D5DB'; }}
     />
   );
@@ -219,7 +219,7 @@ function TextArea({ value, onChange, placeholder, rows = 3 }) {
         width: '100%', padding: '8px 12px', borderRadius: 8, border: '1px solid #D1D5DB',
         fontSize: 14, outline: 'none', resize: 'vertical', fontFamily: 'inherit',
       }}
-      onFocus={(e) => { e.target.style.borderColor = '#146DF7'; }}
+      onFocus={(e) => { e.target.style.borderColor = '#3B82F6'; }}
       onBlur={(e) => { e.target.style.borderColor = '#D1D5DB'; }}
     />
   );
@@ -232,7 +232,7 @@ function Toggle({ checked, onChange, label }) {
         onClick={() => onChange(!checked)}
         style={{
           width: 44, height: 24, borderRadius: 12, cursor: 'pointer',
-          background: checked ? '#146DF7' : '#D1D5DB', transition: 'background 0.2s',
+          background: checked ? '#111827' : '#D1D5DB', transition: 'background 0.2s',
           position: 'relative',
         }}
       >
@@ -256,7 +256,7 @@ function SaveButton({ onClick, saving, label = 'Save Changes' }) {
       style={{
         display: 'inline-flex', alignItems: 'center', gap: 8,
         padding: '10px 24px', borderRadius: 8, border: 'none',
-        background: saving ? '#93C5FD' : '#146DF7', color: '#fff',
+        background: saving ? '#93C5FD' : '#111827', color: '#fff',
         fontSize: 14, fontWeight: 600, cursor: saving ? 'default' : 'pointer',
         transition: 'background 0.15s',
       }}
@@ -342,7 +342,7 @@ function DashboardTab({ stats, onRefresh }) {
 
       {/* Stats Grid */}
       <div style={{ display: 'flex', flexWrap: 'wrap', gap: 12, marginBottom: 20 }}>
-        <StatCard label="Total Users" value={u.total} icon={Users} color="#146DF7" sub={`${u.active || 0} active, ${u.newThisMonth || 0} new this month`} />
+        <StatCard label="Total Users" value={u.total} icon={Users} color="#111827" sub={`${u.active || 0} active, ${u.newThisMonth || 0} new this month`} />
         <StatCard label="Projects" value={p.total} icon={FileText} color="#7C3AED" sub={`${p.active || 0} active`} />
         <StatCard label="Tasks" value={t.total} icon={Activity} color="#059669" sub={`${t.completed || 0} completed (${t.completionRate || 0}%)`} />
         <StatCard label="Revenue" value={`₹${((inv.revenue || 0) / 1000).toFixed(1)}K`} icon={TrendingUp} color="#D97706" sub={`₹${((inv.pendingPayments || 0) / 1000).toFixed(1)}K pending`} />
@@ -382,7 +382,7 @@ function DashboardTab({ stats, onRefresh }) {
                 <div style={{ flex: 1, height: 24, background: '#F3F4F6', borderRadius: 6, overflow: 'hidden' }}>
                   <div style={{
                     height: '100%', borderRadius: 6,
-                    background: 'linear-gradient(90deg, #146DF7, #3B82F6)',
+                    background: 'linear-gradient(90deg, #111827, #3B82F6)',
                     width: `${Math.max((r.count / (u.total || 1)) * 100, 4)}%`,
                     display: 'flex', alignItems: 'center', justifyContent: 'flex-end', paddingRight: 8,
                     fontSize: 11, fontWeight: 700, color: '#fff', minWidth: 30,
@@ -422,7 +422,7 @@ function BrandingTab({ data, onSave, saving }) {
     name: data.name || 'Know AI',
     logo_url: data.logo_url || '/logo.png',
     favicon_url: data.favicon_url || '/favicon.ico',
-    primary_color: data.primary_color || '#146DF7',
+    primary_color: data.primary_color || '#111827',
     tagline: data.tagline || '',
   });
 
@@ -451,7 +451,7 @@ function BrandingTab({ data, onSave, saving }) {
               onChange={(e) => set('primary_color', e.target.value)}
               style={{ width: 44, height: 36, border: '1px solid #D1D5DB', borderRadius: 8, cursor: 'pointer', padding: 2 }}
             />
-            <Input value={form.primary_color} onChange={(v) => set('primary_color', v)} placeholder="#146DF7" style={{ flex: 1 }} />
+            <Input value={form.primary_color} onChange={(v) => set('primary_color', v)} placeholder="#111827" style={{ flex: 1 }} />
           </div>
         </FormField>
       </div>
@@ -638,9 +638,9 @@ function StorageTab({ data, onSave, saving, stats }) {
               onClick={() => set('provider', p.id)}
               style={{
                 padding: '8px 16px', borderRadius: 8,
-                border: form.provider === p.id ? '2px solid #146DF7' : '1px solid #D1D5DB',
+                border: form.provider === p.id ? '2px solid #3B82F6' : '1px solid #D1D5DB',
                 background: form.provider === p.id ? '#EFF6FF' : '#fff',
-                color: form.provider === p.id ? '#146DF7' : '#374151',
+                color: form.provider === p.id ? '#3B82F6' : '#374151',
                 fontWeight: form.provider === p.id ? 600 : 500,
                 fontSize: 13, cursor: 'pointer',
               }}
@@ -1040,7 +1040,7 @@ function UsersTab({ stats }) {
                   <div style={{ flex: 1, height: 20, background: '#F3F4F6', borderRadius: 4, overflow: 'hidden' }}>
                     <div style={{
                       height: '100%', borderRadius: 4,
-                      background: 'linear-gradient(90deg, #146DF7, #3B82F6)',
+                      background: 'linear-gradient(90deg, #111827, #3B82F6)',
                       width: `${pct}%`, transition: 'width 0.3s',
                     }} />
                   </div>
@@ -1056,7 +1056,7 @@ function UsersTab({ stats }) {
 
       {/* Quick Stats */}
       <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
-        <StatCard label="Total Users" value={u.total} icon={Users} color="#146DF7" />
+        <StatCard label="Total Users" value={u.total} icon={Users} color="#111827" />
         <StatCard label="Active Now" value={u.active} icon={Activity} color="#059669" />
         <StatCard label="New This Month" value={u.newThisMonth} icon={TrendingUp} color="#D97706" />
         <StatCard label="Unique Roles" value={byRole.length} icon={Shield} color="#7C3AED" />

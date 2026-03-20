@@ -14,9 +14,9 @@ const STATUS_MAP = {
   DRAFT:      { label: 'Draft',        bg: '#6B728015', color: '#4B5563', dot: '#6B7280' },
 
   // Blue
-  IN_PROGRESS:{ label: 'In Progress',  bg: '#146DF715', color: '#1D4ED8', dot: '#146DF7' },
-  ACTIVE:     { label: 'Active',       bg: '#146DF715', color: '#1D4ED8', dot: '#146DF7' },
-  SENT:       { label: 'Sent',         bg: '#146DF715', color: '#1D4ED8', dot: '#146DF7' },
+  IN_PROGRESS:{ label: 'In Progress',  bg: '#3B82F615', color: '#1D4ED8', dot: '#3B82F6' },
+  ACTIVE:     { label: 'Active',       bg: '#3B82F615', color: '#1D4ED8', dot: '#3B82F6' },
+  SENT:       { label: 'Sent',         bg: '#3B82F615', color: '#1D4ED8', dot: '#3B82F6' },
 
   // Amber
   IN_REVIEW:  { label: 'In Review',    bg: '#D9770615', color: '#B45309', dot: '#D97706' },
@@ -62,7 +62,7 @@ export default function StatusBadge({ status, size = 'md', className = '' }) {
         fontSize: sz.fontSize,
         fontWeight: 600,
         padding: sz.padding,
-        borderRadius: 6,
+        borderRadius: 100,
         background: config.bg,
         color: config.color,
         lineHeight: 1.2,

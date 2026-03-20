@@ -185,7 +185,7 @@ export default function Header() {
 
       <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-          <span style={{ fontWeight: 800, fontSize: 15, color: 'var(--kai-primary)', letterSpacing: -0.3 }}>KnowAI</span>
+          <span style={{ fontWeight: 800, fontSize: 15, color: 'var(--kai-text)', letterSpacing: -0.3 }}>KnowAI</span>
           <span style={{ width: 1, height: 18, background: 'var(--kai-border)' }} />
           <h5 style={{ margin: 0, fontWeight: 700, fontSize: 17, color: 'var(--kai-text)' }}>{pageTitle}</h5>
         </div>
@@ -211,10 +211,10 @@ export default function Header() {
           )}
         </button>
         {showNotifDrop && (
-          <div style={{ position: 'absolute', top: '100%', right: 0, marginTop: 8, width: 340, background: 'var(--kai-bg)', border: '1px solid var(--kai-border)', borderRadius: 12, boxShadow: 'var(--kai-shadow-lg)', zIndex: 1050, overflow: 'hidden' }}>
+          <div style={{ position: 'absolute', top: '100%', right: 0, marginTop: 8, width: 340, background: 'var(--kai-bg)', border: '1px solid var(--kai-border)', borderRadius: 10, boxShadow: 'var(--kai-shadow-lg)', zIndex: 1050, overflow: 'hidden' }}>
             <div style={{ padding: '12px 16px', borderBottom: '1px solid var(--kai-border)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
               <span style={{ fontWeight: 700, fontSize: 14 }}>Notifications</span>
-              {unreadCount > 0 && <span style={{ fontSize: 11, color: '#146DF7', cursor: 'pointer', fontWeight: 600 }}
+              {unreadCount > 0 && <span style={{ fontSize: 11, color: 'var(--kai-accent)', cursor: 'pointer', fontWeight: 600 }}
                 onClick={() => { navigate('/notifications'); setShowNotifDrop(false); }}>View All</span>}
             </div>
             <div style={{ maxHeight: 320, overflowY: 'auto' }}>
@@ -222,9 +222,9 @@ export default function Header() {
                 <div style={{ padding: 24, textAlign: 'center', color: 'var(--kai-text-muted)', fontSize: 13 }}>No new notifications</div>
               ) : recentNotifs.map(n => (
                 <div key={n.id} onClick={() => { if (n.linkUrl) navigate(n.linkUrl); if (!n.read) handleMarkRead(n.id); setShowNotifDrop(false); }}
-                  style={{ padding: '10px 16px', cursor: 'pointer', borderBottom: '1px solid var(--kai-border)', background: n.read ? 'transparent' : 'rgba(20,109,247,0.04)', borderLeft: n.read ? 'none' : '3px solid #146DF7', transition: 'background .15s' }}
+                  style={{ padding: '10px 16px', cursor: 'pointer', borderBottom: '1px solid var(--kai-border)', background: n.read ? 'transparent' : 'var(--kai-primary-light)', borderLeft: n.read ? 'none' : '3px solid var(--kai-primary)', transition: 'background .15s' }}
                   onMouseEnter={e => { e.currentTarget.style.background = 'var(--kai-bg-hover, rgba(0,0,0,.03))'; }}
-                  onMouseLeave={e => { e.currentTarget.style.background = n.read ? 'transparent' : 'rgba(20,109,247,0.04)'; }}>
+                  onMouseLeave={e => { e.currentTarget.style.background = n.read ? 'transparent' : 'var(--kai-primary-light)'; }}>
                   <div style={{ fontWeight: n.read ? 400 : 600, fontSize: 13, marginBottom: 2 }}>{n.title}</div>
                   <div style={{ fontSize: 12, color: 'var(--kai-text-muted)', lineHeight: 1.3 }}>{typeof n.message === 'string' ? n.message.substring(0, 80) : ''}{n.message?.length > 80 ? '...' : ''}</div>
                   <div style={{ fontSize: 10, color: 'var(--kai-text-muted)', marginTop: 4 }}>{timeAgo(n.createdAt)}</div>
@@ -232,7 +232,7 @@ export default function Header() {
               ))}
             </div>
             <div style={{ padding: '8px 16px', borderTop: '1px solid var(--kai-border)', textAlign: 'center' }}>
-              <span style={{ fontSize: 12, color: '#146DF7', cursor: 'pointer', fontWeight: 600 }}
+              <span style={{ fontSize: 12, color: 'var(--kai-accent)', cursor: 'pointer', fontWeight: 600 }}
                 onClick={() => { navigate('/notifications'); setShowNotifDrop(false); }}>See all notifications</span>
             </div>
           </div>
@@ -241,7 +241,7 @@ export default function Header() {
 
       <Dropdown align="end">
         <Dropdown.Toggle as="div" style={{ cursor: 'pointer' }}>
-          <div className="kai-avatar" style={{ background: '#146DF7' }}>
+          <div className="kai-avatar" style={{ background: '#111827' }}>
             {user?.firstName?.[0] || 'U'}
           </div>
         </Dropdown.Toggle>

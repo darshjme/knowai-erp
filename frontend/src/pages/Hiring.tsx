@@ -16,7 +16,7 @@ import VerifiedBadge from '../components/ui/VerifiedBadge';
    CONSTANTS
    ======================================================================== */
 
-const BRAND = '#146DF7';
+const BRAND = '#111827';
 
 const STATUS_LIST = [
   'APPLIED', 'RESUME_REVIEW', 'UNDER_REVIEW', 'SHORTLISTED',

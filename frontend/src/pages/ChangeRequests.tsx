@@ -84,14 +84,14 @@ function StepIndicator({ status }) {
             <div title={step.label} style={{
               width: 20, height: 20, borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center',
               fontSize: 9, fontWeight: 700,
-              background: done ? '#146DF7' : 'var(--kai-border-light)',
+              background: done ? '#111827' : 'var(--kai-border-light)',
               color: done ? '#fff' : 'var(--kai-text-muted)',
-              border: isCurrent ? '2px solid #146DF7' : 'none',
+              border: isCurrent ? '2px solid #111827' : 'none',
             }}>
               {done ? <i className="bi bi-check" /> : i + 1}
             </div>
             {i < steps.length - 1 && (
-              <div style={{ width: 16, height: 2, background: done ? '#146DF7' : 'var(--kai-border-light)' }} />
+              <div style={{ width: 16, height: 2, background: done ? '#111827' : 'var(--kai-border-light)' }} />
             )}
           </div>
         );
@@ -260,7 +260,7 @@ export default function ChangeRequests() {
       {/* Stats */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))', gap: 16, marginBottom: 24 }}>
         {[
-          { label: 'Total', value: stats.total, color: '#146DF7', icon: 'bi-file-earmark-text' },
+          { label: 'Total', value: stats.total, color: '#3B82F6', icon: 'bi-file-earmark-text' },
           { label: 'Pending HR', value: stats.pendingHR, color: '#D97706', icon: 'bi-hourglass-split' },
           { label: 'Pending CTO', value: stats.pendingCTO, color: '#0891B2', icon: 'bi-person-badge' },
           { label: 'Approved', value: stats.approved, color: '#16A34A', icon: 'bi-check-circle' },
@@ -297,7 +297,7 @@ export default function ChangeRequests() {
       {/* Requests Table */}
       <div className="kai-card">
         <div className="kai-card-header">
-          <h6><i className="bi bi-arrow-left-right" style={{ marginRight: 8, color: '#146DF7' }} />Change Requests</h6>
+          <h6><i className="bi bi-arrow-left-right" style={{ marginRight: 8, color: '#3B82F6' }} />Change Requests</h6>
           <span className="kai-badge secondary">{filtered.length} items</span>
         </div>
         <div style={{ overflowX: 'auto' }}>
@@ -345,7 +345,7 @@ export default function ChangeRequests() {
                             {req.currentValue || '(empty)'}
                           </span>
                           <i className="bi bi-arrow-right" style={{ fontSize: 10, color: 'var(--kai-text-muted)' }} />
-                          <span style={{ fontWeight: 600, color: '#146DF7', maxWidth: 90 }} className="truncate" title={req.requestedValue}>
+                          <span style={{ fontWeight: 600, color: '#3B82F6', maxWidth: 90 }} className="truncate" title={req.requestedValue}>
                             {req.requestedValue}
                           </span>
                         </div>
@@ -353,7 +353,7 @@ export default function ChangeRequests() {
                       <td>
                         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                           <div style={{
-                            width: 26, height: 26, borderRadius: '50%', background: '#146DF7', color: '#fff',
+                            width: 26, height: 26, borderRadius: '50%', background: '#111827', color: '#fff',
                             display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 10, fontWeight: 700,
                           }}>
                             {initials(req.requester)}
@@ -425,7 +425,7 @@ export default function ChangeRequests() {
           onClick={e => e.target === e.currentTarget && setShowSubmitModal(false)}>
           <div className="kai-card" style={{ width: '100%', maxWidth: 500, maxHeight: '90vh', overflow: 'auto' }}>
             <div className="kai-card-header">
-              <h5><i className="bi bi-pencil-square" style={{ marginRight: 8, color: '#146DF7' }} />Submit Change Request</h5>
+              <h5><i className="bi bi-pencil-square" style={{ marginRight: 8, color: '#3B82F6' }} />Submit Change Request</h5>
               <button className="kai-btn kai-btn-outline kai-btn-sm" onClick={() => setShowSubmitModal(false)}>&times;</button>
             </div>
             <form onSubmit={handleSubmit}>
@@ -505,7 +505,7 @@ export default function ChangeRequests() {
             {/* Drawer Header */}
             <div style={{ padding: '16px 20px', borderBottom: '1px solid var(--kai-border-light)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
               <h5 style={{ margin: 0, fontSize: 16 }}>
-                <i className="bi bi-file-earmark-text" style={{ marginRight: 8, color: '#146DF7' }} />
+                <i className="bi bi-file-earmark-text" style={{ marginRight: 8, color: '#3B82F6' }} />
                 Change Request Details
               </h5>
               <button className="kai-btn kai-btn-outline kai-btn-sm" onClick={() => setShowDetailDrawer(false)}>
@@ -548,7 +548,7 @@ export default function ChangeRequests() {
                       {selectedRequest.currentValue || '(empty)'}
                     </div>
                   </div>
-                  <i className="bi bi-arrow-right" style={{ fontSize: 18, color: '#146DF7', marginTop: 14 }} />
+                  <i className="bi bi-arrow-right" style={{ fontSize: 18, color: '#3B82F6', marginTop: 14 }} />
                   <div style={{ flex: 1 }}>
                     <div style={{ fontSize: 10, color: 'var(--kai-text-muted)', marginBottom: 2 }}>NEW</div>
                     <div style={{ fontSize: 14, padding: 8, background: '#EFF6FF', borderRadius: 6, border: '1px solid #BFDBFE', color: '#1D4ED8', fontWeight: 600 }}>
@@ -564,7 +564,7 @@ export default function ChangeRequests() {
                   <div style={{ fontSize: 11, fontWeight: 600, color: 'var(--kai-text-muted)', textTransform: 'uppercase', marginBottom: 4 }}>Requester</div>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                     <div style={{
-                      width: 28, height: 28, borderRadius: '50%', background: '#146DF7', color: '#fff',
+                      width: 28, height: 28, borderRadius: '50%', background: '#111827', color: '#fff',
                       display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 10, fontWeight: 700,
                     }}>
                       {initials(selectedRequest.requester)}
@@ -596,10 +596,10 @@ export default function ChangeRequests() {
 
                 {/* Submitted event */}
                 <div style={{ display: 'flex', gap: 12, marginBottom: 14 }}>
-                  <div style={{ width: 10, height: 10, borderRadius: '50%', background: '#146DF7', marginTop: 4, flexShrink: 0 }} />
+                  <div style={{ width: 10, height: 10, borderRadius: '50%', background: '#111827', marginTop: 4, flexShrink: 0 }} />
                   <div>
                     <div style={{ fontWeight: 600, fontSize: 13 }}>
-                      <i className="bi bi-send-check" style={{ marginRight: 4, color: '#146DF7' }} />Request Submitted
+                      <i className="bi bi-send-check" style={{ marginRight: 4, color: '#3B82F6' }} />Request Submitted
                     </div>
                     <div style={{ fontSize: 12, color: 'var(--kai-text-muted)' }}>{formatDateTime(selectedRequest.createdAt)}</div>
                   </div>

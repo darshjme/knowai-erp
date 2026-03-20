@@ -28,7 +28,7 @@ async function getSwal() {
 }
 
 const BRAND = {
-  primary: '#146DF7',
+  primary: '#111827',
   danger: '#DC2626',
   nearBlack: '#10222F',
   silver: '#4C5963',

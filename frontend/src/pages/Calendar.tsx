@@ -4,7 +4,7 @@ import { toast } from 'react-toastify';
 import { calendarApi, tasksApi } from '../services/api';
 
 const EVENT_CATEGORIES = [
-  { key: 'meeting', label: 'Meeting', color: '#146DF7' },
+  { key: 'meeting', label: 'Meeting', color: '#111827' },
   { key: 'deadline', label: 'Deadline', color: '#CB3939' },
   { key: 'followup', label: 'Follow-up', color: '#16A34A' },
   { key: 'personal', label: 'Personal', color: '#8B3FE9' },
@@ -287,7 +287,7 @@ export default function Calendar() {
           minHeight: view === 'month' ? 100 : 120,
           padding: 4,
           border: '1px solid var(--kai-border-light)',
-          background: isToday ? 'rgba(20,109,247,0.04)' : 'transparent',
+          background: isToday ? 'var(--kai-primary-light, rgba(17,24,39,0.04))' : 'transparent',
           opacity: isCurrentMonth ? 1 : 0.4,
           cursor: 'pointer',
           position: 'relative',
@@ -378,7 +378,7 @@ export default function Calendar() {
               }}
             >
               {hours.map(h => (
-                <div key={h} style={{ height: 48, borderBottom: '1px solid var(--kai-border-light)', background: isToday && h === today.getHours() ? 'rgba(20,109,247,0.04)' : 'transparent' }} />
+                <div key={h} style={{ height: 48, borderBottom: '1px solid var(--kai-border-light)', background: isToday && h === today.getHours() ? 'var(--kai-primary-light, rgba(17,24,39,0.04))' : 'transparent' }} />
               ))}
               {/* Events overlay */}
               {dayEvents.map(evt => {

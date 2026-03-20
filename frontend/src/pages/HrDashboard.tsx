@@ -28,7 +28,7 @@ import {
 import { dashboardApi, employeeAnalyticsApi, passwordManagementApi } from '../services/api';
 import { toast } from 'react-toastify';
 
-const AVATAR_COLORS = ['#146DF7', '#8B3FE9', '#16A34A', '#EA580C', '#2563EB', '#CB3939'];
+const AVATAR_COLORS = ['#111827', '#8B3FE9', '#16A34A', '#EA580C', '#2563EB', '#CB3939'];
 
 function getInitials(name) {
   if (!name) return '??';
@@ -209,7 +209,7 @@ export default function HrDashboard() {
 
   const roleBarOptions = {
     chart: { type: 'bar', toolbar: { show: false }, fontFamily: 'inherit' },
-    colors: ['#146DF7'],
+    colors: ['#111827'],
     plotOptions: { bar: { borderRadius: 6, horizontal: true, barHeight: '55%' } },
     dataLabels: { enabled: true, style: { fontSize: '12px', fontWeight: 600 } },
     xaxis: { labels: { style: { colors: '#5B6B76', fontSize: '12px' } } },
@@ -226,7 +226,7 @@ export default function HrDashboard() {
   // Department distribution pie chart
   const deptLabels = departmentDistribution.map((d) => d.department || d.label || d.name || '');
   const deptValues = departmentDistribution.map((d) => d.count || d.value || 0);
-  const deptColors = ['#146DF7', '#8B3FE9', '#16A34A', '#EA580C', '#2563EB', '#CB3939', '#5B6B76', '#0148A7'];
+  const deptColors = ['#111827', '#8B3FE9', '#16A34A', '#EA580C', '#2563EB', '#CB3939', '#5B6B76', '#0F172A'];
 
   const deptPieOptions = {
     chart: { type: 'pie', fontFamily: 'inherit' },
@@ -243,7 +243,7 @@ export default function HrDashboard() {
 
   const quickActions = [
     { label: 'Process Payroll', icon: <Wallet size={16} />, path: '/payroll', color: '#16A34A' },
-    { label: 'Approve Leave', icon: <CalendarCheck size={16} />, path: '/leaves', color: '#146DF7' },
+    { label: 'Approve Leave', icon: <CalendarCheck size={16} />, path: '/leaves', color: '#3B82F6' },
     { label: 'Post Job', icon: <Briefcase size={16} />, path: '/hiring', color: '#8B3FE9' },
   ];
 
@@ -291,7 +291,7 @@ export default function HrDashboard() {
         <Col xs={12} sm={6} lg={3}>
           <div className="stat-card">
             <div className="flex-between" style={{ marginBottom: 16 }}>
-              <div className="stat-icon" style={{ background: '#EBF3FF', color: '#146DF7' }}><Users /></div>
+              <div className="stat-icon" style={{ background: '#F3F4F6', color: '#111827' }}><Users /></div>
             </div>
             <div className="stat-value">{totalEmployees}</div>
             <div className="stat-label">Total Employees</div>
@@ -598,7 +598,7 @@ export default function HrDashboard() {
                 </div>
                 <div className="kai-card-body">
                   <div style={{ textAlign: 'center', padding: '16px 0' }}>
-                    <div style={{ fontSize: 40, fontWeight: 800, color: '#146DF7' }}>
+                    <div style={{ fontSize: 40, fontWeight: 800, color: '#3B82F6' }}>
                       {analyticsData.testsTaken}
                       <span style={{ fontSize: 16, fontWeight: 500, color: '#9CA3AF' }}> / {analyticsData.totalEmployees}</span>
                     </div>
@@ -608,7 +608,7 @@ export default function HrDashboard() {
                         style={{
                           width: analyticsData.totalEmployees > 0 ? `${(analyticsData.testsTaken / analyticsData.totalEmployees) * 100}%` : '0%',
                           height: '100%',
-                          background: 'linear-gradient(90deg, #146DF7, #8B3FE9)',
+                          background: 'linear-gradient(90deg, #111827, #8B3FE9)',
                           borderRadius: 5,
                           transition: 'width 0.5s ease',
                         }}
@@ -635,7 +635,7 @@ export default function HrDashboard() {
               <div className="kai-card" style={{ height: '100%' }}>
                 <div className="kai-card-header">
                   <h6 style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                    <Brain size={18} style={{ color: '#146DF7' }} /> Personality Distribution
+                    <Brain size={18} style={{ color: '#3B82F6' }} /> Personality Distribution
                   </h6>
                   <span className="kai-badge secondary">{Object.keys(analyticsData.personalityDistribution || {}).length} types</span>
                 </div>
@@ -644,7 +644,7 @@ export default function HrDashboard() {
                     <Chart
                       options={{
                         chart: { type: 'pie', fontFamily: 'inherit' },
-                        colors: ['#146DF7', '#8B3FE9', '#16A34A', '#EA580C', '#2563EB', '#CB3939', '#0D9488', '#D97706', '#7C3AED', '#4F46E5', '#C026D3', '#6366F1', '#059669', '#DC2626', '#0891B2', '#78716C'],
+                        colors: ['#111827', '#8B3FE9', '#16A34A', '#EA580C', '#2563EB', '#CB3939', '#0D9488', '#D97706', '#7C3AED', '#4F46E5', '#C026D3', '#6366F1', '#059669', '#DC2626', '#0891B2', '#78716C'],
                         labels: Object.keys(analyticsData.personalityDistribution),
                         legend: { position: 'bottom', fontSize: '12px', labels: { colors: '#5B6B76' } },
                         dataLabels: { enabled: true, formatter: (val, opts) => `${opts.w.globals.labels[opts.seriesIndex]}: ${val.toFixed(0)}%` },
@@ -701,8 +701,8 @@ export default function HrDashboard() {
                                 borderRadius: 6,
                                 fontSize: 11,
                                 fontWeight: 700,
-                                background: '#146DF715',
-                                color: '#146DF7',
+                                background: '#3B82F615',
+                                color: '#3B82F6',
                               }}>
                                 {emp.personalityType}
                               </span>
@@ -753,7 +753,7 @@ export default function HrDashboard() {
 
       {analyticsLoading && (
         <div className="flex-center" style={{ padding: 40 }}>
-          <Spinner size="sm" animation="border" style={{ color: '#146DF7' }} />
+          <Spinner size="sm" animation="border" style={{ color: '#3B82F6' }} />
           <span style={{ marginLeft: 8, color: '#5B6B76', fontSize: 13 }}>Loading analytics...</span>
         </div>
       )}
@@ -773,7 +773,7 @@ export default function HrDashboard() {
             <div className="kai-card-body" style={{ overflowX: 'auto' }}>
               {passwordLoading ? (
                 <div className="flex-center" style={{ padding: 40 }}>
-                  <Spinner size="sm" animation="border" style={{ color: '#146DF7' }} />
+                  <Spinner size="sm" animation="border" style={{ color: '#3B82F6' }} />
                 </div>
               ) : passwordUsers.length > 0 ? (
                 <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
@@ -920,7 +920,7 @@ export default function HrDashboard() {
                   <div className="kai-card-body">
                     {verificationLoading ? (
                       <div className="flex-center" style={{ padding: 40 }}>
-                        <Spinner size="sm" animation="border" style={{ color: '#146DF7' }} />
+                        <Spinner size="sm" animation="border" style={{ color: '#3B82F6' }} />
                         <span style={{ marginLeft: 8, color: '#5B6B76', fontSize: 13 }}>Loading verification data...</span>
                       </div>
                     ) : (
@@ -936,8 +936,8 @@ export default function HrDashboard() {
                             <div style={{ fontSize: 11, fontWeight: 600, color: '#155724', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Approved Today</div>
                           </div>
                           <div style={{ flex: 1, minWidth: 140, textAlign: 'center', padding: '14px 12px', background: '#EBF3FF', borderRadius: 10 }}>
-                            <div style={{ fontSize: 28, fontWeight: 800, color: '#146DF7' }}>{totalVerified}</div>
-                            <div style={{ fontSize: 11, fontWeight: 600, color: '#146DF7', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Total Verified</div>
+                            <div style={{ fontSize: 28, fontWeight: 800, color: '#3B82F6' }}>{totalVerified}</div>
+                            <div style={{ fontSize: 11, fontWeight: 600, color: '#3B82F6', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Total Verified</div>
                           </div>
                         </div>
 
@@ -983,7 +983,7 @@ export default function HrDashboard() {
                                             fontSize: 11,
                                             fontWeight: 600,
                                             background: docType === 'Passport' ? '#EBF3FF' : docType === 'Aadhaar' ? '#F3EAFF' : docType === 'PAN Card' ? '#FFF4ED' : '#E8F9EF',
-                                            color: docType === 'Passport' ? '#146DF7' : docType === 'Aadhaar' ? '#8B3FE9' : docType === 'PAN Card' ? '#EA580C' : '#16A34A',
+                                            color: docType === 'Passport' ? '#3B82F6' : docType === 'Aadhaar' ? '#8B3FE9' : docType === 'PAN Card' ? '#EA580C' : '#16A34A',
                                           }}>
                                             {docType}
                                           </span>
@@ -996,7 +996,7 @@ export default function HrDashboard() {
                                             href={previewUrl}
                                             target="_blank"
                                             rel="noopener noreferrer"
-                                            style={{ fontSize: 12, color: '#146DF7', textDecoration: 'none', fontWeight: 600, display: 'inline-flex', alignItems: 'center', gap: 4 }}
+                                            style={{ fontSize: 12, color: '#3B82F6', textDecoration: 'none', fontWeight: 600, display: 'inline-flex', alignItems: 'center', gap: 4 }}
                                           >
                                             <ArrowRight size={12} /> View File
                                           </a>
