@@ -136,6 +136,15 @@ h1, h2, h3, h4, h5, h6 {
 
 a { color: var(--kai-accent); text-decoration: none; &:hover { color: var(--kai-accent); opacity: 0.8; } }
 
+// Override Bootstrap focus ring (blue by default)
+.form-control:focus, .form-select:focus {
+  border-color: var(--kai-primary);
+  box-shadow: 0 0 0 2px var(--kai-primary-light);
+}
+.btn:focus-visible {
+  box-shadow: 0 0 0 2px var(--kai-primary-light);
+}
+
 // ── Layout ─────────────────────────────────────────────
 .app-wrapper {
   display: flex;
