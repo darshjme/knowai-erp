@@ -1,0 +1,22 @@
+name: Onboarding Reminders
+
+on:
+  schedule:
+    # Run daily at midnight UTC
+    - cron: '0 0 * * *'
+  workflow_dispatch: # Allow manual trigger
+
+jobs:
+  send-reminders:
+    name: Send onboarding reminder emails
+    runs-on: ubuntu-latest
+    steps:
+      - name: Trigger onboarding reminders
+        run: |
+          RESPONSE=$(curl -s -o /dev/null -w "%{http_code}" \
+            "${{ secrets.APP_URL }}/api/cron/onboarding-reminders?secret=${{ secrets.CRON_SECRET }}")
+          echo "Response: $RESPONSE"
+          if [ "$RESPONSE" != "200" ]; then
+            echo "::error::Cron endpoint returned $RESPONSE"
+            exit 1
+          fi
