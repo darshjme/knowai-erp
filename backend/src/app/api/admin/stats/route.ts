@@ -1,15 +1,11 @@
-import { NextRequest } from "next/server";
 import prisma from "@/lib/prisma";
-import { jsonOk, jsonError, getAuthUser } from "@/lib/api-utils";
+import { createHandler, jsonOk } from "@/lib/create-handler";
 
 const ADMIN_ROLES = ["CTO", "CEO", "ADMIN"];
 
-export async function GET(req: NextRequest) {
-  try {
-    const user = await getAuthUser(req);
-    if (!user) return jsonError("Unauthorized", 401);
-    if (!ADMIN_ROLES.includes(user.role)) return jsonError("Admin access required", 403);
-
+export const GET = createHandler(
+  { roles: ADMIN_ROLES },
+  async (req, { user }) => {
     const now = new Date();
     const weekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
     const monthAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
@@ -171,8 +167,5 @@ export async function GET(req: NextRequest) {
         dbTables,
       },
     });
-  } catch (error) {
-    console.error("Admin stats GET error:", error);
-    return jsonError("Internal server error", 500);
   }
-}
+);

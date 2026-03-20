@@ -2,97 +2,9 @@ import { NextRequest } from "next/server";
 import bcrypt from "bcryptjs";
 import prisma from "@/lib/prisma";
 import { signToken } from "@/lib/auth";
-import { jsonOk, jsonError } from "@/lib/api-utils";
+import { createHandler, jsonOk, jsonError } from "@/lib/create-handler";
 import { getRoleContext } from "@/lib/roles";
-
-// ── Role-based permission definitions ──
-const ROLE_PERMISSIONS: Record<string, string[]> = {
-  CEO: [
-    "all:read", "all:write", "all:delete", "all:manage",
-    "users:manage", "roles:assign", "workspace:manage", "finance:full",
-    "reports:all", "settings:manage", "credentials:all", "complaints:all",
-    "hiring:manage", "payroll:manage", "audit:read",
-  ],
-  CTO: [
-    "all:read", "projects:manage", "tasks:manage", "users:read",
-    "workspace:manage", "credentials:tech", "reports:tech",
-    "hiring:manage", "settings:tech", "audit:read",
-  ],
-  CFO: [
-    "all:read", "finance:full", "payroll:manage", "expenses:manage",
-    "invoices:manage", "reports:finance", "audit:read",
-    "credentials:finance",
-  ],
-  BRAND_FACE: [
-    "projects:read", "tasks:read", "clients:manage", "leads:manage",
-    "contacts:manage", "calendar:manage", "reports:marketing",
-  ],
-  ADMIN: [
-    "all:read", "all:write", "users:manage", "roles:assign",
-    "workspace:manage", "settings:manage", "credentials:all",
-    "audit:read", "hiring:manage", "payroll:read",
-  ],
-  HR: [
-    "users:manage", "users:read", "payroll:manage", "leaves:manage",
-    "documents:manage", "hiring:manage", "complaints:manage",
-    "reports:hr", "audit:read",
-  ],
-  SR_ACCOUNTANT: [
-    "finance:read", "payroll:read", "expenses:manage", "invoices:manage",
-    "reports:finance", "credentials:finance",
-  ],
-  JR_ACCOUNTANT: [
-    "finance:read", "payroll:read", "expenses:manage", "invoices:manage",
-    "reports:finance", "credentials:finance",
-  ],
-  PRODUCT_OWNER: [
-    "projects:manage", "tasks:manage", "clients:read", "leads:read",
-    "reports:projects", "goals:manage", "spaces:manage", "docs:manage",
-  ],
-  SR_CONTENT_STRATEGIST: [
-    "projects:read", "tasks:own", "docs:manage", "calendar:manage",
-    "canvas:manage", "files:manage",
-  ],
-  JR_CONTENT_STRATEGIST: [
-    "projects:read", "tasks:own", "docs:manage", "calendar:manage",
-    "canvas:manage", "files:manage",
-  ],
-  BRAND_PARTNER: [
-    "projects:read", "tasks:read", "clients:read", "leads:read",
-    "reports:read", "contacts:read",
-  ],
-  SR_DEVELOPER: [
-    "projects:read", "tasks:own", "docs:manage", "canvas:manage",
-    "files:manage", "time:own", "credentials:tech",
-  ],
-  SR_EDITOR: [
-    "projects:read", "tasks:own", "docs:manage", "canvas:manage",
-    "files:manage", "time:own",
-  ],
-  JR_EDITOR: [
-    "projects:read", "tasks:own", "docs:manage", "canvas:manage",
-    "files:manage", "time:own",
-  ],
-  SR_GRAPHIC_DESIGNER: [
-    "projects:read", "tasks:own", "canvas:manage", "files:manage",
-    "time:own",
-  ],
-  JR_GRAPHIC_DESIGNER: [
-    "projects:read", "tasks:own", "canvas:manage", "files:manage",
-    "time:own",
-  ],
-  JR_DEVELOPER: [
-    "projects:read", "tasks:own", "docs:read", "files:read",
-    "time:own",
-  ],
-  GUY: [
-    "tasks:own", "time:own", "docs:read", "files:read",
-    "calendar:read",
-  ],
-  OFFICE_BOY: [
-    "tasks:own", "time:own", "calendar:read",
-  ],
-};
+import { loginSchema } from "@/schemas/auth";
 
 // ── Rate limiting for brute-force protection ──
 const loginAttempts = new Map<string, { count: number; blockedUntil: number }>();
@@ -156,14 +68,11 @@ setInterval(() => {
 
 const isProduction = process.env.NODE_ENV === "production";
 
-export async function POST(req: NextRequest) {
-  try {
-    const ip = getClientIp(req);
-    const { email, password } = await req.json();
-
-    if (!email || !password) {
-      return jsonError("Email and password are required", 400);
-    }
+export const POST = createHandler(
+  { public: true, schema: loginSchema },
+  async (req, { body }) => {
+    const ip = getClientIp(req as NextRequest);
+    const { email, password } = body;
 
     // Rate limit by both IP and email to prevent distributed brute-force
     const ipCheck = checkLoginRateLimit(`ip:${ip}`);
@@ -271,8 +180,5 @@ export async function POST(req: NextRequest) {
     });
 
     return response;
-  } catch (error) {
-    console.error("Login error:", error);
-    return jsonError("Internal server error", 500);
   }
-}
+);

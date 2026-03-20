@@ -1,7 +1,8 @@
 import { NextRequest } from "next/server";
 import bcrypt from "bcryptjs";
 import prisma from "@/lib/prisma";
-import { jsonOk, jsonError, getAuthUser } from "@/lib/api-utils";
+import { createHandler, jsonOk, jsonError } from "@/lib/create-handler";
+import { teamCreateSchema, teamPatchSchema } from "@/schemas/admin";
 
 // Roles that can see all team members with full details
 const FULL_ACCESS_ROLES = ["CEO", "CTO", "ADMIN", "HR"];
@@ -39,11 +40,10 @@ const LIMITED_MEMBER_SELECT = {
   department: true,
 } as const;
 
-export async function GET(req: NextRequest) {
-  try {
-    const user = await getAuthUser(req);
-    if (!user) return jsonError("Unauthorized", 401);
-
+// Any authenticated user can view the team directory (with varying detail levels)
+export const GET = createHandler(
+  {},
+  async (req, { user }) => {
     const { searchParams } = new URL(req.url);
     const role = searchParams.get("role");
     const status = searchParams.get("status");
@@ -159,9 +159,6 @@ export async function GET(req: NextRequest) {
       where.department = user.department;
     }
 
-    // Non-privileged, non-PO roles: see the full workspace directory but with limited fields
-    // (filter params still apply)
-
     if (role) where.role = role;
     if (status) where.status = status;
     if (department) where.department = department;
@@ -215,11 +212,8 @@ export async function GET(req: NextRequest) {
       userRole: user.role,
       userDepartment: user.department || null,
     });
-  } catch (error) {
-    console.error("Team GET error:", error);
-    return jsonError("Internal server error", 500);
   }
-}
+);
 
 // Only CEO/CTO/ADMIN/HR can create (onboard) new team members
 const ROLE_CREATION_PERMISSIONS: Record<string, string[]> = {
@@ -229,17 +223,10 @@ const ROLE_CREATION_PERMISSIONS: Record<string, string[]> = {
   HR: ["SR_ACCOUNTANT", "JR_ACCOUNTANT", "PRODUCT_OWNER", "SR_CONTENT_STRATEGIST", "JR_CONTENT_STRATEGIST", "BRAND_PARTNER", "SR_DEVELOPER", "SR_EDITOR", "JR_EDITOR", "SR_GRAPHIC_DESIGNER", "JR_GRAPHIC_DESIGNER", "JR_DEVELOPER", "SR_BRAND_STRATEGIST", "JR_BRAND_STRATEGIST", "SR_SCRIPT_WRITER", "JR_SCRIPT_WRITER", "GUY", "DRIVER", "OFFICE_BOY"],
 };
 
-export async function POST(req: NextRequest) {
-  try {
-    const user = await getAuthUser(req);
-    if (!user) return jsonError("Unauthorized", 401);
-
-    // Only CEO/CTO/ADMIN/HR can onboard new members
-    if (!ONBOARDING_ROLES.includes(user.role)) {
-      return jsonError("Only CEO, CTO, Admin, or HR can add team members", 403);
-    }
-
-    const { email, password, firstName, lastName, role, department, phone } = await req.json();
+export const POST = createHandler(
+  { roles: ONBOARDING_ROLES, schema: teamCreateSchema, rateLimit: "write" },
+  async (req, { user, body }) => {
+    const { email, password, firstName, lastName, role, department, phone } = body;
 
     const allowedRoles = ROLE_CREATION_PERMISSIONS[user.role] || [];
     if (!allowedRoles.includes(role)) {
@@ -262,7 +249,7 @@ export async function POST(req: NextRequest) {
         password: hashedPassword,
         firstName,
         lastName,
-        role,
+        role: role as any,
         department: department || null,
         phone: phone || null,
         status: "OFFLINE",
@@ -272,23 +259,13 @@ export async function POST(req: NextRequest) {
     });
 
     return jsonOk({ success: true, data: newUser }, 201);
-  } catch (error) {
-    console.error("Team POST error:", error);
-    return jsonError("Internal server error", 500);
   }
-}
+);
 
-export async function PATCH(req: NextRequest) {
-  try {
-    const user = await getAuthUser(req);
-    if (!user) return jsonError("Unauthorized", 401);
-
-    // Only CEO/CTO/ADMIN/HR can modify team members
-    if (!FULL_ACCESS_ROLES.includes(user.role)) {
-      return jsonError("Only CEO, CTO, Admin, or HR can update team members", 403);
-    }
-
-    const { id, role, status, department, phone } = await req.json();
+export const PATCH = createHandler(
+  { roles: FULL_ACCESS_ROLES, schema: teamPatchSchema, rateLimit: "write" },
+  async (req, { user, body }) => {
+    const { id, role, status, department, phone } = body;
 
     if (role !== undefined) {
       if (id === user.id) {
@@ -302,10 +279,6 @@ export async function PATCH(req: NextRequest) {
       if (role === "CTO" && user.role !== "CEO") {
         return jsonError("Only CEO can promote someone to CTO", 403);
       }
-    }
-
-    if (status !== undefined && role === undefined) {
-      // All FULL_ACCESS_ROLES can change status
     }
 
     const data: Record<string, unknown> = {};
@@ -325,22 +298,12 @@ export async function PATCH(req: NextRequest) {
     });
 
     return jsonOk({ success: true, data: updated });
-  } catch (error) {
-    console.error("Team PATCH error:", error);
-    return jsonError("Internal server error", 500);
   }
-}
+);
 
-export async function DELETE(req: NextRequest) {
-  try {
-    const user = await getAuthUser(req);
-    if (!user) return jsonError("Unauthorized", 401);
-
-    // Only CEO/CTO/ADMIN/HR can delete members
-    if (!FULL_ACCESS_ROLES.includes(user.role)) {
-      return jsonError("Only CEO, CTO, Admin, or HR can delete members", 403);
-    }
-
+export const DELETE = createHandler(
+  { roles: FULL_ACCESS_ROLES, rateLimit: "write" },
+  async (req, { user }) => {
     const { searchParams } = new URL(req.url);
     const id = searchParams.get("id");
 
@@ -355,8 +318,5 @@ export async function DELETE(req: NextRequest) {
     await prisma.user.delete({ where: { id } });
 
     return jsonOk({ success: true, message: "Member deleted successfully" });
-  } catch (error) {
-    console.error("Team DELETE error:", error);
-    return jsonError("Internal server error", 500);
   }
-}
+);

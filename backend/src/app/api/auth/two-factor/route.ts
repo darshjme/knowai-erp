@@ -1,9 +1,9 @@
-import { NextRequest } from "next/server";
 import prisma from "@/lib/prisma";
-import { jsonOk, jsonError, getAuthUser } from "@/lib/api-utils";
+import { createHandler, jsonOk, jsonError } from "@/lib/create-handler";
+import { twoFactorActionSchema } from "@/schemas/auth";
 import crypto from "crypto";
 
-// Generate a simple 6-digit code-based 2FA
+// Generate a simple secret for 2FA
 function generateSecret(): string {
   return crypto.randomBytes(20).toString("hex");
 }
@@ -14,29 +14,22 @@ function generateBackupCodes(): string[] {
   );
 }
 
-export async function GET(req: NextRequest) {
-  try {
-    const user = await getAuthUser(req);
-    if (!user) return jsonError("Unauthorized", 401);
-
+export const GET = createHandler(
+  {},
+  async (_req, { user }) => {
     return jsonOk({
       success: true,
       data: {
         twoFactorEnabled: user.twoFactorEnabled || false,
       },
     });
-  } catch (error) {
-    console.error("2FA GET error:", error);
-    return jsonError("Internal server error", 500);
   }
-}
+);
 
-export async function POST(req: NextRequest) {
-  try {
-    const user = await getAuthUser(req);
-    if (!user) return jsonError("Unauthorized", 401);
-
-    const { action } = await req.json();
+export const POST = createHandler(
+  { schema: twoFactorActionSchema, rateLimit: "write" },
+  async (_req, { user, body }) => {
+    const { action } = body;
 
     if (action === "enable") {
       const secret = generateSecret();
@@ -67,8 +60,5 @@ export async function POST(req: NextRequest) {
     }
 
     return jsonError("Invalid action", 400);
-  } catch (error) {
-    console.error("2FA POST error:", error);
-    return jsonError("Internal server error", 500);
   }
-}
+);

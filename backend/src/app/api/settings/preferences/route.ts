@@ -1,6 +1,6 @@
 import { NextRequest } from "next/server";
-import { getAuthUser, jsonOk, jsonError } from "@/lib/api-utils";
 import prisma from "@/lib/prisma";
+import { createHandler, jsonOk, jsonError } from "@/lib/create-handler";
 
 // ─── Role → max dataScope mapping ────────────────────────────
 // Determines the highest dataScope a role is allowed to use.
@@ -97,47 +97,32 @@ const JSON_STRING_FIELDS = new Set([
 // ─── GET /api/settings/preferences ──────────────────────────
 // Return current user's preferences (create default if not exists).
 // Also returns the user's role and maxDataScope.
-export async function GET(req: NextRequest) {
-  try {
-    const user = await getAuthUser(req);
-    if (!user) return jsonError("Unauthorized", 401);
+export const GET = createHandler({}, async (_req: NextRequest, { user }) => {
+  let prefs = await prisma.userPreference.findUnique({
+    where: { userId: user.id },
+  });
 
-    let prefs = await prisma.userPreference.findUnique({
-      where: { userId: user.id },
+  if (!prefs) {
+    prefs = await prisma.userPreference.create({
+      data: { userId: user.id },
     });
-
-    if (!prefs) {
-      prefs = await prisma.userPreference.create({
-        data: { userId: user.id },
-      });
-    }
-
-    const maxDataScope = ROLE_MAX_DATA_SCOPE[user.role] ?? "own";
-
-    return jsonOk({
-      data: prefs,
-      role: user.role,
-      maxDataScope,
-    });
-  } catch (error) {
-    console.error("GET /api/settings/preferences error:", error);
-    return jsonError("Internal server error", 500);
   }
-}
+
+  const maxDataScope = ROLE_MAX_DATA_SCOPE[user.role] ?? "own";
+
+  return jsonOk({
+    data: prefs,
+    role: user.role,
+    maxDataScope,
+  });
+});
 
 // ─── POST /api/settings/preferences ─────────────────────────
 // Merge partial updates into the user's preferences (upsert).
-export async function POST(req: NextRequest) {
-  try {
-    const user = await getAuthUser(req);
-    if (!user) return jsonError("Unauthorized", 401);
-
-    let body: Record<string, unknown>;
-    try {
-      body = await req.json();
-    } catch {
-      return jsonError("Invalid JSON body", 400);
-    }
+export const POST = createHandler(
+  { rateLimit: "write" },
+  async (req: NextRequest, { user }) => {
+    const body: Record<string, unknown> = await req.json();
 
     // Build update payload from whitelisted fields only
     const updateData: Record<string, unknown> = {};
@@ -224,14 +209,15 @@ export async function POST(req: NextRequest) {
       role: user.role,
       maxDataScope,
     });
-  } catch (error) {
-    console.error("POST /api/settings/preferences error:", error);
-    return jsonError("Internal server error", 500);
   }
-}
+);
 
 // ─── PATCH /api/settings/preferences (kept for backwards compat) ─
 // Identical behaviour to POST — merges partial updates.
-export async function PATCH(req: NextRequest) {
-  return POST(req);
-}
+export const PATCH = createHandler(
+  { rateLimit: "write" },
+  async (req: NextRequest, { user }) => {
+    // Delegate to the POST handler logic by calling it directly
+    return POST(req);
+  }
+);

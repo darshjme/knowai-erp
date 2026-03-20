@@ -1,48 +1,33 @@
 import { NextRequest } from "next/server";
 import bcrypt from "bcryptjs";
 import prisma from "@/lib/prisma";
-import { jsonOk, jsonError, getAuthUser } from "@/lib/api-utils";
+import { createHandler, jsonOk, jsonError } from "@/lib/create-handler";
 
-export async function GET(req: NextRequest) {
-  try {
-    const user = await getAuthUser(req);
-    if (!user) return jsonError("Unauthorized", 401);
+export const GET = createHandler({}, async (_req: NextRequest, { user }) => {
+  const { password, ...profile } = user;
 
-    const { password, ...profile } = user;
+  // Also fetch user preferences (create default if none exist)
+  let preferences = await prisma.userPreference.findUnique({
+    where: { userId: user.id },
+  });
 
-    // Also fetch user preferences (create default if none exist)
-    let preferences = await prisma.userPreference.findUnique({
-      where: { userId: user.id },
+  if (!preferences) {
+    preferences = await prisma.userPreference.create({
+      data: { userId: user.id },
     });
-
-    if (!preferences) {
-      preferences = await prisma.userPreference.create({
-        data: { userId: user.id },
-      });
-    }
-
-    return jsonOk({
-      ...profile,
-      workspaceName: user.workspace?.name ?? null,
-      preferences,
-    });
-  } catch (error) {
-    console.error("GET /api/settings error:", error);
-    return jsonError("Internal server error", 500);
   }
-}
 
-export async function PATCH(req: NextRequest) {
-  try {
-    const user = await getAuthUser(req);
-    if (!user) return jsonError("Unauthorized", 401);
+  return jsonOk({
+    ...profile,
+    workspaceName: user.workspace?.name ?? null,
+    preferences,
+  });
+});
 
-    let body: Record<string, unknown>;
-    try {
-      body = await req.json();
-    } catch {
-      return jsonError("Invalid JSON body", 400);
-    }
+export const PATCH = createHandler(
+  { rateLimit: "write" },
+  async (req: NextRequest, { user }) => {
+    const body = await req.json();
     const { firstName, lastName, phone, department, currentPassword, newPassword } = body as {
       firstName?: string;
       lastName?: string;
@@ -106,8 +91,5 @@ export async function PATCH(req: NextRequest) {
 
     const { password: _, ...result } = updated;
     return jsonOk(result);
-  } catch (error) {
-    console.error("PATCH /api/settings error:", error);
-    return jsonError("Internal server error", 500);
   }
-}
+);

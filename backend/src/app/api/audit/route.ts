@@ -1,6 +1,7 @@
 import { NextRequest } from "next/server";
 import prisma from "@/lib/prisma";
-import { jsonOk, jsonError, getAuthUser } from "@/lib/api-utils";
+import { createHandler, jsonOk, jsonError } from "@/lib/create-handler";
+import { auditRollbackSchema } from "@/schemas/admin";
 
 // ─── Role-based audit access control ────────────────────────────
 // CEO, CTO, ADMIN: full access to all audit logs
@@ -32,11 +33,12 @@ function getAuditAccess(role: string): AuditAccess {
   return { level: "none" };
 }
 
-export async function GET(req: NextRequest) {
-  try {
-    const user = await getAuthUser(req);
-    if (!user) return jsonError("Unauthorized", 401);
+// Allowed roles: full access + scoped access roles
+const AUDIT_ROLES = [...FULL_ACCESS_ROLES, "HR", "SR_ACCOUNTANT", "JR_ACCOUNTANT"];
 
+export const GET = createHandler(
+  { roles: AUDIT_ROLES },
+  async (req, { user }) => {
     // Determine access level based on role
     const access = getAuditAccess(user.role);
 
@@ -92,50 +94,40 @@ export async function GET(req: NextRequest) {
       where.createdAt = dateFilter;
     }
 
-    const [logs, total] = await Promise.all([
-      prisma.auditLog.findMany({
-        where,
-        orderBy: { createdAt: "desc" },
-        skip: (page - 1) * pageSize,
-        take: pageSize,
-      }),
-      prisma.auditLog.count({ where }),
-    ]);
+    try {
+      const [logs, total] = await Promise.all([
+        prisma.auditLog.findMany({
+          where,
+          orderBy: { createdAt: "desc" },
+          skip: (page - 1) * pageSize,
+          take: pageSize,
+        }),
+        prisma.auditLog.count({ where }),
+      ]);
 
-    return jsonOk({
-      success: true,
-      data: logs,
-      total,
-      page,
-      pageSize,
-      totalPages: Math.ceil(total / pageSize),
-    });
-  } catch (error) {
-    console.error("Audit logs GET error:", error);
-
-    // If audit_logs table doesn't exist yet, return mock data
-    if ((error as any).message?.includes("no such table")) {
-      return getMockAuditLogs(req);
+      return jsonOk({
+        success: true,
+        data: logs,
+        total,
+        page,
+        pageSize,
+        totalPages: Math.ceil(total / pageSize),
+      });
+    } catch (error) {
+      // If audit_logs table doesn't exist yet, return mock data
+      if ((error as any).message?.includes("no such table")) {
+        return getMockAuditLogs(req);
+      }
+      throw error;
     }
-
-    return jsonError("Internal server error", 500);
   }
-}
+);
 
 // Rollback endpoint - revert a specific action
-export async function POST(req: NextRequest) {
-  try {
-    const user = await getAuthUser(req);
-    if (!user) return jsonError("Unauthorized", 401);
-
-    // Only full-access roles can perform rollbacks
-    const access = getAuditAccess(user.role);
-    if (access.level !== "full") {
-      return jsonError("Insufficient permissions to perform rollback", 403);
-    }
-
-    const { logId } = await req.json();
-    if (!logId) return jsonError("Log ID is required", 400);
+export const POST = createHandler(
+  { roles: [...FULL_ACCESS_ROLES], schema: auditRollbackSchema, rateLimit: "write" },
+  async (req, { user, body }) => {
+    const { logId } = body;
 
     const log = await prisma.auditLog.findFirst({
       where: { id: logId, workspaceId: user.workspaceId },
@@ -208,11 +200,8 @@ export async function POST(req: NextRequest) {
       message: "Action rolled back successfully",
       data: rollbackResult
     });
-  } catch (error) {
-    console.error("Audit rollback error:", error);
-    return jsonError("Internal server error", 500);
   }
-}
+);
 
 // Mock data fallback for when database isn't migrated yet
 function getMockAuditLogs(req: NextRequest) {

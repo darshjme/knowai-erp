@@ -1,6 +1,6 @@
 import { NextRequest } from "next/server";
 import prisma from "@/lib/prisma";
-import { jsonOk, jsonError, getAuthUser } from "@/lib/api-utils";
+import { createHandler, jsonOk, jsonError } from "@/lib/create-handler";
 import { createNotification } from "@/lib/notifications";
 
 // ─── CSV parser (no external library) ────────────────────────────────────────
@@ -29,15 +29,9 @@ const LEADS_FULL_ACCESS_ROLES = ["CEO", "CTO", "ADMIN", "PRODUCT_OWNER", "BRAND_
 // BRAND_PARTNER sees only assigned leads
 const LEADS_ALL_ALLOWED_ROLES = [...LEADS_FULL_ACCESS_ROLES, "BRAND_PARTNER"];
 
-export async function GET(req: NextRequest) {
-  try {
-    const user = await getAuthUser(req);
-    if (!user) return jsonError("Unauthorized", 401);
-
-    if (!LEADS_ALL_ALLOWED_ROLES.includes(user.role)) {
-      return jsonError("Forbidden: you do not have access to leads", 403);
-    }
-
+export const GET = createHandler(
+  { roles: LEADS_ALL_ALLOWED_ROLES },
+  async (req: NextRequest, { user }) => {
     const { searchParams } = new URL(req.url);
     const search = searchParams.get("search");
     const status = searchParams.get("status");
@@ -89,21 +83,12 @@ export async function GET(req: NextRequest) {
     ]);
 
     return jsonOk({ success: true, data: leads, total, page, pageSize });
-  } catch (error) {
-    console.error("Leads GET error:", error);
-    return jsonError("Internal server error", 500);
   }
-}
+);
 
-export async function POST(req: NextRequest) {
-  try {
-    const user = await getAuthUser(req);
-    if (!user) return jsonError("Unauthorized", 401);
-
-    if (!LEADS_FULL_ACCESS_ROLES.includes(user.role)) {
-      return jsonError("Forbidden: you do not have permission to create leads", 403);
-    }
-
+export const POST = createHandler(
+  { roles: LEADS_FULL_ACCESS_ROLES, rateLimit: "write" },
+  async (req: NextRequest, { user }) => {
     const body = await req.json();
 
     // CSV Import
@@ -173,21 +158,12 @@ export async function POST(req: NextRequest) {
     }
 
     return jsonOk({ success: true, data: lead }, 201);
-  } catch (error) {
-    console.error("Leads POST error:", error);
-    return jsonError("Internal server error", 500);
   }
-}
+);
 
-export async function PATCH(req: NextRequest) {
-  try {
-    const user = await getAuthUser(req);
-    if (!user) return jsonError("Unauthorized", 401);
-
-    if (!LEADS_FULL_ACCESS_ROLES.includes(user.role)) {
-      return jsonError("Forbidden: you do not have permission to update leads", 403);
-    }
-
+export const PATCH = createHandler(
+  { roles: LEADS_FULL_ACCESS_ROLES, rateLimit: "write" },
+  async (req: NextRequest, { user }) => {
     const body = await req.json();
     const { id, taskIds, ...fields } = body;
     if (!id) return jsonError("Lead id is required", 400);
@@ -247,21 +223,12 @@ export async function PATCH(req: NextRequest) {
     }
 
     return jsonOk({ success: true, data: lead });
-  } catch (error) {
-    console.error("Leads PATCH error:", error);
-    return jsonError("Internal server error", 500);
   }
-}
+);
 
-export async function DELETE(req: NextRequest) {
-  try {
-    const user = await getAuthUser(req);
-    if (!user) return jsonError("Unauthorized", 401);
-
-    if (!LEADS_FULL_ACCESS_ROLES.includes(user.role)) {
-      return jsonError("Forbidden: you do not have permission to delete leads", 403);
-    }
-
+export const DELETE = createHandler(
+  { roles: LEADS_FULL_ACCESS_ROLES, rateLimit: "write" },
+  async (req: NextRequest, { user }) => {
     const { searchParams } = new URL(req.url);
     const id = searchParams.get("id");
     if (!id) return jsonError("Lead id is required", 400);
@@ -273,8 +240,5 @@ export async function DELETE(req: NextRequest) {
 
     await prisma.lead.delete({ where: { id } });
     return jsonOk({ success: true, message: "Lead deleted" });
-  } catch (error) {
-    console.error("Leads DELETE error:", error);
-    return jsonError("Internal server error", 500);
   }
-}
+);

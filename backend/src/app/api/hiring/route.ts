@@ -1,6 +1,6 @@
 import { NextRequest } from "next/server";
 import prisma from "@/lib/prisma";
-import { jsonOk, jsonError, getAuthUser } from "@/lib/api-utils";
+import { createHandler, jsonOk, jsonError } from "@/lib/create-handler";
 import { createNotification } from "@/lib/notifications";
 
 // Full management access: CEO/CTO/ADMIN/HR/PRODUCT_OWNER
@@ -37,20 +37,10 @@ const KANBAN_COLUMNS: Record<string, string[]> = {
 
 // ---------------------------------------------------------------------------
 // GET /api/hiring
-//   ?jobId=X                       → single job with ALL candidates, comments count, rating avg, events count
-//   ?candidates=true&jobId=X       → just candidates with filters: status, tier, search, source
-//   ?view=kanban&jobId=X           → candidates grouped by kanban columns
-//   (no jobId)                     → all jobs with candidate counts per status
 // ---------------------------------------------------------------------------
-export async function GET(req: NextRequest) {
-  try {
-    const user = await getAuthUser(req);
-    if (!user) return jsonError("Unauthorized", 401);
-
-    if (!VIEW_ROLES.includes(user.role)) {
-      return jsonOk({ success: true, data: [] });
-    }
-
+export const GET = createHandler(
+  { roles: VIEW_ROLES },
+  async (req, { user }) => {
     const isSrDeveloper = user.role === "SR_DEVELOPER";
     const { searchParams } = new URL(req.url);
     const jobId = searchParams.get("jobId");
@@ -64,9 +54,6 @@ export async function GET(req: NextRequest) {
     // ── Single job with full candidate data ─────────────────────
     if (jobId && !candidatesOnly && viewMode !== "kanban") {
       const candidateWhere: Record<string, unknown> = {};
-      if (isSrDeveloper) {
-        // SR_DEVELOPER only sees interviews they're assigned to — but we still return candidates
-      }
 
       const job = await prisma.jobPosting.findUnique({
         where: { id: jobId },
@@ -234,20 +221,15 @@ export async function GET(req: NextRequest) {
     });
 
     return jsonOk({ success: true, data });
-  } catch (error) {
-    console.error("Hiring GET error:", error);
-    return jsonError("Internal server error", 500);
   }
-}
+);
 
 // ---------------------------------------------------------------------------
 // POST /api/hiring — action-based operations
 // ---------------------------------------------------------------------------
-export async function POST(req: NextRequest) {
-  try {
-    const user = await getAuthUser(req);
-    if (!user) return jsonError("Unauthorized", 401);
-
+export const POST = createHandler(
+  { rateLimit: "write" },
+  async (req, { user }) => {
     const body = await req.json();
     const { action } = body;
 
@@ -795,12 +777,12 @@ export async function POST(req: NextRequest) {
       if (practicalSubmission !== undefined) data.practicalSubmission = practicalSubmission;
       if (practicalDeadline !== undefined) data.practicalDeadline = practicalDeadline ? new Date(practicalDeadline) : null;
 
-      const updated = await prisma.jobCandidate.update({
+      const updatedCandidate = await prisma.jobCandidate.update({
         where: { id: candidateId },
         data,
       });
 
-      return jsonOk({ success: true, data: updated });
+      return jsonOk({ success: true, data: updatedCandidate });
     }
 
     // ── updateResult ───────────────────────────────────────────
@@ -835,24 +817,15 @@ export async function POST(req: NextRequest) {
       "Invalid action. Supported: createJob, addCandidate, importCandidates, changeStatus, addComment, rateCandidate, advanceCandidate, rejectCandidate, offerCandidate, scheduleInterview, submitPractical, updateResult",
       400
     );
-  } catch (error) {
-    console.error("Hiring POST error:", error);
-    return jsonError("Internal server error", 500);
   }
-}
+);
 
 // ---------------------------------------------------------------------------
 // PATCH /api/hiring — update job or candidate
 // ---------------------------------------------------------------------------
-export async function PATCH(req: NextRequest) {
-  try {
-    const user = await getAuthUser(req);
-    if (!user) return jsonError("Unauthorized", 401);
-
-    if (!MANAGE_ROLES.includes(user.role)) {
-      return jsonError("Only management can update records", 403);
-    }
-
+export const PATCH = createHandler(
+  { roles: MANAGE_ROLES, rateLimit: "write" },
+  async (req, { user }) => {
     const body = await req.json();
     const { id, type: recordType } = body;
 
@@ -949,24 +922,15 @@ export async function PATCH(req: NextRequest) {
     const updated = await prisma.jobPosting.update({ where: { id }, data });
 
     return jsonOk({ success: true, data: updated });
-  } catch (error) {
-    console.error("Hiring PATCH error:", error);
-    return jsonError("Internal server error", 500);
   }
-}
+);
 
 // ---------------------------------------------------------------------------
 // DELETE /api/hiring?id=X&type=job|candidate
 // ---------------------------------------------------------------------------
-export async function DELETE(req: NextRequest) {
-  try {
-    const user = await getAuthUser(req);
-    if (!user) return jsonError("Unauthorized", 401);
-
-    if (!MANAGE_ROLES.includes(user.role)) {
-      return jsonError("Only management can delete records", 403);
-    }
-
+export const DELETE = createHandler(
+  { roles: MANAGE_ROLES, rateLimit: "write" },
+  async (req, { user }) => {
     const { searchParams } = new URL(req.url);
     const id = searchParams.get("id");
     const type = searchParams.get("type");
@@ -1008,8 +972,5 @@ export async function DELETE(req: NextRequest) {
     }
 
     return jsonError("type must be 'job' or 'candidate'", 400);
-  } catch (error) {
-    console.error("Hiring DELETE error:", error);
-    return jsonError("Internal server error", 500);
   }
-}
+);
