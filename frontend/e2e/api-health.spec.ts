@@ -1,6 +1,6 @@
 import { test, expect } from '@playwright/test';
 
-const API_BASE = process.env.E2E_API_URL || 'http://localhost:3000';
+const API_BASE = process.env.E2E_API_URL || process.env.E2E_BASE_URL || 'https://crm.knowai.club';
 const TEST_USER = { email: 'darsh@knowai.biz', password: 'admin123' };
 
 test.describe('API Health & Critical Endpoints', () => {

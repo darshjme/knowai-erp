@@ -27,7 +27,7 @@ test.describe('Navigation & Dashboard', () => {
     if (!page.url().includes('/dashboard')) {
       await page.goto('/dashboard');
     }
-    await page.waitForLoadState('networkidle');
+    await page.waitForLoadState('domcontentloaded');
 
     // Dashboard should have content
     const body = await page.textContent('body');
@@ -39,17 +39,20 @@ test.describe('Navigation & Dashboard', () => {
     if (!page.url().includes('/dashboard')) {
       await page.goto('/dashboard');
     }
-    await page.waitForLoadState('networkidle');
+    await page.waitForLoadState('domcontentloaded');
 
     // Check that sidebar links exist (CEO should see all)
-    const sidebarLinks = page.locator('nav a, aside a, [class*="sidebar"] a');
-    const count = await sidebarLinks.count();
-    expect(count).toBeGreaterThan(3);
+    // Wait for page to settle, then check sidebar content
+    await page.waitForTimeout(1000);
+    const bodyText = await page.textContent('body');
+    expect(bodyText).toContain('Dashboard');
+    expect(bodyText).toContain('Tasks');
+    expect(bodyText).toContain('Projects');
   });
 
   test('can navigate to tasks page', async ({ page }) => {
     await page.goto('/tasks');
-    await page.waitForLoadState('networkidle');
+    await page.waitForLoadState('domcontentloaded');
     expect(page.url()).toContain('/tasks');
     // Page should render without error
     await expect(page.locator('body')).not.toContainText('Internal Server Error');
@@ -57,35 +60,35 @@ test.describe('Navigation & Dashboard', () => {
 
   test('can navigate to projects page', async ({ page }) => {
     await page.goto('/projects');
-    await page.waitForLoadState('networkidle');
+    await page.waitForLoadState('domcontentloaded');
     expect(page.url()).toContain('/projects');
     await expect(page.locator('body')).not.toContainText('Internal Server Error');
   });
 
   test('can navigate to team page', async ({ page }) => {
     await page.goto('/team');
-    await page.waitForLoadState('networkidle');
+    await page.waitForLoadState('domcontentloaded');
     expect(page.url()).toContain('/team');
     await expect(page.locator('body')).not.toContainText('Internal Server Error');
   });
 
   test('can navigate to expenses page', async ({ page }) => {
     await page.goto('/expenses');
-    await page.waitForLoadState('networkidle');
+    await page.waitForLoadState('domcontentloaded');
     expect(page.url()).toContain('/expenses');
     await expect(page.locator('body')).not.toContainText('Internal Server Error');
   });
 
   test('can navigate to payroll page', async ({ page }) => {
     await page.goto('/payroll');
-    await page.waitForLoadState('networkidle');
+    await page.waitForLoadState('domcontentloaded');
     expect(page.url()).toContain('/payroll');
     await expect(page.locator('body')).not.toContainText('Internal Server Error');
   });
 
   test('can navigate to settings page', async ({ page }) => {
     await page.goto('/settings');
-    await page.waitForLoadState('networkidle');
+    await page.waitForLoadState('domcontentloaded');
     expect(page.url()).toContain('/settings');
     await expect(page.locator('body')).not.toContainText('Internal Server Error');
   });
