@@ -193,8 +193,14 @@ export const PATCH = createHandler(
   async (req, { user, body }) => {
     const { leaveId, action } = body;
 
-    const leave = await prisma.leaveRequest.findUnique({ where: { id: leaveId } });
+    const leave = await prisma.leaveRequest.findUnique({
+      where: { id: leaveId },
+      include: { employee: { select: { workspaceId: true } } },
+    });
     if (!leave) return jsonError("Leave request not found", 404);
+    if (leave.employee.workspaceId !== user.workspaceId) {
+      return jsonError("Access denied", 403);
+    }
     if (leave.status !== "PENDING") {
       return jsonError(`Cannot ${action} a leave that is already ${leave.status}`, 400);
     }

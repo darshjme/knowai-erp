@@ -15,6 +15,7 @@ const MIME_TYPES: Record<string, string> = {
   ".svg": "image/svg+xml",
 };
 
+// NOTE: Any authenticated user can preview files. File-level ACL deferred.
 const _GET = createHandler({}, async (req: NextRequest) => {
   const segments = req.nextUrl.pathname.split("/");
   const id = segments[segments.length - 1];

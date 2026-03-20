@@ -81,6 +81,7 @@ export async function uploadFile(
   // ── Local fallback (dev) ──
   const uploadsDir = path.join(process.cwd(), "uploads");
   const fullPath = path.join(uploadsDir, key);
+  if (!fullPath.startsWith(uploadsDir)) throw new Error("Invalid file path");
   await mkdir(path.dirname(fullPath), { recursive: true });
   await writeFile(fullPath, buffer);
 

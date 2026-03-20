@@ -54,7 +54,8 @@ export const GET = createHandler({}, async (req: NextRequest, { user }) => {
   } else if (tab === "all") {
     // Role-based visibility for "all" tab
     if (role === "CEO" || role === "CTO" || role === "ADMIN") {
-      // sees everything
+      // sees everything within workspace
+      where.workspaceId = user.workspaceId;
     } else if (role === "HR") {
       where.OR = [
         { assignedToId: userId },
@@ -203,6 +204,7 @@ export const POST = createHandler({ rateLimit: "write" }, async (req: NextReques
       },
     });
     if (!complaint) return jsonError("Complaint not found", 404);
+    if (complaint.workspaceId !== user.workspaceId) return jsonError("Access denied", 403);
 
     // Only assignee or ADMIN can escalate
     if (complaint.assignedToId !== userId && role !== "ADMIN") {
@@ -277,6 +279,7 @@ export const POST = createHandler({ rateLimit: "write" }, async (req: NextReques
 
     const complaint = await prisma.complaint.findUnique({ where: { id: complaintId } });
     if (!complaint) return jsonError("Complaint not found", 404);
+    if (complaint.workspaceId !== user.workspaceId) return jsonError("Access denied", 403);
 
     if (complaint.assignedToId !== userId && role !== "ADMIN") {
       return jsonError("Only the assignee or admin can resolve", 403);
@@ -332,6 +335,7 @@ export const POST = createHandler({ rateLimit: "write" }, async (req: NextReques
 
     const complaint = await prisma.complaint.findUnique({ where: { id: complaintId } });
     if (!complaint) return jsonError("Complaint not found", 404);
+    if (complaint.workspaceId !== user.workspaceId) return jsonError("Access denied", 403);
 
     if (complaint.assignedToId !== userId && role !== "ADMIN") {
       return jsonError("Only the assignee or admin can dismiss", 403);
@@ -379,6 +383,7 @@ export const POST = createHandler({ rateLimit: "write" }, async (req: NextReques
 
     const complaint = await prisma.complaint.findUnique({ where: { id: complaintId } });
     if (!complaint) return jsonError("Complaint not found", 404);
+    if (complaint.workspaceId !== user.workspaceId) return jsonError("Access denied", 403);
 
     await prisma.complaintTimeline.create({
       data: {
@@ -419,6 +424,7 @@ export const PATCH = createHandler({ rateLimit: "write" }, async (req: NextReque
 
   const complaint = await prisma.complaint.findUnique({ where: { id: complaintId } });
   if (!complaint) return jsonError("Complaint not found", 404);
+  if (complaint.workspaceId !== user.workspaceId) return jsonError("Access denied", 403);
 
   // Only filer (if OPEN) or assignee can update
   const isFiler = complaint.filedById === userId && complaint.status === "OPEN";

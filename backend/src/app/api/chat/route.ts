@@ -957,7 +957,7 @@ export const POST = createHandler({ rateLimit: "write" }, async (req: NextReques
 
   // ── Mute user (ADMIN only) ──
   if (action === "muteUser") {
-    if (user.role !== "ADMIN") return jsonError("Only admins can mute users", 403);
+    if (!["ADMIN", "CEO", "CTO"].includes(user.role)) return jsonError("Only admins can mute users", 403);
     const { userId } = body;
     if (!userId) return jsonError("userId is required", 400);
 
@@ -971,7 +971,7 @@ export const POST = createHandler({ rateLimit: "write" }, async (req: NextReques
 
   // ── Unmute user (ADMIN only) ──
   if (action === "unmuteUser") {
-    if (user.role !== "ADMIN") return jsonError("Only admins can unmute users", 403);
+    if (!["ADMIN", "CEO", "CTO"].includes(user.role)) return jsonError("Only admins can unmute users", 403);
     const { userId } = body;
     if (!userId) return jsonError("userId is required", 400);
 

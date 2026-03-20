@@ -43,6 +43,7 @@ const INLINE_TYPES = new Set([
   ".mp4", ".mp3", ".wav", ".txt", ".csv", ".html",
 ]);
 
+// NOTE: Any authenticated user can access uploaded files. File-level ACL deferred.
 const _GET = createHandler({}, async (req: NextRequest) => {
   const segments = req.nextUrl.pathname.split("/");
   const filename = segments[segments.length - 1];

@@ -20,6 +20,7 @@ export const GET = createHandler({}, async (req: NextRequest, { user }) => {
     user.role === "HR";
 
   if (canSeeAll) {
+    where.employee = { workspaceId: user.workspaceId };
     if (employeeId) where.employeeId = employeeId;
   } else {
     where.employeeId = user.id;
@@ -154,8 +155,14 @@ export const PATCH = createHandler({ rateLimit: "write" }, async (req: NextReque
     return jsonError('action must be "approve" or "reject"', 400);
   }
 
-  const leave = await prisma.leaveRequest.findUnique({ where: { id } });
+  const leave = await prisma.leaveRequest.findUnique({
+    where: { id },
+    include: { employee: { select: { workspaceId: true } } },
+  });
   if (!leave) return jsonError("Leave request not found", 404);
+  if (leave.employee.workspaceId !== user.workspaceId) {
+    return jsonError("Access denied", 403);
+  }
 
   // Prevent approving/rejecting your own leave
   if (leave.employeeId === user.id) {
@@ -205,8 +212,14 @@ export const DELETE = createHandler({ rateLimit: "write" }, async (req: NextRequ
 
   if (!id) return jsonError("Leave request id is required", 400);
 
-  const leave = await prisma.leaveRequest.findUnique({ where: { id } });
+  const leave = await prisma.leaveRequest.findUnique({
+    where: { id },
+    include: { employee: { select: { workspaceId: true } } },
+  });
   if (!leave) return jsonError("Leave request not found", 404);
+  if (leave.employee.workspaceId !== user.workspaceId) {
+    return jsonError("Access denied", 403);
+  }
 
   if (leave.employeeId !== user.id && user.role !== "ADMIN") {
     return jsonError("You can only cancel your own leave requests", 403);

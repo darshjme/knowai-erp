@@ -4,7 +4,15 @@ import prisma from "@/lib/prisma";
 import { createHandler, jsonOk, jsonError } from "@/lib/create-handler";
 
 export const GET = createHandler({}, async (_req: NextRequest, { user }) => {
-  const { password, ...profile } = user;
+  const {
+    password,
+    twoFactorSecret,
+    secretAnswer,
+    passwordResetToken,
+    passwordResetExpiry,
+    passwordHistory,
+    ...profile
+  } = user;
 
   // Also fetch user preferences (create default if none exist)
   let preferences = await prisma.userPreference.findUnique({

@@ -17,6 +17,11 @@ export const GET = createHandler({}, async (req: NextRequest, { user }) => {
     if (!isHR) {
       return jsonError("Only HR can view other users' documents", 403);
     }
+    // Verify target user belongs to the same workspace
+    const targetUser = await prisma.user.findUnique({ where: { id: userId }, select: { workspaceId: true } });
+    if (!targetUser || targetUser.workspaceId !== user.workspaceId) {
+      return jsonError("User not found in your workspace", 403);
+    }
     const documents = await prisma.identityDocument.findMany({
       where: { userId },
       include: {
@@ -34,7 +39,7 @@ export const GET = createHandler({}, async (req: NextRequest, { user }) => {
       return jsonError("Only HR can view pending documents", 403);
     }
     const documents = await prisma.identityDocument.findMany({
-      where: { status: "PENDING" },
+      where: { status: "PENDING", user: { workspaceId: user.workspaceId } },
       include: {
         user: { select: { id: true, firstName: true, lastName: true, email: true, avatar: true } },
         reviewer: { select: { id: true, firstName: true, lastName: true } },
@@ -132,6 +137,9 @@ export const POST = createHandler({ rateLimit: "write" }, async (req: NextReques
     if (!document) {
       return jsonError("Document not found", 404);
     }
+    if (document.user.workspaceId !== user.workspaceId) {
+      return jsonError("Access denied", 403);
+    }
 
     if (document.status === "APPROVED") {
       return jsonError("Document is already approved", 400);
@@ -215,6 +223,9 @@ export const POST = createHandler({ rateLimit: "write" }, async (req: NextReques
     if (!document) {
       return jsonError("Document not found", 404);
     }
+    if (document.user.workspaceId !== user.workspaceId) {
+      return jsonError("Access denied", 403);
+    }
 
     const updated = await prisma.identityDocument.update({
       where: { id: documentId },
@@ -261,6 +272,9 @@ export const POST = createHandler({ rateLimit: "write" }, async (req: NextReques
 
     if (!document) {
       return jsonError("Document not found", 404);
+    }
+    if (document.user.workspaceId !== user.workspaceId) {
+      return jsonError("Access denied", 403);
     }
 
     const updated = await prisma.identityDocument.update({

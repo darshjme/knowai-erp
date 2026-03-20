@@ -36,6 +36,7 @@ export const POST = createHandler(
         a + "*".repeat(Math.min(b.length, 5)) + c
       );
 
+      // TODO: Replace raw userId with opaque lookup token for better security
       return jsonOk({
         success: true,
         data: {
