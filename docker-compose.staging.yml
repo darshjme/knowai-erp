@@ -1,0 +1,48 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: knowai_erp_staging
+      POSTGRES_USER: knowai
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-knowai_staging_2026}
+    ports:
+      - "5433:5432"
+    volumes:
+      - pgdata_staging:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U knowai -d knowai_erp_staging"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    ports:
+      - "3001:3001"
+    environment:
+      DATABASE_URL: postgresql://knowai:${POSTGRES_PASSWORD:-knowai_staging_2026}@postgres:5432/knowai_erp_staging
+      JWT_SECRET: ${JWT_SECRET:-staging-jwt-secret-change-in-production}
+      NODE_ENV: staging
+      SENTRY_DSN: ${SENTRY_DSN:-}
+      RESEND_API_KEY: ${RESEND_API_KEY:-}
+      EMAIL_FROM: "KnowAI Staging <noreply@knowai.biz>"
+      CRON_SECRET: ${CRON_SECRET:-staging-cron-secret}
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    ports:
+      - "5174:80"
+    depends_on:
+      - backend
+
+volumes:
+  pgdata_staging:

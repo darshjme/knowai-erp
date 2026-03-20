@@ -35,8 +35,7 @@
 - **Effort:** S (human: 2 days / CC: ~30 min)
 - **Depends on:** Onboarding overhaul (file uploads now include photos + gov IDs)
 
-### Staging Environment
-- **What:** Docker Compose staging environment with separate DB, accessible to team
-- **Why:** Prevents production incidents from untested deployments
-- **Effort:** S (human: 2 days / CC: ~30 min)
-- **Depends on:** CI/CD pipeline (Foundation First)
+~~### Staging Environment~~ ✅ DONE
+- docker-compose.staging.yml with Postgres 16, backend (Next.js), frontend (nginx)
+- Separate staging DB on port 5433, backend on 3001, frontend on 5174
+- Run: `docker compose -f docker-compose.staging.yml up --build`
