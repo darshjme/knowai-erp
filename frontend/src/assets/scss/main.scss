@@ -232,10 +232,12 @@ a { color: var(--kai-accent); text-decoration: none; &:hover { color: var(--kai-
 .app-content {
   flex: 1;
   padding: 24px;
-  max-width: 100%;
+  width: 100%;
+  max-width: 1200px;
+  margin: 0 auto;
 
   @media (max-width: 767px) { padding: 16px; }
-  @media (min-width: 1441px) { padding: 32px; }
+  @media (min-width: 1441px) { padding: 32px 40px; max-width: 1400px; }
 }
 
 // ── Sidebar Styling ────────────────────────────────────
