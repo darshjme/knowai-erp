@@ -2,6 +2,7 @@ import { NextRequest } from "next/server";
 import prisma from "@/lib/prisma";
 import { createHandler, jsonOk, jsonError } from "@/lib/create-handler";
 import { notifyLeaveDecision, createNotification } from "@/lib/notifications";
+import { sendEmail, approvalEmailHtml } from "@/lib/email";
 
 // ─── GET — List leave requests ─────────────────────────────────────────────
 export const GET = createHandler({}, async (req: NextRequest, { user }) => {
@@ -191,7 +192,7 @@ export const PATCH = createHandler({ rateLimit: "write" }, async (req: NextReque
     data,
     include: {
       employee: {
-        select: { id: true, firstName: true, lastName: true, department: true, avatar: true },
+        select: { id: true, firstName: true, lastName: true, department: true, avatar: true, email: true },
       },
       approver: {
         select: { id: true, firstName: true, lastName: true },
@@ -201,6 +202,23 @@ export const PATCH = createHandler({ rateLimit: "write" }, async (req: NextReque
 
   // Notify the employee about the leave decision
   notifyLeaveDecision(id, leave.employeeId, action === "approve").catch(console.error);
+
+  // Fire-and-forget approval/rejection email to the employee
+  if (updated.employee.email) {
+    const empName = `${updated.employee.firstName ?? ""} ${updated.employee.lastName ?? ""}`.trim() || "there";
+    const emailStatus = action === "approve" ? "approved" : "rejected";
+    const html = approvalEmailHtml(empName, "leave", emailStatus, {
+      Type: updated.type,
+      "Start Date": new Date(updated.startDate).toLocaleDateString(),
+      "End Date": new Date(updated.endDate).toLocaleDateString(),
+      Reason: updated.reason || undefined,
+    });
+    sendEmail(
+      updated.employee.email,
+      `Leave request ${emailStatus}`,
+      html
+    ).catch((err) => console.error("[LEAVE EMAIL]", err));
+  }
 
   return jsonOk({ success: true, data: updated });
 });

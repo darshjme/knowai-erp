@@ -91,11 +91,11 @@ export function getExportColumns(pageType) {
       { key: 'dueDate', label: 'Due Date', accessor: r => r.dueDate ? new Date(r.dueDate).toLocaleDateString() : '' },
     ],
     team: [
-      { key: 'name', label: 'Name', accessor: r => `${r.firstName} ${r.lastName}` },
+      { key: 'name', label: 'Name', accessor: r => r.name || `${r.firstName || ''} ${r.lastName || ''}`.trim() },
       { key: 'email', label: 'Email' },
       { key: 'role', label: 'Role' },
       { key: 'department', label: 'Department' },
-      { key: 'phone', label: 'Phone' },
+      { key: 'designation', label: 'Designation' },
       { key: 'status', label: 'Status' },
     ],
     clients: [
@@ -131,12 +131,15 @@ export function getExportColumns(pageType) {
       { key: 'createdAt', label: 'Date', accessor: r => r.createdAt ? new Date(r.createdAt).toLocaleDateString() : '' },
     ],
     payroll: [
-      { key: 'employee', label: 'Employee', accessor: r => r.employee ? `${r.employee.firstName} ${r.employee.lastName}` : '' },
+      { key: 'employee', label: 'Employee', accessor: r => r.employee ? `${r.employee.firstName} ${r.employee.lastName}` : r.employeeName || '' },
+      { key: 'month', label: 'Month' },
+      { key: 'year', label: 'Year' },
       { key: 'basicPay', label: 'Basic Pay', accessor: r => `₹${(r.basicPay || 0).toLocaleString()}` },
       { key: 'hra', label: 'HRA', accessor: r => `₹${(r.hra || 0).toLocaleString()}` },
+      { key: 'transport', label: 'Transport', accessor: r => `₹${(r.transport || 0).toLocaleString()}` },
       { key: 'bonus', label: 'Bonus', accessor: r => `₹${(r.bonus || 0).toLocaleString()}` },
       { key: 'deductions', label: 'Deductions', accessor: r => `₹${(r.deductions || 0).toLocaleString()}` },
-      { key: 'totalPay', label: 'Net Pay', accessor: r => `₹${(r.totalPay || 0).toLocaleString()}` },
+      { key: 'totalPay', label: 'Total', accessor: r => `₹${(r.totalPay || 0).toLocaleString()}` },
       { key: 'status', label: 'Status' },
     ],
     leaves: [

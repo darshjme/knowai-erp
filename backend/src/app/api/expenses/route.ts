@@ -1,6 +1,7 @@
 import prisma from "@/lib/prisma";
 import { createHandler, jsonOk, jsonError } from "@/lib/create-handler";
 import { createExpenseSchema, updateExpenseSchema } from "@/schemas/expenses";
+import { sendEmail, approvalEmailHtml } from "@/lib/email";
 
 // ─── Role Sets ───────────────────────────────────────────────────────────────
 
@@ -236,13 +237,29 @@ export const PATCH = createHandler(
       data,
       include: {
         submitter: {
-          select: { id: true, firstName: true, lastName: true, department: true },
+          select: { id: true, firstName: true, lastName: true, department: true, email: true },
         },
         approver: {
           select: { id: true, firstName: true, lastName: true },
         },
       },
     });
+
+    // Fire-and-forget approval/rejection email to the submitter
+    if ((data.status === "APPROVED" || data.status === "REJECTED") && updated.submitter.email) {
+      const empName = `${updated.submitter.firstName ?? ""} ${updated.submitter.lastName ?? ""}`.trim() || "there";
+      const emailStatus = data.status === "APPROVED" ? "approved" : "rejected";
+      const html = approvalEmailHtml(empName, "expense", emailStatus, {
+        Title: updated.title,
+        Amount: `${updated.currency} ${Number(updated.amount).toLocaleString()}`,
+        Category: updated.category || undefined,
+      });
+      sendEmail(
+        updated.submitter.email,
+        `Expense ${emailStatus}: ${updated.title}`,
+        html
+      ).catch((err) => console.error("[EXPENSE EMAIL]", err));
+    }
 
     return jsonOk({ success: true, data: updated });
   }

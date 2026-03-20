@@ -260,11 +260,11 @@ export default function Tasks() {
     try {
       if (bulkAction.startsWith('status:')) {
         const newStatus = bulkAction.split(':')[1];
-        await Promise.all(selectedTasks.map(id => tasksApi.update(id, { status: newStatus })));
+        await tasksApi.bulkUpdate(selectedTasks, { status: newStatus });
         toast.success(`Updated ${selectedTasks.length} tasks`);
       } else if (bulkAction.startsWith('assign:')) {
         const assigneeId = bulkAction.split(':')[1];
-        await Promise.all(selectedTasks.map(id => tasksApi.update(id, { assignee_id: assigneeId })));
+        await tasksApi.bulkUpdate(selectedTasks, { assigneeId });
         toast.success(`Assigned ${selectedTasks.length} tasks`);
       }
       setSelectedTasks([]);
@@ -272,6 +272,37 @@ export default function Tasks() {
       fetchTasks();
     } catch {
       toast.error('Bulk action failed');
+    } finally {
+      setBulkProcessing(false);
+    }
+  };
+
+  const handleBulkComplete = async () => {
+    if (selectedTasks.length === 0) return;
+    setBulkProcessing(true);
+    try {
+      await tasksApi.bulkUpdate(selectedTasks, { status: 'COMPLETED' });
+      toast.success(`Marked ${selectedTasks.length} tasks as completed`);
+      setSelectedTasks([]);
+      fetchTasks();
+    } catch {
+      toast.error('Bulk complete failed');
+    } finally {
+      setBulkProcessing(false);
+    }
+  };
+
+  const handleBulkDelete = async () => {
+    if (selectedTasks.length === 0) return;
+    if (!window.confirm(`Delete ${selectedTasks.length} selected tasks? This cannot be undone.`)) return;
+    setBulkProcessing(true);
+    try {
+      await tasksApi.bulkDelete(selectedTasks);
+      toast.success(`Deleted ${selectedTasks.length} tasks`);
+      setSelectedTasks([]);
+      fetchTasks();
+    } catch {
+      toast.error('Bulk delete failed');
     } finally {
       setBulkProcessing(false);
     }
@@ -295,6 +326,7 @@ export default function Tasks() {
           <p>Track and manage all tasks across projects</p>
         </div>
         <div className="page-actions">
+          <ExportButtons data={tasks} pageType="tasks" title="Tasks Report" filename="tasks" />
           <button className="kai-btn kai-btn-primary" onClick={() => setShowCreateModal(true)}>
             <Plus /> New Task
           </button>
@@ -402,52 +434,73 @@ export default function Tasks() {
         </div>
       </div>
 
-      {/* Bulk Actions Bar */}
+      {/* Floating Bulk Actions Bar */}
       {selectedTasks.length > 0 && (
-        <div className="kai-card mb-3" style={{ borderColor: 'var(--kai-primary)' }}>
-          <div className="kai-card-body" style={{ padding: '10px 20px' }}>
-            <div className="flex-between">
-              <span style={{ fontSize: 13, fontWeight: 600 }}>
-                {selectedTasks.length} task{selectedTasks.length !== 1 ? 's' : ''} selected
-              </span>
-              <div className="flex-gap-8">
-                <select
-                  className="kai-input"
-                  value={bulkAction}
-                  onChange={(e) => setBulkAction(e.target.value)}
-                  style={{ appearance: 'auto', width: 'auto', minWidth: 180 }}
-                >
-                  <option value="">Choose action...</option>
-                  <optgroup label="Change Status">
-                    <option value="status:TODO">Set to Todo</option>
-                    <option value="status:IN_PROGRESS">Set to In Progress</option>
-                    <option value="status:IN_REVIEW">Set to In Review</option>
-                    <option value="status:COMPLETED">Set to Completed</option>
-                  </optgroup>
-                  <optgroup label="Assign To">
-                    {teamMembers.map(m => (
-                      <option key={m.id} value={`assign:${m.id}`}>
-                        {m.name || m.full_name || m.email}
-                      </option>
-                    ))}
-                  </optgroup>
-                </select>
-                <button
-                  className="kai-btn kai-btn-primary kai-btn-sm"
-                  disabled={!bulkAction || bulkProcessing}
-                  onClick={handleBulkAction}
-                >
-                  {bulkProcessing ? <Spinner animation="border" size="sm" /> : 'Apply'}
-                </button>
-                <button
-                  className="kai-btn kai-btn-outline kai-btn-sm"
-                  onClick={() => setSelectedTasks([])}
-                >
-                  Clear
-                </button>
-              </div>
-            </div>
-          </div>
+        <div style={{
+          position: 'fixed',
+          bottom: 24,
+          left: '50%',
+          transform: 'translateX(-50%)',
+          zIndex: 1050,
+          background: 'rgba(255,255,255,0.75)',
+          backdropFilter: 'blur(20px) saturate(180%)',
+          WebkitBackdropFilter: 'blur(20px) saturate(180%)',
+          borderRadius: 16,
+          border: '1px solid rgba(255,255,255,0.3)',
+          boxShadow: '0 8px 32px rgba(0,0,0,0.12), 0 2px 8px rgba(0,0,0,0.06)',
+          padding: '12px 24px',
+          display: 'flex',
+          alignItems: 'center',
+          gap: 16,
+          minWidth: 360,
+        }}>
+          <span style={{ fontSize: 13, fontWeight: 700, color: 'var(--kai-text)', whiteSpace: 'nowrap' }}>
+            {selectedTasks.length} selected
+          </span>
+          <div style={{ width: 1, height: 24, background: 'var(--kai-border)' }} />
+          <button
+            className="kai-btn kai-btn-sm"
+            disabled={bulkProcessing}
+            onClick={handleBulkComplete}
+            style={{
+              background: 'rgba(52,199,89,0.12)',
+              color: 'var(--kai-success)',
+              border: 'none',
+              fontWeight: 600,
+              fontSize: 13,
+              display: 'flex',
+              alignItems: 'center',
+              gap: 6,
+            }}
+          >
+            {bulkProcessing ? <Spinner animation="border" size="sm" /> : <CheckCircle2 size={14} />}
+            Mark Complete
+          </button>
+          <button
+            className="kai-btn kai-btn-sm"
+            disabled={bulkProcessing}
+            onClick={handleBulkDelete}
+            style={{
+              background: 'rgba(255,59,48,0.12)',
+              color: 'var(--kai-danger)',
+              border: 'none',
+              fontWeight: 600,
+              fontSize: 13,
+              display: 'flex',
+              alignItems: 'center',
+              gap: 6,
+            }}
+          >
+            <Trash2 size={14} />
+            Delete
+          </button>
+          <button
+            className="kai-btn kai-btn-sm kai-btn-outline"
+            onClick={() => setSelectedTasks([])}
+            style={{ fontSize: 13, fontWeight: 600 }}
+          >
+            Clear
+          </button>
         </div>
       )}
 

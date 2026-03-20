@@ -11,7 +11,7 @@ import { toast } from 'react-toastify';
  * @param {string} props.filename - Base filename for downloads
  * @param {Array} [props.columns] - Custom columns (overrides pageType defaults)
  */
-export default function ExportButtons({ data, pageType, title, filename, columns }) {
+export default function ExportButtons({ data, pageType, title, filename, columns }: { data: any; pageType?: any; title?: any; filename?: any; columns?: any }) {
   const cols = columns || getExportColumns(pageType);
 
   if (!data || data.length === 0 || cols.length === 0) return null;

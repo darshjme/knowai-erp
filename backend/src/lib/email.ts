@@ -125,4 +125,47 @@ export function notificationEmailHtml(name: string, title: string, message: stri
   </div>`;
 }
 
-export default { sendEmail, invoiceEmailHtml, welcomeEmailHtml, passwordResetEmailHtml, notificationEmailHtml };
+export function approvalEmailHtml(
+  name: string,
+  type: "expense" | "leave" | "hiring",
+  status: "approved" | "rejected",
+  details: Record<string, string | undefined>
+) {
+  const isApproved = status === "approved";
+  const accentColor = isApproved ? "#34C759" : "#FF3B30";
+  const statusLabel = isApproved ? "Approved" : "Rejected";
+
+  const typeLabels: Record<string, string> = {
+    expense: "Expense Report",
+    leave: "Leave Request",
+    hiring: "Application Update",
+  };
+  const heading = `${typeLabels[type]} ${statusLabel}`;
+
+  // Build detail rows from the details object
+  const detailRows = Object.entries(details)
+    .filter(([, v]) => v !== undefined && v !== null && v !== "")
+    .map(
+      ([k, v]) =>
+        `<p style="margin:0 0 8px;color:#86868B;font-size:13px">${k}</p>
+         <p style="margin:0 0 16px;color:#1D1D1F;font-weight:500">${v}</p>`
+    )
+    .join("");
+
+  return `<div style="font-family:-apple-system,BlinkMacSystemFont,'SF Pro Text',sans-serif;max-width:600px;margin:0 auto;padding:32px">
+    <div style="text-align:center;margin-bottom:32px">
+      <div style="display:inline-block;background:#007AFF;color:#fff;font-weight:700;font-size:16px;width:40px;height:40px;line-height:40px;border-radius:12px">K</div>
+      <h2 style="color:#1D1D1F;margin:16px 0 0;font-size:20px">${heading}</h2>
+    </div>
+    <p style="color:#1D1D1F">Hi ${name},</p>
+    <p style="color:#1D1D1F">Your ${typeLabels[type].toLowerCase()} has been <strong style="color:${accentColor}">${statusLabel.toLowerCase()}</strong>.</p>
+    ${detailRows ? `<div style="background:#F5F5F7;border-radius:12px;padding:20px;margin:20px 0">${detailRows}</div>` : ""}
+    <div style="text-align:center;margin:32px 0">
+      <a href="https://crm.knowai.club" style="display:inline-block;background:#007AFF;color:#fff;font-weight:600;padding:12px 32px;border-radius:12px;text-decoration:none;font-size:15px">View in KnowAI</a>
+    </div>
+    <hr style="border:none;border-top:1px solid rgba(0,0,0,0.06);margin:24px 0"/>
+    <p style="color:#86868B;font-size:13px">KnowAI Team &middot; crm.knowai.club</p>
+  </div>`;
+}
+
+export default { sendEmail, invoiceEmailHtml, welcomeEmailHtml, passwordResetEmailHtml, notificationEmailHtml, approvalEmailHtml };

@@ -241,10 +241,40 @@ export default function Dashboard() {
         inProgressTasks: d.inProgressTasks || [],
       });
 
-      setRevenueChart(d.revenueChart || d.monthlyRevenue || []);
-      setTaskDistribution(d.taskDistribution || d.tasksByStatus || []);
-      setRecentActivity(d.recentActivity || d.activity || []);
-      setDeadlines(d.upcomingDeadlines || d.deadlines || []);
+      setRevenueChart(d.revenueVsExpenses || d.revenueChart || d.monthlyRevenue || []);
+      setTaskDistribution(d.taskStatusDistribution || d.taskDistribution || d.tasksByStatus || []);
+
+      // Map activity feed from backend notifications
+      const rawActivity = d.recentActivityAll || d.activityFeed || d.recentActivity || d.activity || [];
+      const mappedActivity = rawActivity.map((item) => {
+        // If already in the expected format, pass through
+        if (item.title && item.type) return item;
+        // Map notification objects to activity feed format
+        const userName = item.user
+          ? `${item.user.firstName || ''} ${item.user.lastName || ''}`.trim()
+          : '';
+        const notifType = (item.type || '').toLowerCase();
+        const activityType = notifType.includes('task') ? 'task'
+          : notifType.includes('project') ? 'project'
+          : notifType.includes('invoice') ? 'invoice'
+          : notifType.includes('leave') ? 'leave'
+          : notifType.includes('team') || notifType.includes('member') ? 'team'
+          : 'task';
+        return {
+          id: item.id,
+          type: activityType,
+          title: item.title || item.message || 'Activity',
+          message: item.message,
+          user: userName,
+          time: item.createdAt
+            ? new Date(item.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })
+            : '',
+          createdAt: item.createdAt,
+        };
+      });
+      setRecentActivity(mappedActivity);
+
+      setDeadlines(d.upcomingDeadlines || d.deadlines || d.overdueTasks || []);
     } catch (err) {
       console.error('Dashboard fetch error:', err);
       setError(err.response?.data?.message || err.message || 'Failed to load dashboard data');

@@ -67,6 +67,8 @@ export const tasksApi = {
   create: (data) => api.post('/tasks', data),
   update: (id, data) => api.patch('/tasks', { id, ...data }),
   delete: (id) => api.delete(`/tasks?id=${id}`),
+  bulkUpdate: (taskIds, fields) => api.post('/tasks', { action: 'bulkUpdate', taskIds, ...fields }),
+  bulkDelete: (taskIds) => api.post('/tasks', { action: 'bulkDelete', taskIds }),
 };
 
 // Team

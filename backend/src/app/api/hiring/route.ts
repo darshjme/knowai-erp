@@ -2,6 +2,7 @@ import { NextRequest } from "next/server";
 import prisma from "@/lib/prisma";
 import { createHandler, jsonOk, jsonError } from "@/lib/create-handler";
 import { createNotification } from "@/lib/notifications";
+import { sendEmail, approvalEmailHtml } from "@/lib/email";
 
 // Full management access: CEO/CTO/ADMIN/HR/PRODUCT_OWNER
 const MANAGE_ROLES = ["CEO", "CTO", "ADMIN", "HR", "PRODUCT_OWNER"];
@@ -453,6 +454,21 @@ export const POST = createHandler(
         ).catch(console.error);
       }
 
+      // Fire-and-forget email to candidate on HIRED or REJECTED
+      if ((status === "HIRED" || status === "REJECTED") && candidate.email) {
+        const emailStatus = status === "HIRED" ? "approved" : "rejected";
+        const html = approvalEmailHtml(candidate.name, "hiring", emailStatus, {
+          Position: (await prisma.jobPosting.findUnique({ where: { id: candidate.jobId }, select: { title: true } }))?.title || "Open Position",
+          Status: status === "HIRED" ? "Selected" : "Not selected",
+          ...(rejectionReason ? { Reason: rejectionReason } : {}),
+        });
+        sendEmail(
+          candidate.email,
+          status === "HIRED" ? "Congratulations — You have been selected!" : "Application Update",
+          html
+        ).catch((err) => console.error("[HIRING EMAIL]", err));
+      }
+
       return jsonOk({ success: true, data: updated });
     }
 
@@ -656,6 +672,17 @@ export const POST = createHandler(
           `/hiring?jobId=${candidate.jobId}`,
           { candidateId }
         ).catch(console.error);
+      }
+
+      // Fire-and-forget rejection email to candidate
+      if (candidate.email) {
+        const jobTitle = (await prisma.jobPosting.findUnique({ where: { id: candidate.jobId }, select: { title: true } }))?.title || "Open Position";
+        const html = approvalEmailHtml(candidate.name, "hiring", "rejected", {
+          Position: jobTitle,
+          Status: "Not selected",
+          ...(rejectionReason ? { Reason: rejectionReason } : {}),
+        });
+        sendEmail(candidate.email, "Application Update", html).catch((err) => console.error("[HIRING EMAIL]", err));
       }
 
       return jsonOk({ success: true, data: updated });
