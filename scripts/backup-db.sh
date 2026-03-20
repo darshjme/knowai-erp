@@ -14,7 +14,8 @@ DB_USER="${DB_USER:-postgres}"
 DB_HOST="${DB_HOST:-localhost}"
 DB_PORT="${DB_PORT:-5432}"
 BACKUP_DIR="${BACKUP_DIR:-/backups}"
-RETENTION_COUNT=30
+RETENTION_DAILY=7
+RETENTION_WEEKLY=4
 TIMESTAMP=$(date +"%Y%m%d_%H%M%S")
 BACKUP_FILE="${BACKUP_DIR}/knowai_erp_${TIMESTAMP}.sql.gz"
 LOG_FILE="${BACKUP_DIR}/backup.log"
@@ -49,15 +50,18 @@ else
     exit 1
 fi
 
-# Cleanup old backups - keep only the last N
-BACKUP_COUNT=$(ls -1 "${BACKUP_DIR}"/knowai_erp_*.sql.gz 2>/dev/null | wc -l | tr -d ' ')
-if [ "${BACKUP_COUNT}" -gt "${RETENTION_COUNT}" ]; then
-    DELETE_COUNT=$((BACKUP_COUNT - RETENTION_COUNT))
-    log "Removing ${DELETE_COUNT} old backup(s) (keeping last ${RETENTION_COUNT})..."
-    ls -1t "${BACKUP_DIR}"/knowai_erp_*.sql.gz | tail -n "${DELETE_COUNT}" | xargs rm -f
-    log "Old backups removed."
-else
-    log "Total backups: ${BACKUP_COUNT}/${RETENTION_COUNT} (no cleanup needed)"
+# Weekly backup (every Sunday)
+DAY_OF_WEEK=$(date +%u)
+if [ "${DAY_OF_WEEK}" -eq 7 ]; then
+    mkdir -p "${BACKUP_DIR}/weekly"
+    cp "${BACKUP_FILE}" "${BACKUP_DIR}/weekly/knowai_erp_weekly_$(date +%Y-%m-%d).sql.gz"
+    log "Weekly backup created."
+    # Cleanup old weekly backups
+    ls -1t "${BACKUP_DIR}/weekly"/knowai_erp_weekly_*.sql.gz 2>/dev/null | tail -n +$((RETENTION_WEEKLY + 1)) | xargs rm -f 2>/dev/null || true
 fi
+
+# Cleanup old daily backups
+ls -1t "${BACKUP_DIR}"/knowai_erp_*.sql.gz 2>/dev/null | tail -n +$((RETENTION_DAILY + 1)) | xargs rm -f 2>/dev/null || true
+log "Retention: $(ls -1 "${BACKUP_DIR}"/knowai_erp_*.sql.gz 2>/dev/null | wc -l | tr -d ' ') daily, $(ls -1 "${BACKUP_DIR}/weekly"/knowai_erp_weekly_*.sql.gz 2>/dev/null | wc -l | tr -d ' ') weekly"
 
 log "Backup process finished."

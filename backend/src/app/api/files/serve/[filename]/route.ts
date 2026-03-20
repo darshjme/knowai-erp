@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createHandler, jsonError } from "@/lib/create-handler";
-import { readFile } from "fs/promises";
-import { existsSync } from "fs";
+import { stat } from "fs/promises";
+import { existsSync, createReadStream } from "fs";
 import path from "path";
 
 const UPLOAD_DIR = path.join(process.cwd(), "uploads", "files");
@@ -57,7 +57,7 @@ const _GET = createHandler({}, async (req: NextRequest) => {
     return jsonError("File not found", 404);
   }
 
-  const fileBuffer = await readFile(filePath);
+  const fileStat = await stat(filePath);
   const ext = path.extname(filename).toLowerCase();
   const contentType = MIME_TYPES[ext] || "application/octet-stream";
   const disposition = INLINE_TYPES.has(ext) ? "inline" : "attachment";
@@ -65,12 +65,22 @@ const _GET = createHandler({}, async (req: NextRequest) => {
   // Extract original filename (remove UUID prefix)
   const originalName = filename.replace(/^[a-f0-9-]+-/, "");
 
-  return new NextResponse(fileBuffer, {
+  // Stream file instead of loading into memory
+  const stream = createReadStream(filePath);
+  const webStream = new ReadableStream({
+    start(controller) {
+      stream.on("data", (chunk) => controller.enqueue(chunk));
+      stream.on("end", () => controller.close());
+      stream.on("error", (err) => controller.error(err));
+    },
+  });
+
+  return new NextResponse(webStream, {
     status: 200,
     headers: {
       "Content-Type": contentType,
       "Content-Disposition": `${disposition}; filename="${originalName}"`,
-      "Content-Length": fileBuffer.length.toString(),
+      "Content-Length": fileStat.size.toString(),
       "Cache-Control": "private, max-age=3600",
     },
   });

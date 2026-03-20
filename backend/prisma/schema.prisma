@@ -385,6 +385,9 @@ model Task {
   @@index([projectId])
   @@index([assigneeId])
   @@index([createdById])
+  @@index([assigneeId, status])
+  @@index([assigneeId, dueDate])
+  @@index([projectId, status])
   @@map("tasks")
 }
 
@@ -629,6 +632,7 @@ model LeaveRequest {
   @@index([approverId])
   @@index([status])
   @@index([startDate, endDate])
+  @@index([employeeId, status])
 }
 
 // ─── EMPLOYEE DOCUMENT MANAGEMENT ─────────────────────────────
@@ -889,6 +893,7 @@ model Expense {
   @@index([approverId])
   @@index([status])
   @@index([category])
+  @@index([submitterId, status])
 }
 
 // ─── CREDENTIAL / PASSWORD VAULT ───────────────────────────────
