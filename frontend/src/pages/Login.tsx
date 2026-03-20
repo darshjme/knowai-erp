@@ -183,7 +183,7 @@ export default function Login() {
               <label className="kai-label">Email Address</label>
               <div style={{ position: 'relative' }}>
                 <Mail size={16} style={{ position: 'absolute', left: 12, top: 10, color: '#5B6B76' }} />
-                <input className="kai-input" type="email" value={forgotEmail} onChange={e => setForgotEmail(e.target.value)} placeholder="you@knowai.com" required style={{ paddingLeft: 36 }} />
+                <input className="kai-input" type="email" value={forgotEmail} onChange={e => setForgotEmail(e.target.value)} placeholder="you@knowai.biz" required style={{ paddingLeft: 36 }} />
               </div>
             </div>
             <button type="submit" className="kai-btn kai-btn-primary kai-btn-lg" style={{ width: '100%' }} disabled={loading}>
@@ -290,7 +290,7 @@ export default function Login() {
               <form onSubmit={handleSubmit}>
                 <div style={{ marginBottom: 20 }}>
                   <label className="kai-label">Email Address</label>
-                  <input className="kai-input" type="email" value={email} onChange={e => setEmail(e.target.value)} placeholder="you@knowai.com" required />
+                  <input className="kai-input" type="email" value={email} onChange={e => setEmail(e.target.value)} placeholder="you@knowai.biz" required />
                 </div>
                 <div style={{ marginBottom: 20, position: 'relative' }}>
                   <label className="kai-label">Password</label>

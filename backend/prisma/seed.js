@@ -113,6 +113,15 @@ async function main() {
         onboardingComplete: true,
         onboardingStep: 3,
         profileComplete: true,
+        phone: u.phone || `+91 ${Math.floor(7000000000 + Math.random() * 2999999999)}`,
+        address: `${Math.floor(1 + Math.random() * 200)}, ${['MG Road', 'FC Road', 'SB Road', 'JM Road', 'Ring Road', 'Link Road', 'Station Road', 'Market Road'][Math.floor(Math.random() * 8)]}`,
+        city: ['Mumbai', 'Pune', 'Bengaluru', 'Ahmedabad', 'Delhi', 'Hyderabad', 'Chennai', 'Jaipur'][Math.floor(Math.random() * 8)],
+        state: ['Maharashtra', 'Karnataka', 'Gujarat', 'Delhi', 'Telangana', 'Tamil Nadu', 'Rajasthan'][Math.floor(Math.random() * 7)],
+        country: 'India',
+        pincode: `${Math.floor(100000 + Math.random() * 899999)}`,
+        about: `${u.firstName} is a ${u.designation} in the ${u.department} department at Zeel.ai, contributing to AI innovation and creative content production.`,
+        alternateEmail: `${u.firstName.toLowerCase()}${Math.floor(Math.random() * 99)}@gmail.com`,
+        dateOfBirth: new Date(1985 + Math.floor(Math.random() * 15), Math.floor(Math.random() * 12), 1 + Math.floor(Math.random() * 28)),
       }
     });
     userMap[u.email] = user;

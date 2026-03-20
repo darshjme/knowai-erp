@@ -563,7 +563,7 @@ export default function Settings() {
                     <div>
                       <label className="kai-label">Company Email</label>
                       <input className="kai-input" type="email" value={profile.companyEmail || profile.email} disabled style={{ background: 'var(--kai-bg)', color: 'var(--kai-text-muted)', cursor: 'not-allowed' }} />
-                      <span style={{ fontSize: 11, color: '#94A3B8' }}>Auto-generated @knowai.com email</span>
+                      <span style={{ fontSize: 11, color: '#94A3B8' }}>Auto-generated @knowai.biz email</span>
                     </div>
                     <div>
                       <label className="kai-label">Alternate Email<RequiredMark /></label>

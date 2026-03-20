@@ -579,6 +579,7 @@ export default function HelpTour({ role }) {
       if (action === ACTIONS.CLOSE) {
         setRun(false);
         setStepIndex(0);
+        localStorage.setItem(storageKey, 'true');
       }
     },
     [dontShowAgain, storageKey]
