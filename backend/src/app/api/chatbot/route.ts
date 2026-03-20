@@ -1,6 +1,6 @@
 import { NextRequest } from "next/server";
 import prisma from "@/lib/prisma";
-import { jsonOk, jsonError, getAuthUser } from "@/lib/api-utils";
+import { createHandler, jsonOk, jsonError } from "@/lib/create-handler";
 
 const OPENROUTER_API_KEY = process.env.OPENROUTER_API_KEY || "";
 const OPENROUTER_MODEL = process.env.OPENROUTER_MODEL || "anthropic/claude-3.5-haiku";
@@ -55,187 +55,163 @@ Know AI is a creative-tech company based in India focused on content creation, b
 Be friendly, concise, and helpful. Use short paragraphs. If you don't know something specific about their data, suggest where they can find it in the CRM. Always encourage productivity.`;
 
 // GET: List conversations or messages
-export async function GET(req: NextRequest) {
-  try {
-    const user = await getAuthUser(req);
-    if (!user) return jsonError("Unauthorized", 401);
+export const GET = createHandler({}, async (req: NextRequest, { user }) => {
+  const { searchParams } = new URL(req.url);
+  const conversationId = searchParams.get("conversationId");
 
-    const { searchParams } = new URL(req.url);
-    const conversationId = searchParams.get("conversationId");
-
-    if (conversationId) {
-      const conversation = await prisma.chatBotConversation.findFirst({
-        where: { id: conversationId, userId: user.id },
-        include: {
-          messages: {
-            where: { role: { not: "system" } },
-            orderBy: { createdAt: "asc" },
-          },
+  if (conversationId) {
+    const conversation = await prisma.chatBotConversation.findFirst({
+      where: { id: conversationId, userId: user.id },
+      include: {
+        messages: {
+          where: { role: { not: "system" } },
+          orderBy: { createdAt: "asc" },
         },
-      });
-      if (!conversation) return jsonError("Conversation not found", 404);
-      return jsonOk({ conversation });
-    }
-
-    // List recent conversations
-    const conversations = await prisma.chatBotConversation.findMany({
-      where: { userId: user.id },
-      orderBy: { updatedAt: "desc" },
-      take: 20,
-      select: {
-        id: true,
-        title: true,
-        createdAt: true,
-        updatedAt: true,
-        _count: { select: { messages: true } },
       },
     });
-
-    return jsonOk({ conversations });
-  } catch (error) {
-    console.error("ChatBot GET error:", error);
-    return jsonError("Internal server error", 500);
+    if (!conversation) return jsonError("Conversation not found", 404);
+    return jsonOk({ conversation });
   }
-}
+
+  // List recent conversations
+  const conversations = await prisma.chatBotConversation.findMany({
+    where: { userId: user.id },
+    orderBy: { updatedAt: "desc" },
+    take: 20,
+    select: {
+      id: true,
+      title: true,
+      createdAt: true,
+      updatedAt: true,
+      _count: { select: { messages: true } },
+    },
+  });
+
+  return jsonOk({ conversations });
+});
 
 // POST: Send message and get AI response
-export async function POST(req: NextRequest) {
+export const POST = createHandler({ rateLimit: "write" }, async (req: NextRequest, { user }) => {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  let body: any;
   try {
-    const user = await getAuthUser(req);
-    if (!user) return jsonError("Unauthorized", 401);
-
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    let body: any;
-    try {
-      body = await req.json();
-    } catch {
-      return jsonError("Invalid JSON body", 400);
-    }
-    const { conversationId, message } = body || {};
-    if (!message || typeof message !== "string" || message.trim().length === 0) {
-      return jsonError("Message is required", 400);
-    }
-    if (message.length > 4000) {
-      return jsonError("Message too long (max 4000 chars)", 400);
-    }
-
-    const cleanMessage = message.trim();
-
-    // Get or create conversation
-    let convoId = conversationId;
-    if (!convoId) {
-      const convo = await prisma.chatBotConversation.create({
-        data: {
-          userId: user.id,
-          title: cleanMessage.slice(0, 60) + (cleanMessage.length > 60 ? "..." : ""),
-        },
-      });
-      convoId = convo.id;
-    } else {
-      // Verify ownership
-      const existing = await prisma.chatBotConversation.findFirst({
-        where: { id: convoId, userId: user.id },
-      });
-      if (!existing) return jsonError("Conversation not found", 404);
-    }
-
-    // Save user message
-    await prisma.chatBotMessage.create({
-      data: { conversationId: convoId, role: "user", content: cleanMessage },
-    });
-
-    // Build context: get last 20 messages for context
-    const history = await prisma.chatBotMessage.findMany({
-      where: { conversationId: convoId },
-      orderBy: { createdAt: "asc" },
-      take: 20,
-    });
-
-    const userContext = `Current user: ${user.firstName || "Unknown"} ${user.lastName || ""} (${user.email || "N/A"}), Role: ${user.role || "GUY"}, Department: ${user.department || "N/A"}`;
-
-    const messages = [
-      { role: "system", content: SYSTEM_PROMPT + "\n\n" + userContext },
-      ...history.map((m) => ({ role: m.role, content: m.content })),
-    ];
-
-    // Call OpenRouter API
-    let assistantReply = "I'm sorry, I couldn't process your request right now. Please try again.";
-
-    if (OPENROUTER_API_KEY) {
-      try {
-        const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
-          method: "POST",
-          headers: {
-            "Authorization": `Bearer ${OPENROUTER_API_KEY}`,
-            "Content-Type": "application/json",
-            "HTTP-Referer": "https://knowai.com",
-            "X-Title": "KnowAI CRM Assistant",
-          },
-          body: JSON.stringify({
-            model: OPENROUTER_MODEL,
-            messages,
-            max_tokens: 1000,
-            temperature: 0.7,
-          }),
-        });
-
-        if (response.ok) {
-          const data = await response.json();
-          assistantReply = data.choices?.[0]?.message?.content || assistantReply;
-        } else {
-          console.error("OpenRouter error:", response.status, await response.text());
-        }
-      } catch (err) {
-        console.error("OpenRouter fetch error:", err);
-      }
-    } else {
-      // Fallback: basic responses without API key
-      assistantReply = getOfflineResponse(cleanMessage, user.role, user.firstName || "there");
-    }
-
-    // Save assistant message
-    await prisma.chatBotMessage.create({
-      data: { conversationId: convoId, role: "assistant", content: assistantReply },
-    });
-
-    // Update conversation timestamp
-    await prisma.chatBotConversation.update({
-      where: { id: convoId },
-      data: { updatedAt: new Date() },
-    });
-
-    return jsonOk({
-      conversationId: convoId,
-      reply: assistantReply,
-    });
-  } catch (error) {
-    console.error("ChatBot POST error:", error);
-    return jsonError("Internal server error", 500);
+    body = await req.json();
+  } catch {
+    return jsonError("Invalid JSON body", 400);
   }
-}
+  const { conversationId, message } = body || {};
+  if (!message || typeof message !== "string" || message.trim().length === 0) {
+    return jsonError("Message is required", 400);
+  }
+  if (message.length > 4000) {
+    return jsonError("Message too long (max 4000 chars)", 400);
+  }
+
+  const cleanMessage = message.trim();
+
+  // Get or create conversation
+  let convoId = conversationId;
+  if (!convoId) {
+    const convo = await prisma.chatBotConversation.create({
+      data: {
+        userId: user.id,
+        title: cleanMessage.slice(0, 60) + (cleanMessage.length > 60 ? "..." : ""),
+      },
+    });
+    convoId = convo.id;
+  } else {
+    // Verify ownership
+    const existing = await prisma.chatBotConversation.findFirst({
+      where: { id: convoId, userId: user.id },
+    });
+    if (!existing) return jsonError("Conversation not found", 404);
+  }
+
+  // Save user message
+  await prisma.chatBotMessage.create({
+    data: { conversationId: convoId, role: "user", content: cleanMessage },
+  });
+
+  // Build context: get last 20 messages for context
+  const history = await prisma.chatBotMessage.findMany({
+    where: { conversationId: convoId },
+    orderBy: { createdAt: "asc" },
+    take: 20,
+  });
+
+  const userContext = `Current user: ${user.firstName || "Unknown"} ${user.lastName || ""} (${user.email || "N/A"}), Role: ${user.role || "GUY"}, Department: ${user.department || "N/A"}`;
+
+  const messages = [
+    { role: "system", content: SYSTEM_PROMPT + "\n\n" + userContext },
+    ...history.map((m) => ({ role: m.role, content: m.content })),
+  ];
+
+  // Call OpenRouter API
+  let assistantReply = "I'm sorry, I couldn't process your request right now. Please try again.";
+
+  if (OPENROUTER_API_KEY) {
+    try {
+      const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
+        method: "POST",
+        headers: {
+          "Authorization": `Bearer ${OPENROUTER_API_KEY}`,
+          "Content-Type": "application/json",
+          "HTTP-Referer": "https://knowai.com",
+          "X-Title": "KnowAI CRM Assistant",
+        },
+        body: JSON.stringify({
+          model: OPENROUTER_MODEL,
+          messages,
+          max_tokens: 1000,
+          temperature: 0.7,
+        }),
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        assistantReply = data.choices?.[0]?.message?.content || assistantReply;
+      } else {
+        console.error("OpenRouter error:", response.status, await response.text());
+      }
+    } catch (err) {
+      console.error("OpenRouter fetch error:", err);
+    }
+  } else {
+    // Fallback: basic responses without API key
+    assistantReply = getOfflineResponse(cleanMessage, user.role, user.firstName || "there");
+  }
+
+  // Save assistant message
+  await prisma.chatBotMessage.create({
+    data: { conversationId: convoId, role: "assistant", content: assistantReply },
+  });
+
+  // Update conversation timestamp
+  await prisma.chatBotConversation.update({
+    where: { id: convoId },
+    data: { updatedAt: new Date() },
+  });
+
+  return jsonOk({
+    conversationId: convoId,
+    reply: assistantReply,
+  });
+});
 
 // DELETE: Delete a conversation
-export async function DELETE(req: NextRequest) {
-  try {
-    const user = await getAuthUser(req);
-    if (!user) return jsonError("Unauthorized", 401);
+export const DELETE = createHandler({ rateLimit: "write" }, async (req: NextRequest, { user }) => {
+  const { searchParams } = new URL(req.url);
+  const id = searchParams.get("id");
+  if (!id) return jsonError("Conversation ID required", 400);
 
-    const { searchParams } = new URL(req.url);
-    const id = searchParams.get("id");
-    if (!id) return jsonError("Conversation ID required", 400);
+  const convo = await prisma.chatBotConversation.findFirst({
+    where: { id, userId: user.id },
+  });
+  if (!convo) return jsonError("Conversation not found", 404);
 
-    const convo = await prisma.chatBotConversation.findFirst({
-      where: { id, userId: user.id },
-    });
-    if (!convo) return jsonError("Conversation not found", 404);
-
-    await prisma.chatBotConversation.delete({ where: { id } });
-    return jsonOk({ success: true });
-  } catch (error) {
-    console.error("ChatBot DELETE error:", error);
-    return jsonError("Internal server error", 500);
-  }
-}
+  await prisma.chatBotConversation.delete({ where: { id } });
+  return jsonOk({ success: true });
+});
 
 function getOfflineResponse(message: string, role: string, name: string): string {
   const lower = message.toLowerCase();

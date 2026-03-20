@@ -1,6 +1,6 @@
 import { NextRequest } from "next/server";
 import prisma from "@/lib/prisma";
-import { jsonOk, jsonError, getAuthUser } from "@/lib/api-utils";
+import { createHandler, jsonOk, jsonError } from "@/lib/create-handler";
 import { sendEmail, invoiceEmailHtml } from "@/lib/email";
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
@@ -192,348 +192,332 @@ function getTemplate(templateName: string, params: TemplateParams): { subject: s
 
 // ─── GET: Email history + analytics ──────────────────────────────────────────
 
-export async function GET(req: NextRequest) {
-  try {
-    const user = await getAuthUser(req);
-    if (!user) return jsonError("Unauthorized", 401);
+export const GET = createHandler({}, async (req: NextRequest, { user }) => {
+  const { searchParams } = new URL(req.url);
+  const action = searchParams.get("action");
 
-    const { searchParams } = new URL(req.url);
-    const action = searchParams.get("action");
+  // ── Email history (all roles) ──
+  if (!action || action === "history") {
+    const page = Math.max(1, parseInt(searchParams.get("page") || "1"));
+    const pageSize = Math.min(100, Math.max(1, parseInt(searchParams.get("pageSize") || "50")));
+    const typeFilter = searchParams.get("type");
+    const folder = searchParams.get("folder") || "sent";
 
-    // ── Email history (all roles) ──
-    if (!action || action === "history") {
-      const page = Math.max(1, parseInt(searchParams.get("page") || "1"));
-      const pageSize = Math.min(100, Math.max(1, parseInt(searchParams.get("pageSize") || "50")));
-      const typeFilter = searchParams.get("type");
-      const folder = searchParams.get("folder") || "sent";
+    let emailWhere: Record<string, unknown>;
 
-      let emailWhere: Record<string, unknown>;
+    if (folder === "inbox") {
+      // All users can see emails sent TO them
+      emailWhere = { toEmail: { contains: user.email } };
+    } else {
+      // Sent folder: emails sent BY this user
+      emailWhere = { fromId: user.id };
+    }
 
-      if (folder === "inbox") {
-        // All users can see emails sent TO them
-        emailWhere = { toEmail: { contains: user.email } };
-      } else {
-        // Sent folder: emails sent BY this user
-        emailWhere = { fromId: user.id };
-      }
+    if (typeFilter) emailWhere.type = typeFilter;
 
-      if (typeFilter) emailWhere.type = typeFilter;
-
-      const [sentEmails, totalEmails] = await Promise.all([
-        prisma.sentEmail.findMany({
-          where: emailWhere,
-          select: {
-            id: true,
-            fromId: true,
-            toEmail: true,
-            subject: true,
-            body: true,
-            status: true,
-            type: true,
-            relatedId: true,
-            createdAt: true,
-            from: {
-              select: { id: true, firstName: true, lastName: true, email: true },
-            },
+    const [sentEmails, totalEmails] = await Promise.all([
+      prisma.sentEmail.findMany({
+        where: emailWhere,
+        select: {
+          id: true,
+          fromId: true,
+          toEmail: true,
+          subject: true,
+          body: true,
+          status: true,
+          type: true,
+          relatedId: true,
+          createdAt: true,
+          from: {
+            select: { id: true, firstName: true, lastName: true, email: true },
           },
-          orderBy: { createdAt: "desc" },
-          skip: (page - 1) * pageSize,
-          take: pageSize,
-        }),
-        prisma.sentEmail.count({ where: emailWhere }),
-      ]);
-
-      return jsonOk({
-        success: true,
-        data: sentEmails,
-        pagination: {
-          page,
-          pageSize,
-          total: totalEmails,
-          totalPages: Math.ceil(totalEmails / pageSize),
         },
-      });
-    }
+        orderBy: { createdAt: "desc" },
+        skip: (page - 1) * pageSize,
+        take: pageSize,
+      }),
+      prisma.sentEmail.count({ where: emailWhere }),
+    ]);
 
-    // ── Dashboard analytics (ADMIN / CEO only) ──
-    if (action === "analytics") {
-      if (!isExecutive(user.role)) {
-        return jsonError("Only executives can view email analytics", 403);
-      }
-
-      const now = new Date();
-      const thirtyDaysAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
-      const sevenDaysAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
-
-      const [totalAll, totalLast30, totalLast7, byType, byStatus, topSenders] = await Promise.all([
-        prisma.sentEmail.count(),
-        prisma.sentEmail.count({ where: { createdAt: { gte: thirtyDaysAgo } } }),
-        prisma.sentEmail.count({ where: { createdAt: { gte: sevenDaysAgo } } }),
-        prisma.sentEmail.groupBy({
-          by: ["type"],
-          _count: { id: true },
-          orderBy: { _count: { id: "desc" } },
-        }),
-        prisma.sentEmail.groupBy({
-          by: ["status"],
-          _count: { id: true },
-        }),
-        prisma.sentEmail.groupBy({
-          by: ["fromId"],
-          _count: { id: true },
-          orderBy: { _count: { id: "desc" } },
-          take: 10,
-        }),
-      ]);
-
-      // Enrich top senders with user info
-      const senderIds = topSenders.map((s) => s.fromId);
-      const senderUsers = await prisma.user.findMany({
-        where: { id: { in: senderIds } },
-        select: { id: true, firstName: true, lastName: true, email: true, role: true },
-      });
-      const senderMap = Object.fromEntries(senderUsers.map((u) => [u.id, u]));
-
-      const enrichedSenders = topSenders.map((s) => ({
-        user: senderMap[s.fromId] || { id: s.fromId, firstName: "Unknown", lastName: "" },
-        count: s._count.id,
-      }));
-
-      return jsonOk({
-        success: true,
-        data: {
-          totalEmails: totalAll,
-          last30Days: totalLast30,
-          last7Days: totalLast7,
-          byType: byType.map((t) => ({ type: t.type, count: t._count.id })),
-          byStatus: byStatus.map((s) => ({ status: s.status, count: s._count.id })),
-          topSenders: enrichedSenders,
-        },
-      });
-    }
-
-    // ── List available templates ──
-    if (action === "templates") {
-      const templates = [
-        { id: "welcome", name: "Welcome Email", description: "Onboarding email for new team members", requiredFields: ["recipientName", "loginUrl"] },
-        { id: "invoice", name: "Invoice Email", description: "Send invoice to clients", requiredFields: ["invoiceNumber", "total", "currency"] },
-        { id: "leave_approval", name: "Leave Approval/Rejection", description: "Notify employee of leave decision", requiredFields: ["approved", "leaveType", "startDate", "endDate"] },
-        { id: "task_assigned", name: "Task Assignment", description: "Notify team member of new task", requiredFields: ["taskTitle"] },
-        { id: "payroll_processed", name: "Payroll Processed", description: "Notify employee of salary processing", requiredFields: ["month", "year", "totalPay"] },
-      ];
-
-      return jsonOk({ success: true, data: templates });
-    }
-
-    return jsonError("Invalid action", 400);
-  } catch (error) {
-    console.error("Email GET error:", error);
-    return jsonError("Internal server error", 500);
+    return jsonOk({
+      success: true,
+      data: sentEmails,
+      pagination: {
+        page,
+        pageSize,
+        total: totalEmails,
+        totalPages: Math.ceil(totalEmails / pageSize),
+      },
+    });
   }
-}
+
+  // ── Dashboard analytics (ADMIN / CEO only) ──
+  if (action === "analytics") {
+    if (!isExecutive(user.role)) {
+      return jsonError("Only executives can view email analytics", 403);
+    }
+
+    const now = new Date();
+    const thirtyDaysAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+    const sevenDaysAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+
+    const [totalAll, totalLast30, totalLast7, byType, byStatus, topSenders] = await Promise.all([
+      prisma.sentEmail.count(),
+      prisma.sentEmail.count({ where: { createdAt: { gte: thirtyDaysAgo } } }),
+      prisma.sentEmail.count({ where: { createdAt: { gte: sevenDaysAgo } } }),
+      prisma.sentEmail.groupBy({
+        by: ["type"],
+        _count: { id: true },
+        orderBy: { _count: { id: "desc" } },
+      }),
+      prisma.sentEmail.groupBy({
+        by: ["status"],
+        _count: { id: true },
+      }),
+      prisma.sentEmail.groupBy({
+        by: ["fromId"],
+        _count: { id: true },
+        orderBy: { _count: { id: "desc" } },
+        take: 10,
+      }),
+    ]);
+
+    // Enrich top senders with user info
+    const senderIds = topSenders.map((s) => s.fromId);
+    const senderUsers = await prisma.user.findMany({
+      where: { id: { in: senderIds } },
+      select: { id: true, firstName: true, lastName: true, email: true, role: true },
+    });
+    const senderMap = Object.fromEntries(senderUsers.map((u) => [u.id, u]));
+
+    const enrichedSenders = topSenders.map((s) => ({
+      user: senderMap[s.fromId] || { id: s.fromId, firstName: "Unknown", lastName: "" },
+      count: s._count.id,
+    }));
+
+    return jsonOk({
+      success: true,
+      data: {
+        totalEmails: totalAll,
+        last30Days: totalLast30,
+        last7Days: totalLast7,
+        byType: byType.map((t) => ({ type: t.type, count: t._count.id })),
+        byStatus: byStatus.map((s) => ({ status: s.status, count: s._count.id })),
+        topSenders: enrichedSenders,
+      },
+    });
+  }
+
+  // ── List available templates ──
+  if (action === "templates") {
+    const templates = [
+      { id: "welcome", name: "Welcome Email", description: "Onboarding email for new team members", requiredFields: ["recipientName", "loginUrl"] },
+      { id: "invoice", name: "Invoice Email", description: "Send invoice to clients", requiredFields: ["invoiceNumber", "total", "currency"] },
+      { id: "leave_approval", name: "Leave Approval/Rejection", description: "Notify employee of leave decision", requiredFields: ["approved", "leaveType", "startDate", "endDate"] },
+      { id: "task_assigned", name: "Task Assignment", description: "Notify team member of new task", requiredFields: ["taskTitle"] },
+      { id: "payroll_processed", name: "Payroll Processed", description: "Notify employee of salary processing", requiredFields: ["month", "year", "totalPay"] },
+    ];
+
+    return jsonOk({ success: true, data: templates });
+  }
+
+  return jsonError("Invalid action", 400);
+});
 
 // ─── POST ────────────────────────────────────────────────────────────────────
 
-export async function POST(req: NextRequest) {
-  try {
-    const user = await getAuthUser(req);
-    if (!user) return jsonError("Unauthorized", 401);
+export const POST = createHandler({ rateLimit: "write" }, async (req: NextRequest, { user }) => {
+  const body = await req.json();
+  const { action } = body;
 
-    const body = await req.json();
-    const { action } = body;
+  if (!action) return jsonError("action is required", 400);
 
-    if (!action) return jsonError("action is required", 400);
+  // ─── Send Invoice ────────────────────────────────────────────────────────
+  if (action === "sendInvoice") {
+    // ADMIN, CEO, CFO, or managers can send invoices
+    if (!isExecutive(user.role) && !isManager(user.role)) {
+      return jsonError("Only executives or managers can send invoices", 403);
+    }
 
-    // ─── Send Invoice ────────────────────────────────────────────────────────
-    if (action === "sendInvoice") {
-      // ADMIN, CEO, CFO, or managers can send invoices
-      if (!isExecutive(user.role) && !isManager(user.role)) {
-        return jsonError("Only executives or managers can send invoices", 403);
-      }
+    const { invoiceId } = body;
+    if (!invoiceId) return jsonError("invoiceId is required", 400);
 
-      const { invoiceId } = body;
-      if (!invoiceId) return jsonError("invoiceId is required", 400);
+    const invoice = await prisma.invoice.findUnique({
+      where: { id: invoiceId },
+      include: {
+        createdBy: { select: { firstName: true, lastName: true } },
+      },
+    });
 
-      const invoice = await prisma.invoice.findUnique({
+    if (!invoice) return jsonError("Invoice not found", 404);
+    if (!invoice.clientEmail) return jsonError("Invoice has no client email address", 400);
+
+    const html = invoiceEmailHtml({
+      invoiceNumber: invoice.invoiceNumber,
+      clientName: invoice.clientName,
+      amount: `${invoice.currency} ${invoice.total}`,
+      dueDate: invoice.dueDate ? invoice.dueDate.toLocaleDateString() : "On receipt",
+    });
+
+    const result = await sendEmail(
+      invoice.clientEmail,
+      `Invoice ${invoice.invoiceNumber} from KnowAI`,
+      html,
+    );
+
+    await prisma.sentEmail.create({
+      data: {
+        fromId: user.id,
+        toEmail: invoice.clientEmail,
+        subject: `Invoice ${invoice.invoiceNumber} from KnowAI`,
+        body: html,
+        status: "SENT",
+        type: "INVOICE",
+        relatedId: invoiceId,
+      },
+    });
+
+    if (invoice.status === "DRAFT") {
+      await prisma.invoice.update({
         where: { id: invoiceId },
-        include: {
-          createdBy: { select: { firstName: true, lastName: true } },
-        },
-      });
-
-      if (!invoice) return jsonError("Invoice not found", 404);
-      if (!invoice.clientEmail) return jsonError("Invoice has no client email address", 400);
-
-      const html = invoiceEmailHtml({
-        invoiceNumber: invoice.invoiceNumber,
-        clientName: invoice.clientName,
-        amount: `${invoice.currency} ${invoice.total}`,
-        dueDate: invoice.dueDate ? invoice.dueDate.toLocaleDateString() : "On receipt",
-      });
-
-      const result = await sendEmail(
-        invoice.clientEmail,
-        `Invoice ${invoice.invoiceNumber} from KnowAI`,
-        html,
-      );
-
-      await prisma.sentEmail.create({
-        data: {
-          fromId: user.id,
-          toEmail: invoice.clientEmail,
-          subject: `Invoice ${invoice.invoiceNumber} from KnowAI`,
-          body: html,
-          status: "SENT",
-          type: "INVOICE",
-          relatedId: invoiceId,
-        },
-      });
-
-      if (invoice.status === "DRAFT") {
-        await prisma.invoice.update({
-          where: { id: invoiceId },
-          data: { status: "SENT" },
-        });
-      }
-
-      return jsonOk({
-        success: true,
-        message: `Invoice sent to ${invoice.clientEmail}`,
-        messageId: result.messageId,
+        data: { status: "SENT" },
       });
     }
 
-    // ─── Send Custom Email (all roles) ───────────────────────────────────────
-    if (action === "sendCustom") {
-      const { to, subject, body: emailBody } = body;
-      if (!to || !subject || !emailBody) {
-        return jsonError("to, subject, and body are required", 400);
-      }
-
-      const html = buildEmailHtml({
-        heading: "KnowAI ERP",
-        bodyContent: emailBody,
-        footerText: `Sent by ${user.firstName} ${user.lastName} via KnowAI ERP`,
-      });
-
-      const toStr = Array.isArray(to) ? to.join(", ") : to;
-      const result = await sendEmail(toStr, subject, html);
-
-      await prisma.sentEmail.create({
-        data: {
-          fromId: user.id,
-          toEmail: toStr,
-          subject,
-          body: html,
-          status: "SENT",
-          type: "CUSTOM",
-        },
-      });
-
-      return jsonOk({
-        success: true,
-        message: `Email sent to ${toStr}`,
-        messageId: result.messageId,
-      });
-    }
-
-    // ─── Send Newsletter (ADMIN only) ────────────────────────────────────────
-    if (action === "sendNewsletter") {
-      if (!isExecutive(user.role)) {
-        return jsonError("Only executives can send newsletters", 403);
-      }
-
-      const { subject, body: newsletterBody } = body;
-      if (!subject || !newsletterBody) {
-        return jsonError("subject and body are required", 400);
-      }
-
-      const teamMembers = await prisma.user.findMany({
-        select: { email: true, firstName: true },
-      });
-
-      if (teamMembers.length === 0) {
-        return jsonError("No active team members found", 400);
-      }
-
-      const emails = teamMembers.map((m) => m.email).filter(Boolean);
-
-      const html = buildEmailHtml({
-        heading: "KnowAI ERP",
-        subtitle: "Team Newsletter",
-        bodyContent: newsletterBody,
-        footerText: `Sent by ${user.firstName} ${user.lastName} (${user.role}) via KnowAI ERP`,
-      });
-
-      const result = await sendEmail(emails.join(", "), subject, html);
-
-      await prisma.sentEmail.create({
-        data: {
-          fromId: user.id,
-          toEmail: emails.join(", "),
-          subject,
-          body: html,
-          status: "SENT",
-          type: "NEWSLETTER",
-        },
-      });
-
-      return jsonOk({
-        success: true,
-        message: `Newsletter sent to ${emails.length} team member(s)`,
-        messageId: result.messageId,
-      });
-    }
-
-    // ─── Send from template ──────────────────────────────────────────────────
-    if (action === "sendTemplate") {
-      const { to, templateName, templateParams } = body;
-      if (!to || !templateName) {
-        return jsonError("to and templateName are required", 400);
-      }
-
-      const senderName = `${user.firstName} ${user.lastName}`;
-      const template = getTemplate(templateName, {
-        ...templateParams,
-        senderName,
-      });
-
-      if (!template) {
-        return jsonError(`Unknown template: ${templateName}. Available: welcome, invoice, leave_approval, task_assigned, payroll_processed`, 400);
-      }
-
-      // Permission checks for sensitive templates
-      if (templateName === "payroll_processed" && !isExecutive(user.role) && user.role !== "HR" && !["SR_ACCOUNTANT", "JR_ACCOUNTANT"].includes(user.role)) {
-        return jsonError("Only HR, Accounting, or executives can send payroll emails", 403);
-      }
-      if (templateName === "leave_approval" && !isExecutive(user.role) && !isManager(user.role) && user.role !== "HR") {
-        return jsonError("Only HR, managers, or executives can send leave approval emails", 403);
-      }
-
-      const toStr = Array.isArray(to) ? to.join(", ") : to;
-      const result = await sendEmail(toStr, template.subject, template.html);
-
-      await prisma.sentEmail.create({
-        data: {
-          fromId: user.id,
-          toEmail: toStr,
-          subject: template.subject,
-          body: template.html,
-          status: "SENT",
-          type: templateName.toUpperCase(),
-        },
-      });
-
-      return jsonOk({
-        success: true,
-        message: `Template email (${templateName}) sent to ${toStr}`,
-        messageId: result.messageId,
-      });
-    }
-
-    return jsonError(`Unknown action: ${action}`, 400);
-  } catch (error) {
-    console.error("Email API error:", error);
-    return jsonError("Internal server error", 500);
+    return jsonOk({
+      success: true,
+      message: `Invoice sent to ${invoice.clientEmail}`,
+      messageId: result.messageId,
+    });
   }
-}
+
+  // ─── Send Custom Email (all roles) ───────────────────────────────────────
+  if (action === "sendCustom") {
+    const { to, subject, body: emailBody } = body;
+    if (!to || !subject || !emailBody) {
+      return jsonError("to, subject, and body are required", 400);
+    }
+
+    const html = buildEmailHtml({
+      heading: "KnowAI ERP",
+      bodyContent: emailBody,
+      footerText: `Sent by ${user.firstName} ${user.lastName} via KnowAI ERP`,
+    });
+
+    const toStr = Array.isArray(to) ? to.join(", ") : to;
+    const result = await sendEmail(toStr, subject, html);
+
+    await prisma.sentEmail.create({
+      data: {
+        fromId: user.id,
+        toEmail: toStr,
+        subject,
+        body: html,
+        status: "SENT",
+        type: "CUSTOM",
+      },
+    });
+
+    return jsonOk({
+      success: true,
+      message: `Email sent to ${toStr}`,
+      messageId: result.messageId,
+    });
+  }
+
+  // ─── Send Newsletter (ADMIN only) ────────────────────────────────────────
+  if (action === "sendNewsletter") {
+    if (!isExecutive(user.role)) {
+      return jsonError("Only executives can send newsletters", 403);
+    }
+
+    const { subject, body: newsletterBody } = body;
+    if (!subject || !newsletterBody) {
+      return jsonError("subject and body are required", 400);
+    }
+
+    const teamMembers = await prisma.user.findMany({
+      select: { email: true, firstName: true },
+    });
+
+    if (teamMembers.length === 0) {
+      return jsonError("No active team members found", 400);
+    }
+
+    const emails = teamMembers.map((m) => m.email).filter(Boolean);
+
+    const html = buildEmailHtml({
+      heading: "KnowAI ERP",
+      subtitle: "Team Newsletter",
+      bodyContent: newsletterBody,
+      footerText: `Sent by ${user.firstName} ${user.lastName} (${user.role}) via KnowAI ERP`,
+    });
+
+    const result = await sendEmail(emails.join(", "), subject, html);
+
+    await prisma.sentEmail.create({
+      data: {
+        fromId: user.id,
+        toEmail: emails.join(", "),
+        subject,
+        body: html,
+        status: "SENT",
+        type: "NEWSLETTER",
+      },
+    });
+
+    return jsonOk({
+      success: true,
+      message: `Newsletter sent to ${emails.length} team member(s)`,
+      messageId: result.messageId,
+    });
+  }
+
+  // ─── Send from template ──────────────────────────────────────────────────
+  if (action === "sendTemplate") {
+    const { to, templateName, templateParams } = body;
+    if (!to || !templateName) {
+      return jsonError("to and templateName are required", 400);
+    }
+
+    const senderName = `${user.firstName} ${user.lastName}`;
+    const template = getTemplate(templateName, {
+      ...templateParams,
+      senderName,
+    });
+
+    if (!template) {
+      return jsonError(`Unknown template: ${templateName}. Available: welcome, invoice, leave_approval, task_assigned, payroll_processed`, 400);
+    }
+
+    // Permission checks for sensitive templates
+    if (templateName === "payroll_processed" && !isExecutive(user.role) && user.role !== "HR" && !["SR_ACCOUNTANT", "JR_ACCOUNTANT"].includes(user.role)) {
+      return jsonError("Only HR, Accounting, or executives can send payroll emails", 403);
+    }
+    if (templateName === "leave_approval" && !isExecutive(user.role) && !isManager(user.role) && user.role !== "HR") {
+      return jsonError("Only HR, managers, or executives can send leave approval emails", 403);
+    }
+
+    const toStr = Array.isArray(to) ? to.join(", ") : to;
+    const result = await sendEmail(toStr, template.subject, template.html);
+
+    await prisma.sentEmail.create({
+      data: {
+        fromId: user.id,
+        toEmail: toStr,
+        subject: template.subject,
+        body: template.html,
+        status: "SENT",
+        type: templateName.toUpperCase(),
+      },
+    });
+
+    return jsonOk({
+      success: true,
+      message: `Template email (${templateName}) sent to ${toStr}`,
+      messageId: result.messageId,
+    });
+  }
+
+  return jsonError(`Unknown action: ${action}`, 400);
+});

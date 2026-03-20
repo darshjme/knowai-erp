@@ -1,17 +1,12 @@
-import { NextRequest } from "next/server";
 import prisma from "@/lib/prisma";
-import { jsonOk, jsonError, getAuthUser } from "@/lib/api-utils";
+import { createHandler, jsonOk, jsonError } from "@/lib/create-handler";
+import { hrLeaveActionSchema } from "@/schemas/admin";
 
-export async function GET(req: NextRequest) {
-  try {
-    const user = await getAuthUser(req);
-    if (!user) return jsonError("Unauthorized", 401);
+const HR_ACCESS = ["CTO", "CEO", "CFO", "ADMIN", "HR", "BRAND_FACE"];
 
-    const HR_ACCESS = ["CTO", "CEO", "CFO", "ADMIN", "HR", "BRAND_FACE"];
-    if (!HR_ACCESS.includes(user.role)) {
-      return jsonError("Access denied", 403);
-    }
-
+export const GET = createHandler(
+  { roles: HR_ACCESS },
+  async (req, { user }) => {
     const now = new Date();
     const currentMonth = now.getMonth() + 1;
     const currentYear = now.getFullYear();
@@ -186,29 +181,15 @@ export async function GET(req: NextRequest) {
         employees: allEmployees,
       },
     });
-  } catch (error) {
-    console.error("HR Dashboard GET error:", error);
-    return jsonError("Internal server error", 500);
   }
-}
+);
 
 // ─── PATCH — Quick approve a leave from HR dashboard ─────────────────────────
-export async function PATCH(req: NextRequest) {
-  try {
-    const user = await getAuthUser(req);
-    if (!user) return jsonError("Unauthorized", 401);
 
-    if (user.role !== "HR" && user.role !== "ADMIN") {
-      return jsonError("Only HR or Admin can approve leaves from dashboard", 403);
-    }
-
-    const body = await req.json();
+export const PATCH = createHandler(
+  { roles: ["HR", "ADMIN"], schema: hrLeaveActionSchema, rateLimit: "write" },
+  async (req, { user, body }) => {
     const { leaveId, action } = body;
-
-    if (!leaveId) return jsonError("leaveId is required", 400);
-    if (!action || !["approve", "reject"].includes(action)) {
-      return jsonError('action must be "approve" or "reject"', 400);
-    }
 
     const leave = await prisma.leaveRequest.findUnique({ where: { id: leaveId } });
     if (!leave) return jsonError("Leave request not found", 404);
@@ -239,8 +220,5 @@ export async function PATCH(req: NextRequest) {
     });
 
     return jsonOk({ success: true, data: updated });
-  } catch (error) {
-    console.error("HR PATCH error:", error);
-    return jsonError("Internal server error", 500);
   }
-}
+);

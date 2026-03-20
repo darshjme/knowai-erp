@@ -1,6 +1,7 @@
 import { NextRequest } from "next/server";
 import prisma from "@/lib/prisma";
-import { jsonOk, jsonError, getAuthUser, getAuthFromHeaders } from "@/lib/api-utils";
+import { createHandler, jsonOk, jsonError } from "@/lib/create-handler";
+import { getAuthFromHeaders } from "@/lib/api-utils";
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
@@ -131,73 +132,170 @@ async function getTaskDeadlineEvents(userIds: string[], dateFilter?: { gte?: Dat
 
 // ─── GET ─────────────────────────────────────────────────────────────────────
 
-export async function GET(req: NextRequest) {
-  try {
-    const user = await getAuthUser(req);
-    if (!user) return jsonError("Unauthorized", 401);
+export const GET = createHandler({}, async (req: NextRequest, { user }) => {
+  const { searchParams } = new URL(req.url);
+  const startDate = searchParams.get("startDate");
+  const endDate = searchParams.get("endDate");
+  const calendarType = searchParams.get("type");
+  const view = searchParams.get("view"); // personal, team, company
+  const includeTaskDeadlines = searchParams.get("includeTaskDeadlines") !== "false"; // default true
 
-    const { searchParams } = new URL(req.url);
-    const startDate = searchParams.get("startDate");
-    const endDate = searchParams.get("endDate");
-    const calendarType = searchParams.get("type");
-    const view = searchParams.get("view"); // personal, team, company
-    const includeTaskDeadlines = searchParams.get("includeTaskDeadlines") !== "false"; // default true
+  // Build date filter
+  const dateFilter: { gte?: Date; lte?: Date } = {};
+  if (startDate) {
+    const parsed = new Date(startDate);
+    if (!isNaN(parsed.getTime())) dateFilter.gte = parsed;
+  }
+  if (endDate) {
+    const parsed = new Date(endDate);
+    if (!isNaN(parsed.getTime())) dateFilter.lte = parsed;
+  }
 
-    // Build date filter
-    const dateFilter: { gte?: Date; lte?: Date } = {};
-    if (startDate) {
-      const parsed = new Date(startDate);
-      if (!isNaN(parsed.getTime())) dateFilter.gte = parsed;
-    }
-    if (endDate) {
-      const parsed = new Date(endDate);
-      if (!isNaN(parsed.getTime())) dateFilter.lte = parsed;
-    }
+  const where: Record<string, unknown> = {};
 
-    const where: Record<string, unknown> = {};
+  if (dateFilter.gte || dateFilter.lte) {
+    where.startDate = {};
+    if (dateFilter.gte) (where.startDate as Record<string, unknown>).gte = dateFilter.gte;
+    if (dateFilter.lte) (where.startDate as Record<string, unknown>).lte = dateFilter.lte;
+  }
 
-    if (dateFilter.gte || dateFilter.lte) {
-      where.startDate = {};
-      if (dateFilter.gte) (where.startDate as Record<string, unknown>).gte = dateFilter.gte;
-      if (dateFilter.lte) (where.startDate as Record<string, unknown>).lte = dateFilter.lte;
-    }
+  if (calendarType) where.calendarType = calendarType;
 
-    if (calendarType) where.calendarType = calendarType;
+  // ── Determine visibility scope based on role + view param ──
+  const requestedView = view || "auto";
+  let visibleUserIds: string[] = [user.id];
+  let effectiveView = "personal";
 
-    // ── Determine visibility scope based on role + view param ──
-    const requestedView = view || "auto";
-    let visibleUserIds: string[] = [user.id];
-    let effectiveView = "personal";
-
-    if (requestedView === "company" || (requestedView === "auto" && isExecutive(user.role))) {
-      // CEO/CTO/ADMIN/CFO see company-wide calendar
-      if (isExecutive(user.role)) {
-        effectiveView = "company";
-        // No user filter - see all events
-      } else {
-        // Non-executives requesting company view fall back to personal
-        where.createdById = user.id;
-        effectiveView = "personal";
-      }
-    } else if (requestedView === "team" || (requestedView === "auto" && isManager(user.role))) {
-      // Managers see team calendar
-      if (isManager(user.role) || isExecutive(user.role)) {
-        const teamIds = await getTeamMemberIds(user.id, user.role, user.workspaceId);
-        visibleUserIds = [user.id, ...teamIds];
-        where.createdById = { in: visibleUserIds };
-        effectiveView = "team";
-      } else {
-        where.createdById = user.id;
-        effectiveView = "personal";
-      }
+  if (requestedView === "company" || (requestedView === "auto" && isExecutive(user.role))) {
+    // CEO/CTO/ADMIN/CFO see company-wide calendar
+    if (isExecutive(user.role)) {
+      effectiveView = "company";
+      // No user filter - see all events
     } else {
-      // Personal view: only own events
+      // Non-executives requesting company view fall back to personal
       where.createdById = user.id;
       effectiveView = "personal";
     }
+  } else if (requestedView === "team" || (requestedView === "auto" && isManager(user.role))) {
+    // Managers see team calendar
+    if (isManager(user.role) || isExecutive(user.role)) {
+      const teamIds = await getTeamMemberIds(user.id, user.role, user.workspaceId);
+      visibleUserIds = [user.id, ...teamIds];
+      where.createdById = { in: visibleUserIds };
+      effectiveView = "team";
+    } else {
+      where.createdById = user.id;
+      effectiveView = "personal";
+    }
+  } else {
+    // Personal view: only own events
+    where.createdById = user.id;
+    effectiveView = "personal";
+  }
 
-    const events = await prisma.calendarEvent.findMany({
-      where,
+  const events = await prisma.calendarEvent.findMany({
+    where,
+    include: {
+      createdBy: {
+        select: {
+          id: true,
+          firstName: true,
+          lastName: true,
+          email: true,
+          avatar: true,
+        },
+      },
+    },
+    orderBy: { startDate: "asc" },
+  });
+
+  // ── Task deadline integration ──
+  let taskDeadlines: any[] = [];
+  if (includeTaskDeadlines) {
+    const taskDateFilter: { gte?: Date; lte?: Date } = {};
+    if (dateFilter.gte) taskDateFilter.gte = dateFilter.gte;
+    if (dateFilter.lte) taskDateFilter.lte = dateFilter.lte;
+
+    if (effectiveView === "company") {
+      // Get all users for task deadlines
+      const allUsers = await prisma.user.findMany({
+        where: { workspaceId: user.workspaceId },
+        select: { id: true },
+      });
+      taskDeadlines = await getTaskDeadlineEvents(
+        allUsers.map((u) => u.id),
+        Object.keys(taskDateFilter).length > 0 ? taskDateFilter : undefined
+      );
+    } else if (effectiveView === "team") {
+      taskDeadlines = await getTaskDeadlineEvents(
+        visibleUserIds,
+        Object.keys(taskDateFilter).length > 0 ? taskDateFilter : undefined
+      );
+    } else {
+      taskDeadlines = await getTaskDeadlineEvents(
+        [user.id],
+        Object.keys(taskDateFilter).length > 0 ? taskDateFilter : undefined
+      );
+    }
+  }
+
+  // ── Combine events and task deadlines ──
+  const calendarEvents = events.map((e) => ({
+    ...e,
+    isTaskDeadline: false,
+  }));
+
+  const allEvents = [...calendarEvents, ...taskDeadlines].sort(
+    (a, b) => new Date(a.startDate!).getTime() - new Date(b.startDate!).getTime()
+  );
+
+  return jsonOk({
+    success: true,
+    data: allEvents,
+    meta: {
+      view: effectiveView,
+      totalCalendarEvents: events.length,
+      totalTaskDeadlines: taskDeadlines.length,
+      totalCombined: allEvents.length,
+    },
+  });
+});
+
+// ─── POST ────────────────────────────────────────────────────────────────────
+
+export const POST = createHandler({ rateLimit: "write" }, async (req: NextRequest, { user }) => {
+  const body = await req.json();
+  const { action } = body;
+
+  // ── Default: create event (backward compatible) ──
+  if (!action || action === "create") {
+    const { title, description, startDate: startDateStr, endDate: endDateStr, color, calendarType: eventType, attendeeIds } = body;
+
+    if (!title || !startDateStr || !endDateStr) {
+      return jsonError("Title, startDate, and endDate are required", 400);
+    }
+
+    const start = new Date(startDateStr);
+    const end = new Date(endDateStr);
+
+    if (isNaN(start.getTime()) || isNaN(end.getTime())) {
+      return jsonError("Invalid date format for startDate or endDate", 400);
+    }
+
+    if (end <= start) {
+      return jsonError("endDate must be after startDate", 400);
+    }
+
+    const event = await prisma.calendarEvent.create({
+      data: {
+        title,
+        description: description || null,
+        startDate: start,
+        endDate: end,
+        color: color || null,
+        calendarType: eventType || null,
+        createdById: user.id,
+      },
       include: {
         createdBy: {
           select: {
@@ -209,220 +307,107 @@ export async function GET(req: NextRequest) {
           },
         },
       },
-      orderBy: { startDate: "asc" },
     });
 
-    // ── Task deadline integration ──
-    let taskDeadlines: any[] = [];
-    if (includeTaskDeadlines) {
-      const taskDateFilter: { gte?: Date; lte?: Date } = {};
-      if (dateFilter.gte) taskDateFilter.gte = dateFilter.gte;
-      if (dateFilter.lte) taskDateFilter.lte = dateFilter.lte;
+    // If attendeeIds provided, create events for each attendee as well
+    if (attendeeIds && Array.isArray(attendeeIds) && attendeeIds.length > 0) {
+      const attendeeEvents = attendeeIds
+        .filter((id: string) => id !== user.id)
+        .map((attendeeId: string) => ({
+          title: `[Invited] ${title}`,
+          description: `Invited by ${user.firstName} ${user.lastName}. ${description || ""}`.trim(),
+          startDate: start,
+          endDate: end,
+          color: color || "#6366f1",
+          calendarType: "meeting",
+          createdById: attendeeId,
+        }));
 
-      if (effectiveView === "company") {
-        // Get all users for task deadlines
-        const allUsers = await prisma.user.findMany({
-          where: { workspaceId: user.workspaceId },
-          select: { id: true },
+      if (attendeeEvents.length > 0) {
+        await prisma.calendarEvent.createMany({
+          data: attendeeEvents,
         });
-        taskDeadlines = await getTaskDeadlineEvents(
-          allUsers.map((u) => u.id),
-          Object.keys(taskDateFilter).length > 0 ? taskDateFilter : undefined
-        );
-      } else if (effectiveView === "team") {
-        taskDeadlines = await getTaskDeadlineEvents(
-          visibleUserIds,
-          Object.keys(taskDateFilter).length > 0 ? taskDateFilter : undefined
-        );
-      } else {
-        taskDeadlines = await getTaskDeadlineEvents(
-          [user.id],
-          Object.keys(taskDateFilter).length > 0 ? taskDateFilter : undefined
-        );
       }
     }
 
-    // ── Combine events and task deadlines ──
-    const calendarEvents = events.map((e) => ({
-      ...e,
-      isTaskDeadline: false,
-    }));
+    return jsonOk({ success: true, data: event }, 201);
+  }
 
-    const allEvents = [...calendarEvents, ...taskDeadlines].sort(
-      (a, b) => new Date(a.startDate!).getTime() - new Date(b.startDate!).getTime()
-    );
+  // ── Get upcoming deadlines summary ──
+  if (action === "deadlines-summary") {
+    const daysAhead = parseInt(body.daysAhead || "7", 10);
+    const now = new Date();
+    const futureDate = new Date(now.getTime() + daysAhead * 24 * 60 * 60 * 1000);
+
+    let userIdsForTasks = [user.id];
+
+    if (isExecutive(user.role)) {
+      const allUsers = await prisma.user.findMany({
+        where: { workspaceId: user.workspaceId },
+        select: { id: true },
+      });
+      userIdsForTasks = allUsers.map((u) => u.id);
+    } else if (isManager(user.role)) {
+      const teamIds = await getTeamMemberIds(user.id, user.role, user.workspaceId);
+      userIdsForTasks = [user.id, ...teamIds];
+    }
+
+    const upcomingTasks = await prisma.task.findMany({
+      where: {
+        assigneeId: { in: userIdsForTasks },
+        dueDate: { gte: now, lte: futureDate },
+        status: { not: "COMPLETED" },
+      },
+      select: {
+        id: true,
+        title: true,
+        dueDate: true,
+        priority: true,
+        status: true,
+        assignee: { select: { id: true, firstName: true, lastName: true } },
+        project: { select: { id: true, name: true } },
+      },
+      orderBy: { dueDate: "asc" },
+    });
+
+    const overdueTasks = await prisma.task.findMany({
+      where: {
+        assigneeId: { in: userIdsForTasks },
+        dueDate: { lt: now },
+        status: { not: "COMPLETED" },
+      },
+      select: {
+        id: true,
+        title: true,
+        dueDate: true,
+        priority: true,
+        status: true,
+        assignee: { select: { id: true, firstName: true, lastName: true } },
+        project: { select: { id: true, name: true } },
+      },
+      orderBy: { dueDate: "asc" },
+    });
 
     return jsonOk({
       success: true,
-      data: allEvents,
-      meta: {
-        view: effectiveView,
-        totalCalendarEvents: events.length,
-        totalTaskDeadlines: taskDeadlines.length,
-        totalCombined: allEvents.length,
+      data: {
+        upcoming: upcomingTasks,
+        overdue: overdueTasks,
+        summary: {
+          upcomingCount: upcomingTasks.length,
+          overdueCount: overdueTasks.length,
+          urgentCount: [...upcomingTasks, ...overdueTasks].filter((t) => t.priority === "URGENT").length,
+          highCount: [...upcomingTasks, ...overdueTasks].filter((t) => t.priority === "HIGH").length,
+        },
       },
     });
-  } catch (error) {
-    console.error("Calendar GET error:", error);
-    return jsonError("Internal server error", 500);
   }
-}
 
-// ─── POST ────────────────────────────────────────────────────────────────────
-
-export async function POST(req: NextRequest) {
-  try {
-    const user = await getAuthUser(req);
-    if (!user) return jsonError("Unauthorized", 401);
-
-    const body = await req.json();
-    const { action } = body;
-
-    // ── Default: create event (backward compatible) ──
-    if (!action || action === "create") {
-      const { title, description, startDate: startDateStr, endDate: endDateStr, color, calendarType: eventType, attendeeIds } = body;
-
-      if (!title || !startDateStr || !endDateStr) {
-        return jsonError("Title, startDate, and endDate are required", 400);
-      }
-
-      const start = new Date(startDateStr);
-      const end = new Date(endDateStr);
-
-      if (isNaN(start.getTime()) || isNaN(end.getTime())) {
-        return jsonError("Invalid date format for startDate or endDate", 400);
-      }
-
-      if (end <= start) {
-        return jsonError("endDate must be after startDate", 400);
-      }
-
-      const event = await prisma.calendarEvent.create({
-        data: {
-          title,
-          description: description || null,
-          startDate: start,
-          endDate: end,
-          color: color || null,
-          calendarType: eventType || null,
-          createdById: user.id,
-        },
-        include: {
-          createdBy: {
-            select: {
-              id: true,
-              firstName: true,
-              lastName: true,
-              email: true,
-              avatar: true,
-            },
-          },
-        },
-      });
-
-      // If attendeeIds provided, create events for each attendee as well
-      // (or create notification - depending on your notification system)
-      if (attendeeIds && Array.isArray(attendeeIds) && attendeeIds.length > 0) {
-        const attendeeEvents = attendeeIds
-          .filter((id: string) => id !== user.id)
-          .map((attendeeId: string) => ({
-            title: `[Invited] ${title}`,
-            description: `Invited by ${user.firstName} ${user.lastName}. ${description || ""}`.trim(),
-            startDate: start,
-            endDate: end,
-            color: color || "#6366f1",
-            calendarType: "meeting",
-            createdById: attendeeId,
-          }));
-
-        if (attendeeEvents.length > 0) {
-          await prisma.calendarEvent.createMany({
-            data: attendeeEvents,
-          });
-        }
-      }
-
-      return jsonOk({ success: true, data: event }, 201);
-    }
-
-    // ── Get upcoming deadlines summary ──
-    if (action === "deadlines-summary") {
-      const daysAhead = parseInt(body.daysAhead || "7", 10);
-      const now = new Date();
-      const futureDate = new Date(now.getTime() + daysAhead * 24 * 60 * 60 * 1000);
-
-      let userIdsForTasks = [user.id];
-
-      if (isExecutive(user.role)) {
-        const allUsers = await prisma.user.findMany({
-          where: { workspaceId: user.workspaceId },
-          select: { id: true },
-        });
-        userIdsForTasks = allUsers.map((u) => u.id);
-      } else if (isManager(user.role)) {
-        const teamIds = await getTeamMemberIds(user.id, user.role, user.workspaceId);
-        userIdsForTasks = [user.id, ...teamIds];
-      }
-
-      const upcomingTasks = await prisma.task.findMany({
-        where: {
-          assigneeId: { in: userIdsForTasks },
-          dueDate: { gte: now, lte: futureDate },
-          status: { not: "COMPLETED" },
-        },
-        select: {
-          id: true,
-          title: true,
-          dueDate: true,
-          priority: true,
-          status: true,
-          assignee: { select: { id: true, firstName: true, lastName: true } },
-          project: { select: { id: true, name: true } },
-        },
-        orderBy: { dueDate: "asc" },
-      });
-
-      const overdueTasks = await prisma.task.findMany({
-        where: {
-          assigneeId: { in: userIdsForTasks },
-          dueDate: { lt: now },
-          status: { not: "COMPLETED" },
-        },
-        select: {
-          id: true,
-          title: true,
-          dueDate: true,
-          priority: true,
-          status: true,
-          assignee: { select: { id: true, firstName: true, lastName: true } },
-          project: { select: { id: true, name: true } },
-        },
-        orderBy: { dueDate: "asc" },
-      });
-
-      return jsonOk({
-        success: true,
-        data: {
-          upcoming: upcomingTasks,
-          overdue: overdueTasks,
-          summary: {
-            upcomingCount: upcomingTasks.length,
-            overdueCount: overdueTasks.length,
-            urgentCount: [...upcomingTasks, ...overdueTasks].filter((t) => t.priority === "URGENT").length,
-            highCount: [...upcomingTasks, ...overdueTasks].filter((t) => t.priority === "HIGH").length,
-          },
-        },
-      });
-    }
-
-    return jsonError(`Unknown action: ${action}`, 400);
-  } catch (error) {
-    console.error("Calendar POST error:", error);
-    return jsonError("Internal server error", 500);
-  }
-}
+  return jsonError(`Unknown action: ${action}`, 400);
+});
 
 // ─── PATCH ───────────────────────────────────────────────────────────────────
+// Note: PATCH and DELETE use getAuthFromHeaders for legacy reasons (lighter auth check).
 
 export async function PATCH(req: NextRequest) {
   try {

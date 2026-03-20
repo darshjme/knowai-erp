@@ -1,42 +1,15 @@
-import { NextRequest } from "next/server";
 import bcrypt from "bcryptjs";
 import prisma from "@/lib/prisma";
-// auth utilities not needed here — signup does not issue tokens
-import { jsonOk, jsonError, getAuthUser } from "@/lib/api-utils";
-
-// All 16 valid roles in the system
-const VALID_ROLES = [
-  "CEO", "CTO", "CFO", "BRAND_FACE", "ADMIN", "HR",
-  "PRODUCT_OWNER", "BRAND_PARTNER",
-  "SR_ACCOUNTANT", "JR_ACCOUNTANT",
-  "SR_DEVELOPER", "JR_DEVELOPER",
-  "SR_GRAPHIC_DESIGNER", "JR_GRAPHIC_DESIGNER",
-  "SR_EDITOR", "JR_EDITOR",
-  "SR_CONTENT_STRATEGIST", "JR_CONTENT_STRATEGIST",
-  "SR_SCRIPT_WRITER", "JR_SCRIPT_WRITER",
-  "SR_BRAND_STRATEGIST", "JR_BRAND_STRATEGIST",
-  "DRIVER", "GUY", "OFFICE_BOY",
-] as const;
+import { createHandler, jsonOk, jsonError } from "@/lib/create-handler";
+import { adminCreateUserSchema } from "@/schemas/auth";
+import { sendEmail, welcomeEmailHtml } from "@/lib/email";
 
 // Only these roles can create new users (no public signup)
 const ALLOWED_CREATOR_ROLES = ["ADMIN", "HR", "CEO"];
 
-export async function POST(req: NextRequest) {
-  try {
-    // ── Authentication: caller must be logged in ──
-    const authUser = await getAuthUser(req);
-    if (!authUser) {
-      return jsonError("Authentication required. Only ADMIN or HR can create users.", 401);
-    }
-
-    // ── Authorization: only ADMIN, HR, or CEO can create users ──
-    if (!ALLOWED_CREATOR_ROLES.includes(authUser.role)) {
-      return jsonError(
-        "Access denied. Only ADMIN, HR, or CEO roles can create new users.",
-        403
-      );
-    }
-
+export const POST = createHandler(
+  { schema: adminCreateUserSchema, roles: ALLOWED_CREATOR_ROLES, rateLimit: "write" },
+  async (_req, { user: authUser, body }) => {
     const {
       email,
       password,
@@ -49,30 +22,10 @@ export async function POST(req: NextRequest) {
       salary,
       reportingTo,
       workspaceId,
-    } = await req.json();
-
-    // ── Validation ──
-    if (!email || !password || !firstName || !lastName) {
-      return jsonError("email, password, firstName, and lastName are required", 400);
-    }
-
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(email)) {
-      return jsonError("Invalid email format", 400);
-    }
-
-    if (password.length < 8) {
-      return jsonError("Password must be at least 8 characters", 400);
-    }
+    } = body;
 
     // Validate role if provided
     const assignedRole = role || "GUY";
-    if (!VALID_ROLES.includes(assignedRole)) {
-      return jsonError(
-        `Invalid role. Must be one of: ${VALID_ROLES.join(", ")}`,
-        400
-      );
-    }
 
     // Prevent non-CEO from assigning C-suite roles
     const C_SUITE_ROLES = ["CEO", "CTO", "CFO"];
@@ -90,12 +43,12 @@ export async function POST(req: NextRequest) {
 
     const hashedPassword = await bcrypt.hash(password, 12);
 
-    // Auto-generate companyEmail: firstname.lastname@knowai.com
-    const baseCompanyEmail = `${firstName.toLowerCase().replace(/\s+/g, '')}.${lastName.toLowerCase().replace(/\s+/g, '')}@knowai.com`;
+    // Auto-generate companyEmail: firstname.lastname@knowai.biz
+    const baseCompanyEmail = `${firstName.toLowerCase().replace(/\s+/g, '')}.${lastName.toLowerCase().replace(/\s+/g, '')}@knowai.biz`;
     let companyEmail = baseCompanyEmail;
     let emailSuffix = 2;
     while (await prisma.user.findUnique({ where: { companyEmail } })) {
-      companyEmail = `${firstName.toLowerCase().replace(/\s+/g, '')}.${lastName.toLowerCase().replace(/\s+/g, '')}${emailSuffix}@knowai.com`;
+      companyEmail = `${firstName.toLowerCase().replace(/\s+/g, '')}.${lastName.toLowerCase().replace(/\s+/g, '')}${emailSuffix}@knowai.biz`;
       emailSuffix++;
     }
 
@@ -141,6 +94,15 @@ export async function POST(req: NextRequest) {
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const { password: _, ...userWithoutPassword } = user;
 
+    // Fire-and-forget: send welcome email to employee's personal email
+    sendEmail(
+      email,
+      "Welcome to KnowAI — Your Account is Ready",
+      welcomeEmailHtml(`${firstName} ${lastName}`, companyEmail, password)
+    ).catch((err) => {
+      console.error(`[SIGNUP] Failed to send welcome email to ${email}:`, err);
+    });
+
     // Return the created user (no auto-login token — the new user is not the caller)
     return jsonOk(
       {
@@ -150,8 +112,5 @@ export async function POST(req: NextRequest) {
       },
       201
     );
-  } catch (error) {
-    console.error("Signup error:", error);
-    return jsonError("Internal server error", 500);
   }
-}
+);

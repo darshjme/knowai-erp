@@ -1,51 +1,33 @@
-import { NextRequest, NextResponse } from "next/server";
-import { getAuthFromHeaders, jsonError } from "@/lib/api-utils";
+import { NextRequest } from "next/server";
+import { createHandler, jsonOk, jsonError } from "@/lib/create-handler";
 import { webhooksDB } from "@/lib/webhooks-store";
+import { z } from "zod";
+
+const createWebhookSchema = z.object({
+  url: z.string().url("Valid URL is required"),
+  events: z.array(z.string()).min(1, "At least one event is required"),
+  active: z.boolean().optional().default(true),
+});
 
 // GET /api/webhooks - List all webhooks
-export async function GET(request: NextRequest) {
-  const auth = getAuthFromHeaders(request);
-  if (!auth) return jsonError("Unauthorized", 401);
-  if (auth.role !== "ADMIN") return jsonError("Forbidden: Admin access required", 403);
-
-  return NextResponse.json({
-    success: true,
-    data: webhooksDB.getAll(),
-  });
-}
+export const GET = createHandler(
+  { roles: ["ADMIN"] },
+  async (_req: NextRequest) => {
+    return jsonOk({ success: true, data: webhooksDB.getAll() });
+  }
+);
 
 // POST /api/webhooks - Create new webhook
-export async function POST(request: NextRequest) {
-  const auth = getAuthFromHeaders(request);
-  if (!auth) return jsonError("Unauthorized", 401);
-  if (auth.role !== "ADMIN") return jsonError("Forbidden: Admin access required", 403);
-
-  try {
-    const body = await request.json();
-    const { url, events, active } = body;
-
-    if (!url || !events || events.length === 0) {
-      return NextResponse.json(
-        { success: false, error: "Missing required fields" },
-        { status: 400 }
-      );
-    }
-
+export const POST = createHandler(
+  { roles: ["ADMIN"], schema: createWebhookSchema, rateLimit: "write" },
+  async (_req: NextRequest, { body }) => {
     const newWebhook = webhooksDB.create({
-      url,
-      events,
-      active: active ?? true,
+      url: body.url,
+      events: body.events,
+      active: body.active ?? true,
       secret: "whsec_" + Math.random().toString(36).substring(2, 15),
     });
 
-    return NextResponse.json({
-      success: true,
-      data: newWebhook,
-    });
-  } catch (error) {
-    return NextResponse.json(
-      { success: false, error: "Invalid request body" },
-      { status: 400 }
-    );
+    return jsonOk({ success: true, data: newWebhook });
   }
-}
+);

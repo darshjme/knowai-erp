@@ -1,13 +1,10 @@
 import { NextRequest } from "next/server";
 import prisma from "@/lib/prisma";
-import { jsonOk, jsonError, getAuthUser } from "@/lib/api-utils";
+import { createHandler, jsonOk, jsonError } from "@/lib/create-handler";
+import { adminConfigPostSchema } from "@/schemas/admin";
 
 // ─── Admin role check ────────────────────────────────────────────────────────
 const ADMIN_ROLES = ["CTO", "CEO", "ADMIN"];
-
-function isAdmin(role: string) {
-  return ADMIN_ROLES.includes(role);
-}
 
 // ─── Sensitive keys (masked in GET) ──────────────────────────────────────────
 const SENSITIVE_KEYS = [
@@ -104,13 +101,23 @@ function groupBySection(configs: Record<string, string>): Record<string, Record<
   return grouped;
 }
 
-// ─── GET: Return all system configs grouped by section ───────────────────────
-export async function GET(req: NextRequest) {
-  try {
-    const user = await getAuthUser(req);
-    if (!user) return jsonError("Unauthorized", 401);
-    if (!isAdmin(user.role)) return jsonError("Admin access required", 403);
+// ─── Helper: get a single config value ───────────────────────────────────────
+async function getConfigValue(key: string): Promise<string> {
+  const row = await prisma.systemConfig.findUnique({ where: { key } });
+  if (row) {
+    try {
+      return JSON.parse(row.value);
+    } catch {
+      return row.value;
+    }
+  }
+  return CONFIG_DEFAULTS[key] || "";
+}
 
+// ─── GET: Return all system configs grouped by section ───────────────────────
+export const GET = createHandler(
+  { roles: ADMIN_ROLES },
+  async (req, { user }) => {
     // Fetch all system configs
     const rows = await prisma.systemConfig.findMany();
     const configMap: Record<string, string> = { ...CONFIG_DEFAULTS };
@@ -134,26 +141,13 @@ export async function GET(req: NextRequest) {
     const grouped = groupBySection(maskedMap);
 
     return jsonOk({ success: true, data: grouped });
-  } catch (error) {
-    console.error("Admin config GET error:", error);
-    return jsonError("Internal server error", 500);
   }
-}
+);
 
 // ─── POST: Upsert config key-value or handle actions ─────────────────────────
-export async function POST(req: NextRequest) {
-  try {
-    const user = await getAuthUser(req);
-    if (!user) return jsonError("Unauthorized", 401);
-    if (!isAdmin(user.role)) return jsonError("Admin access required", 403);
-
-    let body: Record<string, unknown>;
-    try {
-      body = await req.json();
-    } catch {
-      return jsonError("Invalid JSON body", 400);
-    }
-
+export const POST = createHandler(
+  { roles: ADMIN_ROLES, schema: adminConfigPostSchema, rateLimit: "write" },
+  async (req, { user, body }) => {
     const { action } = body;
 
     // ── Test Email Action ──────────────────────────────────
@@ -245,21 +239,5 @@ export async function POST(req: NextRequest) {
     );
 
     return jsonOk({ success: true, message: `${filteredUpdates.length} config(s) updated.` });
-  } catch (error) {
-    console.error("Admin config POST error:", error);
-    return jsonError("Internal server error", 500);
   }
-}
-
-// ─── Helper: get a single config value ───────────────────────────────────────
-async function getConfigValue(key: string): Promise<string> {
-  const row = await prisma.systemConfig.findUnique({ where: { key } });
-  if (row) {
-    try {
-      return JSON.parse(row.value);
-    } catch {
-      return row.value;
-    }
-  }
-  return CONFIG_DEFAULTS[key] || "";
-}
+);

@@ -1,15 +1,9 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextRequest } from "next/server";
 import prisma from "@/lib/prisma";
-import { getAuthUser } from "@/lib/api-utils";
+import { createHandler, jsonOk, jsonError } from "@/lib/create-handler";
+import { adminPutSchema, adminPatchSchema } from "@/schemas/admin";
 
 const ADMIN_ROLES = ["CTO", "CEO", "ADMIN"];
-
-function ok(data: unknown) {
-  return NextResponse.json(data);
-}
-function err(msg: string, status = 400) {
-  return NextResponse.json({ error: msg }, { status });
-}
 
 // ─── Helper: get or create config ────────────────────────────────────────────
 
@@ -63,12 +57,9 @@ const DEFAULT_INTEGRATIONS = {
 
 // ─── GET ─────────────────────────────────────────────────────────────────────
 
-export async function GET(req: NextRequest) {
-  try {
-    const user = await getAuthUser(req);
-    if (!user) return err("Unauthorized", 401);
-    if (!ADMIN_ROLES.includes(user.role)) return err("Admin access required", 403);
-
+export const GET = createHandler(
+  { roles: ADMIN_ROLES },
+  async (req, { user }) => {
     const { searchParams } = new URL(req.url);
     const section = searchParams.get("section");
 
@@ -76,12 +67,12 @@ export async function GET(req: NextRequest) {
     if (section === "smtp") {
       const smtp = await getConfig("smtp", DEFAULT_SMTP);
       // Mask password
-      return ok({ smtp: { ...smtp, pass: smtp.pass ? "••••••••" : "" } });
+      return jsonOk({ smtp: { ...smtp, pass: smtp.pass ? "••••••••" : "" } });
     }
 
     if (section === "smtp-test") {
       const smtp = await getConfig("smtp", DEFAULT_SMTP);
-      return ok({ configured: !!(smtp.host && smtp.user && smtp.pass), host: smtp.host, user: smtp.user });
+      return jsonOk({ configured: !!(smtp.host && smtp.user && smtp.pass), host: smtp.host, user: smtp.user });
     }
 
     if (section === "integrations") {
@@ -93,7 +84,7 @@ export async function GET(req: NextRequest) {
       if (masked.github?.webhookSecret) masked.github.webhookSecret = "••••••••";
       if (masked.googleDrive?.clientSecret) masked.googleDrive.clientSecret = "••••••••";
       if (masked.whatsapp?.apiKey) masked.whatsapp.apiKey = "••••••••";
-      return ok({ integrations: masked });
+      return jsonOk({ integrations: masked });
     }
 
     if (section === "users") {
@@ -106,7 +97,7 @@ export async function GET(req: NextRequest) {
         },
         orderBy: { createdAt: "desc" },
       });
-      return ok({ users });
+      return jsonOk({ users });
     }
 
     if (section === "workspaces") {
@@ -114,7 +105,7 @@ export async function GET(req: NextRequest) {
         include: { _count: { select: { members: true, projects: true } } },
         orderBy: { createdAt: "desc" },
       });
-      return ok({ workspaces });
+      return jsonOk({ workspaces });
     }
 
     if (section === "stats") {
@@ -132,7 +123,7 @@ export async function GET(req: NextRequest) {
       ]);
       const invoiceRevenue = await prisma.invoice.aggregate({ _sum: { total: true }, where: { status: "PAID" } });
       const expenseTotal = await prisma.expense.aggregate({ _sum: { amount: true }, where: { status: "APPROVED" } });
-      return ok({
+      return jsonOk({
         stats: {
           users: userCount,
           activeProjects,
@@ -162,7 +153,7 @@ export async function GET(req: NextRequest) {
           }),
           prisma.auditLog.count(),
         ]);
-        return ok({ logs, total, page, pageSize, totalPages: Math.ceil(total / pageSize) });
+        return jsonOk({ logs, total, page, pageSize, totalPages: Math.ceil(total / pageSize) });
       } catch {
         // Fallback mock data if table doesn't exist
         const mockLogs = [
@@ -175,7 +166,7 @@ export async function GET(req: NextRequest) {
           { id: "7", action: "EXPORT", entity: "PROJECT", entityName: "Q1 Report", description: "Data exported to CSV", userName: "Darshan Joshi", createdAt: new Date(Date.now() - 1000 * 60 * 240).toISOString() },
           { id: "8", action: "UPDATE", entity: "WORKSPACE", entityName: "Know AI", description: "Workspace settings updated", userName: "Admin", createdAt: new Date(Date.now() - 1000 * 60 * 300).toISOString() },
         ];
-        return ok({ logs: mockLogs, total: mockLogs.length, page: 1, pageSize: 25, totalPages: 1 });
+        return jsonOk({ logs: mockLogs, total: mockLogs.length, page: 1, pageSize: 25, totalPages: 1 });
       }
     }
 
@@ -206,7 +197,7 @@ export async function GET(req: NextRequest) {
       prisma.task.count({ where: { createdAt: { gte: weekAgo } } }),
     ]);
 
-    return ok({
+    return jsonOk({
       systemSettings: system,
       smtp: { ...smtp, pass: smtp.pass ? "••••••••" : "" },
       integrations,
@@ -219,27 +210,14 @@ export async function GET(req: NextRequest) {
         storageUsedMb: 0,
       },
     });
-  } catch (error) {
-    console.error("Admin GET error:", error);
-    return err("Internal server error", 500);
   }
-}
+);
 
 // ─── PUT ─────────────────────────────────────────────────────────────────────
 
-export async function PUT(req: NextRequest) {
-  try {
-    const user = await getAuthUser(req);
-    if (!user) return err("Unauthorized", 401);
-    if (!ADMIN_ROLES.includes(user.role)) return err("Admin access required", 403);
-
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    let body: Record<string, any>;
-    try {
-      body = await req.json();
-    } catch {
-      return err("Invalid JSON body", 400);
-    }
+export const PUT = createHandler(
+  { roles: ADMIN_ROLES, schema: adminPutSchema, rateLimit: "write" },
+  async (req, { user, body }) => {
     const { section } = body;
 
     // ── System Settings ──────────────────────────────────
@@ -247,14 +225,14 @@ export async function PUT(req: NextRequest) {
       const current = await getConfig("system", DEFAULT_SYSTEM);
       const updated = { ...current, ...(body.data as Record<string, unknown>) };
       await setConfig("system", updated, user.id);
-      return ok({ success: true, message: "System settings updated", data: updated });
+      return jsonOk({ success: true, message: "System settings updated", data: updated });
     }
 
     // ── SMTP Configuration ──────────────────────────────
     if (section === "smtp") {
       const current = await getConfig("smtp", DEFAULT_SMTP);
       const data = body.data as Record<string, unknown> | undefined;
-      if (!data) return err("data is required for smtp section");
+      if (!data) return jsonError("data is required for smtp section");
       // If pass is masked, keep existing
       if (data.pass === "••••••••") data.pass = current.pass;
       const updated = { ...current, ...data };
@@ -266,14 +244,14 @@ export async function PUT(req: NextRequest) {
       if (updated.user) process.env.SMTP_USER = updated.user;
       if (updated.pass) process.env.SMTP_PASS = updated.pass;
 
-      return ok({ success: true, message: "SMTP configuration saved", data: { ...updated, pass: updated.pass ? "••••••••" : "" } });
+      return jsonOk({ success: true, message: "SMTP configuration saved", data: { ...updated, pass: updated.pass ? "••••••••" : "" } });
     }
 
     // ── SMTP Test ───────────────────────────────────────
     if (section === "smtp-test") {
       const smtp = await getConfig("smtp", DEFAULT_SMTP);
       if (!smtp.host || !smtp.user || !smtp.pass) {
-        return err("SMTP not configured. Save SMTP settings first.");
+        return jsonError("SMTP not configured. Save SMTP settings first.");
       }
 
       try {
@@ -286,10 +264,10 @@ export async function PUT(req: NextRequest) {
         });
 
         await testTransport.verify();
-        return ok({ success: true, message: "SMTP connection successful! Mail server is reachable." });
+        return jsonOk({ success: true, message: "SMTP connection successful! Mail server is reachable." });
       } catch (error) {
         console.error("SMTP test failed:", error);
-        return ok({ success: false, message: "SMTP test failed: connection could not be established" });
+        return jsonOk({ success: false, message: "SMTP test failed: connection could not be established" });
       }
     }
 
@@ -299,10 +277,10 @@ export async function PUT(req: NextRequest) {
       const integration = body.integration as string | undefined;
       const data = body.data as Record<string, unknown> | undefined;
 
-      if (!integration || !data) return err("integration and data required");
+      if (!integration || !data) return jsonError("integration and data required");
 
       const allowedIntegrations = ["slack", "github", "googleDrive", "whatsapp"];
-      if (!allowedIntegrations.includes(integration)) return err("Invalid integration name");
+      if (!allowedIntegrations.includes(integration)) return jsonError("Invalid integration name");
 
       // If tokens are masked, keep existing
       if (integration === "slack" && data.botToken === "••••••••") data.botToken = current.slack?.botToken;
@@ -314,19 +292,19 @@ export async function PUT(req: NextRequest) {
       const updated = { ...current, [integration]: { ...current[integration], ...data } };
       await setConfig("integrations", updated, user.id);
 
-      return ok({ success: true, message: `${integration} configuration saved` });
+      return jsonOk({ success: true, message: `${integration} configuration saved` });
     }
 
     // ── User Management ──────────────────────────────────
     if (section === "user-update") {
       const { userId, role, department, status } = body as { userId?: string; role?: string; department?: string; status?: string };
-      if (!userId) return err("userId required");
+      if (!userId) return jsonError("userId required");
 
       const validRoles = ["CEO", "CTO", "CFO", "BRAND_FACE", "ADMIN", "HR", "PRODUCT_OWNER", "BRAND_PARTNER", "SR_ACCOUNTANT", "JR_ACCOUNTANT", "SR_DEVELOPER", "JR_DEVELOPER", "SR_GRAPHIC_DESIGNER", "JR_GRAPHIC_DESIGNER", "SR_EDITOR", "JR_EDITOR", "SR_CONTENT_STRATEGIST", "JR_CONTENT_STRATEGIST", "SR_SCRIPT_WRITER", "JR_SCRIPT_WRITER", "SR_BRAND_STRATEGIST", "JR_BRAND_STRATEGIST", "DRIVER", "GUY", "OFFICE_BOY"];
-      if (role && !validRoles.includes(role)) return err("Invalid role");
+      if (role && !validRoles.includes(role)) return jsonError("Invalid role");
 
       const validStatuses = ["ONLINE", "AWAY", "OFFLINE"];
-      if (status && !validStatuses.includes(status)) return err("Invalid status");
+      if (status && !validStatuses.includes(status)) return jsonError("Invalid status");
 
       const updateData: Record<string, unknown> = {};
       if (role) {
@@ -342,7 +320,7 @@ export async function PUT(req: NextRequest) {
         data: updateData,
         select: { id: true, email: true, firstName: true, lastName: true, role: true, department: true, status: true },
       });
-      return ok({ success: true, message: "User updated", user: updated });
+      return jsonOk({ success: true, message: "User updated", user: updated });
     }
 
     if (section === "user-create") {
@@ -350,20 +328,20 @@ export async function PUT(req: NextRequest) {
         email?: string; firstName?: string; lastName?: string; role?: string; department?: string; password?: string;
       };
       if (!email || !firstName || !lastName || !role || !password) {
-        return err("email, firstName, lastName, role, and password are required");
+        return jsonError("email, firstName, lastName, role, and password are required");
       }
 
       // Basic email format validation
       const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-      if (!emailRegex.test(email)) return err("Invalid email format");
+      if (!emailRegex.test(email)) return jsonError("Invalid email format");
 
-      if (password.length < 6) return err("Password must be at least 6 characters");
+      if (password.length < 6) return jsonError("Password must be at least 6 characters");
 
       const validRoles = ["CEO", "CTO", "CFO", "BRAND_FACE", "ADMIN", "HR", "PRODUCT_OWNER", "BRAND_PARTNER", "SR_ACCOUNTANT", "JR_ACCOUNTANT", "SR_DEVELOPER", "JR_DEVELOPER", "SR_GRAPHIC_DESIGNER", "JR_GRAPHIC_DESIGNER", "SR_EDITOR", "JR_EDITOR", "SR_CONTENT_STRATEGIST", "JR_CONTENT_STRATEGIST", "SR_SCRIPT_WRITER", "JR_SCRIPT_WRITER", "SR_BRAND_STRATEGIST", "JR_BRAND_STRATEGIST", "DRIVER", "GUY", "OFFICE_BOY"];
-      if (!validRoles.includes(role)) return err("Invalid role");
+      if (!validRoles.includes(role)) return jsonError("Invalid role");
 
       const existing = await prisma.user.findUnique({ where: { email } });
-      if (existing) return err("A user with this email already exists");
+      if (existing) return jsonError("A user with this email already exists");
 
       const bcrypt = await import("bcryptjs");
       const hashed = await bcrypt.default.hash(password, 10);
@@ -386,91 +364,74 @@ export async function PUT(req: NextRequest) {
         },
         select: { id: true, email: true, firstName: true, lastName: true, role: true, department: true, status: true, createdAt: true },
       });
-      return ok({ success: true, message: "User created successfully", user: created });
+      return jsonOk({ success: true, message: "User created successfully", user: created });
     }
 
     if (section === "user-delete") {
       const { userId } = body as { userId?: string };
-      if (!userId) return err("userId required");
-      if (userId === user.id) return err("Cannot delete yourself");
+      if (!userId) return jsonError("userId required");
+      if (userId === user.id) return jsonError("Cannot delete yourself");
       await prisma.user.delete({ where: { id: userId } });
-      return ok({ success: true, message: "User deleted" });
+      return jsonOk({ success: true, message: "User deleted" });
     }
 
     // ── Bulk Actions ──────────────────────────────────────
     if (section === "bulk-deactivate") {
       const { userIds } = body as { userIds?: string[] };
-      if (!Array.isArray(userIds) || userIds.length === 0) return err("userIds array required");
+      if (!Array.isArray(userIds) || userIds.length === 0) return jsonError("userIds array required");
       const filtered = userIds.filter((id: string) => id !== user.id);
-      if (filtered.length === 0) return err("Cannot deactivate yourself");
+      if (filtered.length === 0) return jsonError("Cannot deactivate yourself");
       await prisma.user.updateMany({
         where: { id: { in: filtered } },
         data: { status: "OFFLINE" },
       });
-      return ok({ success: true, message: `${filtered.length} users deactivated` });
+      return jsonOk({ success: true, message: `${filtered.length} users deactivated` });
     }
 
     if (section === "bulk-department") {
       const { userIds, department } = body as { userIds?: string[]; department?: string };
-      if (!Array.isArray(userIds) || userIds.length === 0) return err("userIds array required");
-      if (department === undefined) return err("department required");
+      if (!Array.isArray(userIds) || userIds.length === 0) return jsonError("userIds array required");
+      if (department === undefined) return jsonError("department required");
       await prisma.user.updateMany({
         where: { id: { in: userIds } },
         data: { department: department || null },
       });
-      return ok({ success: true, message: `${userIds.length} users updated to ${department || "no department"}` });
+      return jsonOk({ success: true, message: `${userIds.length} users updated to ${department || "no department"}` });
     }
 
     if (section === "user-reset-password") {
       const { userId, newPassword } = body as { userId?: string; newPassword?: string };
-      if (!userId || !newPassword) return err("userId and newPassword required");
-      if (newPassword.length < 6) return err("Password must be at least 6 characters");
+      if (!userId || !newPassword) return jsonError("userId and newPassword required");
+      if (newPassword.length < 6) return jsonError("Password must be at least 6 characters");
       const bcrypt = await import("bcryptjs");
       const hashed = await bcrypt.default.hash(newPassword, 10);
       await prisma.user.update({ where: { id: userId }, data: { password: hashed } });
-      return ok({ success: true, message: "Password reset successfully" });
+      return jsonOk({ success: true, message: "Password reset successfully" });
     }
 
-    return err("Unknown section: " + section);
-  } catch (error) {
-    console.error("Admin PUT error:", error);
-    return err("Internal server error", 500);
+    return jsonError("Unknown section: " + section);
   }
-}
+);
 
 // ─── PATCH (for quick toggles) ──────────────────────────────────────────────
 
-export async function PATCH(req: NextRequest) {
-  try {
-    const user = await getAuthUser(req);
-    if (!user) return err("Unauthorized", 401);
-    if (!ADMIN_ROLES.includes(user.role)) return err("Admin access required", 403);
-
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    let body: Record<string, any>;
-    try {
-      body = await req.json();
-    } catch {
-      return err("Invalid JSON body", 400);
-    }
-
+export const PATCH = createHandler(
+  { roles: ADMIN_ROLES, schema: adminPatchSchema, rateLimit: "write" },
+  async (req, { user, body }) => {
     if (body.action === "toggle-maintenance") {
       const system = await getConfig("system", DEFAULT_SYSTEM);
       system.maintenanceMode = !system.maintenanceMode;
       await setConfig("system", system, user.id);
-      return ok({ success: true, maintenanceMode: system.maintenanceMode });
+      return jsonOk({ success: true, maintenanceMode: system.maintenanceMode });
     }
 
     if (body.action === "toggle-signup") {
       const system = await getConfig("system", DEFAULT_SYSTEM);
       system.signupEnabled = !system.signupEnabled;
       await setConfig("system", system, user.id);
-      return ok({ success: true, signupEnabled: system.signupEnabled });
+      return jsonOk({ success: true, signupEnabled: system.signupEnabled });
     }
 
-    return err("Unknown action");
-  } catch (error) {
-    console.error("Admin PATCH error:", error);
-    return err("Internal server error", 500);
+    return jsonError("Unknown action");
   }
-}
+);

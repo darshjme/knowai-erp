@@ -1,12 +1,14 @@
-import { NextRequest } from "next/server";
-import { jsonOk, jsonError, getAuthUser } from "@/lib/api-utils";
 import prisma from "@/lib/prisma";
+import { createHandler, jsonOk } from "@/lib/create-handler";
 
 const isProduction = process.env.NODE_ENV === "production";
 
-export async function POST(req: NextRequest) {
-  try {
+export const POST = createHandler(
+  { public: true },
+  async (req) => {
     // Attempt to identify the user and set status to OFFLINE
+    // We import getAuthUser here because the wrapper skips auth for public routes
+    const { getAuthUser } = await import("@/lib/api-utils");
     const user = await getAuthUser(req);
 
     if (user) {
@@ -31,23 +33,5 @@ export async function POST(req: NextRequest) {
     });
 
     return response;
-  } catch (error) {
-    console.error("Logout error:", error);
-
-    // Even if something fails, still clear the cookie so the client is logged out
-    const response = jsonOk({
-      success: true,
-      message: "Logged out",
-    });
-
-    response.cookies.set("token", "", {
-      httpOnly: true,
-      secure: isProduction,
-      sameSite: "lax",
-      path: "/",
-      maxAge: 0,
-    });
-
-    return response;
   }
-}
+);

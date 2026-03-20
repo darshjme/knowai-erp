@@ -1,6 +1,10 @@
-import { NextRequest } from "next/server";
 import prisma from "@/lib/prisma";
-import { jsonOk, jsonError, getAuthUser } from "@/lib/api-utils";
+import { createHandler, jsonOk, jsonError } from "@/lib/create-handler";
+import {
+  createPayrollSchema,
+  addPayrollLogSchema,
+  updatePayrollSchema,
+} from "@/schemas/payroll";
 
 // ─── Role Sets ───────────────────────────────────────────────────────────────
 
@@ -24,16 +28,8 @@ function canProcessPayroll(role: string) {
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
-// Recalculate payroll status inside an interactive transaction to prevent
-// race conditions (double-payment). Uses SELECT ... FOR UPDATE semantics
-// via Prisma's interactive transactions.
-//
-//   Thread A: BEGIN TX → lock payroll row → calc total → update → COMMIT
-//   Thread B: BEGIN TX → lock payroll row → BLOCKED → reads updated state → no-op
-//
 async function recalculatePayrollStatus(payrollId: string) {
   await prisma.$transaction(async (tx) => {
-    // Lock the payroll row for this transaction
     const rows = await tx.$queryRaw<Array<{ id: string; totalPay: number; status: string }>>`
       SELECT id, "totalPay", status FROM payrolls WHERE id = ${payrollId} FOR UPDATE
     `;
@@ -58,91 +54,19 @@ async function recalculatePayrollStatus(payrollId: string) {
 
 // ─── GET ──────────────────────────────────────────────────────────────────────
 
-export async function GET(req: NextRequest) {
-  try {
-    const user = await getAuthUser(req);
-    if (!user) return jsonError("Unauthorized", 401);
+export const GET = createHandler({}, async (req, { user }) => {
+  const { searchParams } = new URL(req.url);
+  const payrollId = searchParams.get("payrollId");
+  const logsFlag = searchParams.get("logs");
+  const month = searchParams.get("month");
+  const year = searchParams.get("year");
+  const employeeId = searchParams.get("employeeId");
+  const status = searchParams.get("status");
 
-    const { searchParams } = new URL(req.url);
-    const payrollId = searchParams.get("payrollId");
-    const logsFlag = searchParams.get("logs");
-    const month = searchParams.get("month");
-    const year = searchParams.get("year");
-    const employeeId = searchParams.get("employeeId");
-    const status = searchParams.get("status");
-
-    // ── Single payroll with logs ──────────────────────────────────────────
-    if (payrollId && logsFlag === "true") {
-      const payroll = await prisma.payroll.findUnique({
-        where: { id: payrollId },
-        include: {
-          employee: {
-            select: {
-              id: true,
-              firstName: true,
-              lastName: true,
-              email: true,
-              role: true,
-              department: true,
-            },
-          },
-          logs: {
-            include: {
-              paidBy: {
-                select: {
-                  id: true,
-                  firstName: true,
-                  lastName: true,
-                },
-              },
-            },
-            orderBy: { paidAt: "desc" },
-          },
-        },
-      });
-
-      if (!payroll) return jsonError("Payroll not found", 404);
-
-      // Access control: only privileged roles can view any payroll; others see own only
-      if (!canSeeAllPayrolls(user.role) && payroll.employeeId !== user.id) {
-        return jsonError("Forbidden", 403);
-      }
-
-      const aggregate = await prisma.payrollLog.aggregate({
-        where: { payrollId },
-        _sum: { amount: true },
-      });
-
-      const totalPaid = aggregate._sum.amount ?? 0;
-      const remaining = Math.max(0, payroll.totalPay - totalPaid);
-
-      return jsonOk({
-        success: true,
-        data: {
-          ...payroll,
-          totalPaid,
-          remaining,
-        },
-      });
-    }
-
-    // ── List payrolls ─────────────────────────────────────────────────────
-    const where: Record<string, unknown> = {};
-
-    if (canSeeAllPayrolls(user.role)) {
-      // CEO, CFO, ADMIN, ACCOUNTING, HR — can see all payrolls
-      if (employeeId) where.employeeId = employeeId;
-    } else {
-      // Everyone else — own payroll records only
-      where.employeeId = user.id;
-    }
-
-    if (month) where.month = parseInt(month, 10);
-    if (year) where.year = parseInt(year, 10);
-    if (status) where.status = status;
-
-    const payrolls = await prisma.payroll.findMany({
-      where,
+  // ── Single payroll with logs ──────────────────────────────────────────
+  if (payrollId && logsFlag === "true") {
+    const payroll = await prisma.payroll.findUnique({
+      where: { id: payrollId },
       include: {
         employee: {
           select: {
@@ -155,45 +79,105 @@ export async function GET(req: NextRequest) {
           },
         },
         logs: {
-          select: {
-            id: true, amount: true, mode: true, bankRef: true,
-            purpose: true, remarks: true, paidAt: true, createdAt: true,
-            paidBy: { select: { id: true, firstName: true, lastName: true } },
+          include: {
+            paidBy: {
+              select: {
+                id: true,
+                firstName: true,
+                lastName: true,
+              },
+            },
           },
-          orderBy: { createdAt: "desc" as const },
+          orderBy: { paidAt: "desc" },
         },
       },
-      orderBy: [{ year: "desc" }, { month: "desc" }],
     });
 
-    // Attach totalPaid / remaining to each payroll
-    const data = payrolls.map((p) => {
-      const totalPaid = p.logs.reduce((s, l) => s + l.amount, 0);
-      return {
-        ...p,
+    if (!payroll) return jsonError("Payroll not found", 404);
+
+    // Access control: only privileged roles can view any payroll; others see own only
+    if (!canSeeAllPayrolls(user.role) && payroll.employeeId !== user.id) {
+      return jsonError("Forbidden", 403);
+    }
+
+    const aggregate = await prisma.payrollLog.aggregate({
+      where: { payrollId },
+      _sum: { amount: true },
+    });
+
+    const totalPaid = aggregate._sum.amount ?? 0;
+    const remaining = Math.max(0, payroll.totalPay - totalPaid);
+
+    return jsonOk({
+      success: true,
+      data: {
+        ...payroll,
         totalPaid,
-        remaining: Math.max(0, p.totalPay - totalPaid),
-      };
+        remaining,
+      },
     });
-
-    return jsonOk({ success: true, data, total: data.length });
-  } catch (error) {
-    console.error("Payroll GET error:", error);
-    return jsonError("Internal server error", 500);
   }
-}
+
+  // ── List payrolls ─────────────────────────────────────────────────────
+  const where: Record<string, unknown> = {};
+
+  if (canSeeAllPayrolls(user.role)) {
+    if (employeeId) where.employeeId = employeeId;
+  } else {
+    where.employeeId = user.id;
+  }
+
+  if (month) where.month = parseInt(month, 10);
+  if (year) where.year = parseInt(year, 10);
+  if (status) where.status = status;
+
+  const payrolls = await prisma.payroll.findMany({
+    where,
+    include: {
+      employee: {
+        select: {
+          id: true,
+          firstName: true,
+          lastName: true,
+          email: true,
+          role: true,
+          department: true,
+        },
+      },
+      logs: {
+        select: {
+          id: true, amount: true, mode: true, bankRef: true,
+          purpose: true, remarks: true, paidAt: true, createdAt: true,
+          paidBy: { select: { id: true, firstName: true, lastName: true } },
+        },
+        orderBy: { createdAt: "desc" as const },
+      },
+    },
+    orderBy: [{ year: "desc" }, { month: "desc" }],
+  });
+
+  // Attach totalPaid / remaining to each payroll
+  const data = payrolls.map((p) => {
+    const totalPaid = p.logs.reduce((s, l) => s + l.amount, 0);
+    return {
+      ...p,
+      totalPaid,
+      remaining: Math.max(0, p.totalPay - totalPaid),
+    };
+  });
+
+  return jsonOk({ success: true, data, total: data.length });
+});
 
 // ─── POST ─────────────────────────────────────────────────────────────────────
 
-export async function POST(req: NextRequest) {
-  try {
-    const user = await getAuthUser(req);
-    if (!user) return jsonError("Unauthorized", 401);
-
-    const body = await req.json();
+export const POST = createHandler(
+  { rateLimit: "write" },
+  async (req, { user }) => {
+    const rawBody = await req.json();
 
     // ── Add payment log (process payroll) ─────────────────────────────────
-    if (body.action === "addLog") {
+    if (rawBody.action === "addLog") {
       if (!canProcessPayroll(user.role)) {
         return jsonError(
           "Only CEO, CFO, Admin, or Accounting can process payroll payments",
@@ -201,37 +185,29 @@ export async function POST(req: NextRequest) {
         );
       }
 
-      const { payrollId, amount, mode, bankRef, purpose, remarks } = body;
-
-      if (!payrollId || !amount || !mode || !purpose) {
+      const parsed = addPayrollLogSchema.safeParse(rawBody);
+      if (!parsed.success) {
         return jsonError(
-          "payrollId, amount, mode, and purpose are required",
+          parsed.error.issues.map((i) => i.message).join("; "),
           400
         );
       }
-
-      const validModes = ["CASH", "BANK_TRANSFER", "UPI", "CHEQUE"];
-      if (!validModes.includes(mode)) {
-        return jsonError(
-          `Invalid mode. Must be one of: ${validModes.join(", ")}`,
-          400
-        );
-      }
+      const body = parsed.data;
 
       // Verify payroll exists
       const payroll = await prisma.payroll.findUnique({
-        where: { id: payrollId },
+        where: { id: body.payrollId },
       });
       if (!payroll) return jsonError("Payroll not found", 404);
 
       const log = await prisma.payrollLog.create({
         data: {
-          payrollId,
-          amount: Math.round(amount),
-          mode,
-          bankRef: bankRef || null,
-          purpose,
-          remarks: remarks || null,
+          payrollId: body.payrollId,
+          amount: Math.round(body.amount),
+          mode: body.mode,
+          bankRef: body.bankRef || null,
+          purpose: body.purpose,
+          remarks: body.remarks || null,
           paidById: user.id,
           paidAt: new Date(),
         },
@@ -243,7 +219,7 @@ export async function POST(req: NextRequest) {
       });
 
       // Auto-update payroll status
-      await recalculatePayrollStatus(payrollId);
+      await recalculatePayrollStatus(body.payrollId);
 
       return jsonOk({ success: true, data: log }, 201);
     }
@@ -255,60 +231,41 @@ export async function POST(req: NextRequest) {
         403
       );
     }
-    const {
-      employeeId,
-      month,
-      year,
-      basicPay,
-      hra = 0,
-      transport = 0,
-      bonus = 0,
-      deductions = 0,
-      totalPay,
-      notes,
-      workingDays,
-      presentDays,
-      absentDays,
-      leaveDays,
-    } = body;
 
-    if (!employeeId || !month || !year || basicPay === undefined) {
+    const parsed = createPayrollSchema.safeParse(rawBody);
+    if (!parsed.success) {
       return jsonError(
-        "employeeId, month, year, and basicPay are required",
+        parsed.error.issues.map((i) => i.message).join("; "),
         400
       );
     }
+    const body = parsed.data;
 
     // Validate employee exists
-    const employee = await prisma.user.findUnique({ where: { id: employeeId } });
+    const employee = await prisma.user.findUnique({ where: { id: body.employeeId } });
     if (!employee) return jsonError("Employee not found", 404);
 
-    // Validate month/year ranges
-    if (month < 1 || month > 12) return jsonError("Month must be between 1 and 12", 400);
-    if (year < 2000 || year > 2100) return jsonError("Year must be between 2000 and 2100", 400);
-    if (basicPay < 0) return jsonError("Basic pay cannot be negative", 400);
-
     const calculatedTotal =
-      totalPay !== undefined && totalPay !== null
-        ? totalPay
-        : basicPay + hra + transport + bonus - deductions;
+      body.totalPay !== undefined && body.totalPay !== null
+        ? body.totalPay
+        : body.basicPay + body.hra + body.transport + body.bonus - body.deductions;
 
     const payroll = await prisma.payroll.create({
       data: {
-        employeeId,
-        month,
-        year,
-        basicPay,
-        hra,
-        transport,
-        bonus,
-        deductions,
+        employeeId: body.employeeId,
+        month: body.month,
+        year: body.year,
+        basicPay: body.basicPay,
+        hra: body.hra,
+        transport: body.transport,
+        bonus: body.bonus,
+        deductions: body.deductions,
         totalPay: calculatedTotal,
-        notes,
-        workingDays: workingDays ?? 22,
-        presentDays: presentDays ?? 0,
-        absentDays: absentDays ?? 0,
-        leaveDays: leaveDays ?? 0,
+        notes: body.notes,
+        workingDays: body.workingDays ?? 22,
+        presentDays: body.presentDays ?? 0,
+        absentDays: body.absentDays ?? 0,
+        leaveDays: body.leaveDays ?? 0,
       },
       include: {
         employee: {
@@ -325,30 +282,19 @@ export async function POST(req: NextRequest) {
     });
 
     return jsonOk({ success: true, data: payroll }, 201);
-  } catch (error) {
-    console.error("Payroll POST error:", error);
-    return jsonError("Internal server error", 500);
   }
-}
+);
 
 // ─── PATCH ────────────────────────────────────────────────────────────────────
 
-export async function PATCH(req: NextRequest) {
-  try {
-    const user = await getAuthUser(req);
-    if (!user) return jsonError("Unauthorized", 401);
-
-    if (!canProcessPayroll(user.role)) {
-      return jsonError(
-        "Only CEO, CFO, Admin, or Accounting can update payroll records",
-        403
-      );
-    }
-
-    const body = await req.json();
+export const PATCH = createHandler(
+  {
+    roles: ["CTO", "CEO", "CFO", "ADMIN", "SR_ACCOUNTANT", "JR_ACCOUNTANT", "BRAND_FACE"],
+    schema: updatePayrollSchema,
+    rateLimit: "write",
+  },
+  async (_req, { user, body }) => {
     const { id, ...rawUpdates } = body;
-
-    if (!id) return jsonError("Payroll id is required", 400);
 
     // Validate the payroll record exists
     const existing = await prisma.payroll.findUnique({ where: { id } });
@@ -359,19 +305,11 @@ export async function PATCH(req: NextRequest) {
       "basicPay", "hra", "transport", "bonus", "deductions", "totalPay",
       "notes", "workingDays", "presentDays", "absentDays", "leaveDays",
       "status", "month", "year",
-    ];
+    ] as const;
     const updates: Record<string, unknown> = {};
     for (const key of allowedFields) {
-      if (rawUpdates[key] !== undefined) {
-        updates[key] = rawUpdates[key];
-      }
-    }
-
-    // Validate status transition
-    if (updates.status) {
-      const validStatuses = ["PENDING", "PAID", "FAILED", "CANCELLED"];
-      if (!validStatuses.includes(updates.status as string)) {
-        return jsonError(`Invalid status. Must be one of: ${validStatuses.join(", ")}`, 400);
+      if ((rawUpdates as Record<string, unknown>)[key] !== undefined) {
+        updates[key] = (rawUpdates as Record<string, unknown>)[key];
       }
     }
 
@@ -398,23 +336,17 @@ export async function PATCH(req: NextRequest) {
     });
 
     return jsonOk({ success: true, data: payroll });
-  } catch (error) {
-    console.error("Payroll PATCH error:", error);
-    return jsonError("Internal server error", 500);
   }
-}
+);
 
 // ─── DELETE ───────────────────────────────────────────────────────────────────
 
-export async function DELETE(req: NextRequest) {
-  try {
-    const user = await getAuthUser(req);
-    if (!user) return jsonError("Unauthorized", 401);
-
-    if (user.role !== "CEO" && user.role !== "CFO" && user.role !== "ADMIN") {
-      return jsonError("Only CEO, CFO, or Admin can delete payroll records", 403);
-    }
-
+export const DELETE = createHandler(
+  {
+    roles: ["CEO", "CFO", "ADMIN"],
+    rateLimit: "write",
+  },
+  async (req, _ctx) => {
     const { searchParams } = new URL(req.url);
     const id = searchParams.get("id");
     const logId = searchParams.get("logId");
@@ -448,8 +380,5 @@ export async function DELETE(req: NextRequest) {
       success: true,
       message: "Payroll record deleted successfully",
     });
-  } catch (error) {
-    console.error("Payroll DELETE error:", error);
-    return jsonError("Internal server error", 500);
   }
-}
+);

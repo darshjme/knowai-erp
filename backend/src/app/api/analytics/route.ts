@@ -1,6 +1,6 @@
 import { NextRequest } from "next/server";
 import prisma from "@/lib/prisma";
-import { jsonOk, jsonError, getAuthUser } from "@/lib/api-utils";
+import { createHandler, jsonOk } from "@/lib/create-handler";
 
 // ── Role-to-scope mapping ───────────────────────────────────────────────────
 type AnalyticsScope = "full" | "financial" | "people" | "product" | "personal";
@@ -393,138 +393,130 @@ async function buildPersonalAnalytics(userId: string, workspaceId: string, dateF
 
 // ── Main handler ────────────────────────────────────────────────────────────
 
-export async function GET(req: NextRequest) {
-  try {
-    const user = await getAuthUser(req);
-    if (!user) return jsonError("Unauthorized", 401);
+export const GET = createHandler({}, async (req: NextRequest, { user }) => {
+  const workspaceId = user.workspaceId;
+  const now = new Date();
 
-    const workspaceId = user.workspaceId;
-    const now = new Date();
+  const { searchParams } = new URL(req.url);
+  const exportFormat = searchParams.get("export"); // "csv" or "pdf"
+  const { dateFrom, dateTo } = parseDateRange(searchParams);
 
-    const { searchParams } = new URL(req.url);
-    const exportFormat = searchParams.get("export"); // "csv" or "pdf"
-    const { dateFrom, dateTo } = parseDateRange(searchParams);
+  const scope = getScopeForRole(user.role);
 
-    const scope = getScopeForRole(user.role);
+  // Fetch workspace users (shared across scopes)
+  const users = await prisma.user.findMany({
+    where: { workspaceId },
+    select: {
+      id: true,
+      firstName: true,
+      lastName: true,
+      email: true,
+      role: true,
+      department: true,
+      createdAt: true,
+    },
+  });
+  const userIds = users.map((u) => u.id);
 
-    // Fetch workspace users (shared across scopes)
-    const users = await prisma.user.findMany({
-      where: { workspaceId },
+  // ── FULL scope (CEO/CTO/ADMIN) ─────────────────────────────
+  if (scope === "full") {
+    const [financial, people, product] = await Promise.all([
+      buildFinancialAnalytics(workspaceId, userIds, dateFrom, dateTo, now),
+      buildPeopleAnalytics(workspaceId, users, dateFrom, dateTo, now),
+      buildProductAnalytics(workspaceId, dateFrom, dateTo, now),
+    ]);
+
+    // Recent activity
+    const recentActivity = await prisma.task.findMany({
+      where: { project: { workspaceId } },
       select: {
-        id: true,
-        firstName: true,
-        lastName: true,
-        email: true,
-        role: true,
-        department: true,
-        createdAt: true,
+        id: true, title: true, status: true, priority: true, dueDate: true, updatedAt: true,
+        assignee: { select: { id: true, firstName: true, lastName: true } },
+        project: { select: { id: true, name: true } },
       },
+      orderBy: { updatedAt: "desc" },
+      take: 20,
     });
-    const userIds = users.map((u) => u.id);
 
-    // ── FULL scope (CEO/CTO/ADMIN) ─────────────────────────────
-    if (scope === "full") {
-      const [financial, people, product] = await Promise.all([
-        buildFinancialAnalytics(workspaceId, userIds, dateFrom, dateTo, now),
-        buildPeopleAnalytics(workspaceId, users, dateFrom, dateTo, now),
-        buildProductAnalytics(workspaceId, dateFrom, dateTo, now),
-      ]);
-
-      // Recent activity
-      const recentActivity = await prisma.task.findMany({
-        where: { project: { workspaceId } },
-        select: {
-          id: true, title: true, status: true, priority: true, dueDate: true, updatedAt: true,
-          assignee: { select: { id: true, firstName: true, lastName: true } },
-          project: { select: { id: true, name: true } },
-        },
-        orderBy: { updatedAt: "desc" },
-        take: 20,
-      });
-
-      const data = {
-        scope: "full",
-        financial,
-        people,
-        product,
-        companyKpis: {
-          totalRevenue: financial.kpis.totalRevenue,
-          totalExpenses: financial.kpis.totalExpenses,
-          profitMargin: financial.kpis.profitMargin,
-          headcount: people.kpis.totalHeadcount,
-          activeProjects: product.kpis.activeProjects,
-          taskCompletionRate: product.kpis.totalTasks > 0 ? Math.round((product.kpis.completedTasks / product.kpis.totalTasks) * 100) : 0,
-        },
-        recentActivity,
-      };
-
-      if (exportFormat === "csv") {
-        const rows = financial.revenueTrend.map((r) => ({
-          Month: r.month, Revenue: r.revenue, Expenses: r.expenses, Profit: r.profit,
-        }));
-        return csvResponse(toCsv(rows), "company-analytics.csv");
-      }
-
-      return jsonOk({ success: true, data });
-    }
-
-    // ── FINANCIAL scope (CFO/ACCOUNTING) ────────────────────────
-    if (scope === "financial") {
-      const financial = await buildFinancialAnalytics(workspaceId, userIds, dateFrom, dateTo, now);
-
-      if (exportFormat === "csv") {
-        const rows = financial.revenueTrend.map((r) => ({
-          Month: r.month, Revenue: r.revenue, Expenses: r.expenses, Profit: r.profit,
-        }));
-        return csvResponse(toCsv(rows), "financial-analytics.csv");
-      }
-
-      return jsonOk({ success: true, data: { scope: "financial", financial } });
-    }
-
-    // ── PEOPLE scope (HR) ───────────────────────────────────────
-    if (scope === "people") {
-      const people = await buildPeopleAnalytics(workspaceId, users, dateFrom, dateTo, now);
-
-      if (exportFormat === "csv") {
-        const rows = people.teamGrowth.map((r) => ({
-          Month: r.month, NewJoins: r.count, Cumulative: r.cumulative,
-        }));
-        return csvResponse(toCsv(rows), "people-analytics.csv");
-      }
-
-      return jsonOk({ success: true, data: { scope: "people", people } });
-    }
-
-    // ── PRODUCT scope (PRODUCT_OWNER) ───────────────────────────
-    if (scope === "product") {
-      const product = await buildProductAnalytics(workspaceId, dateFrom, dateTo, now);
-
-      if (exportFormat === "csv") {
-        const rows = product.projectMetrics.map((p) => ({
-          Project: p.name, Status: p.status, Progress: `${p.progress}%`, Manager: p.manager,
-          Tasks: p.totalTasks, Completed: p.completedTasks, Overdue: p.overdueTasks,
-          Velocity: p.velocity, CompletionRate: `${p.completionRate}%`,
-        }));
-        return csvResponse(toCsv(rows), "product-analytics.csv");
-      }
-
-      return jsonOk({ success: true, data: { scope: "product", product } });
-    }
-
-    // ── PERSONAL scope (all other roles) ────────────────────────
-    const personal = await buildPersonalAnalytics(user.id, workspaceId, dateFrom, dateTo, now);
+    const data = {
+      scope: "full",
+      financial,
+      people,
+      product,
+      companyKpis: {
+        totalRevenue: financial.kpis.totalRevenue,
+        totalExpenses: financial.kpis.totalExpenses,
+        profitMargin: financial.kpis.profitMargin,
+        headcount: people.kpis.totalHeadcount,
+        activeProjects: product.kpis.activeProjects,
+        taskCompletionRate: product.kpis.totalTasks > 0 ? Math.round((product.kpis.completedTasks / product.kpis.totalTasks) * 100) : 0,
+      },
+      recentActivity,
+    };
 
     if (exportFormat === "csv") {
-      const rows = personal.productivityTrend.map((w) => ({
-        Week: w.week, TasksCompleted: w.completed, Hours: w.hours,
+      const rows = financial.revenueTrend.map((r) => ({
+        Month: r.month, Revenue: r.revenue, Expenses: r.expenses, Profit: r.profit,
       }));
-      return csvResponse(toCsv(rows), "my-analytics.csv");
+      return csvResponse(toCsv(rows), "company-analytics.csv") as unknown as ReturnType<typeof jsonOk>;
     }
 
-    return jsonOk({ success: true, data: { scope: "personal", personal } });
-  } catch (error) {
-    console.error("Analytics GET error:", error);
-    return jsonError("Internal server error", 500);
+    return jsonOk({ success: true, data });
   }
-}
+
+  // ── FINANCIAL scope (CFO/ACCOUNTING) ────────────────────────
+  if (scope === "financial") {
+    const financial = await buildFinancialAnalytics(workspaceId, userIds, dateFrom, dateTo, now);
+
+    if (exportFormat === "csv") {
+      const rows = financial.revenueTrend.map((r) => ({
+        Month: r.month, Revenue: r.revenue, Expenses: r.expenses, Profit: r.profit,
+      }));
+      return csvResponse(toCsv(rows), "financial-analytics.csv") as unknown as ReturnType<typeof jsonOk>;
+    }
+
+    return jsonOk({ success: true, data: { scope: "financial", financial } });
+  }
+
+  // ── PEOPLE scope (HR) ───────────────────────────────────────
+  if (scope === "people") {
+    const people = await buildPeopleAnalytics(workspaceId, users, dateFrom, dateTo, now);
+
+    if (exportFormat === "csv") {
+      const rows = people.teamGrowth.map((r) => ({
+        Month: r.month, NewJoins: r.count, Cumulative: r.cumulative,
+      }));
+      return csvResponse(toCsv(rows), "people-analytics.csv") as unknown as ReturnType<typeof jsonOk>;
+    }
+
+    return jsonOk({ success: true, data: { scope: "people", people } });
+  }
+
+  // ── PRODUCT scope (PRODUCT_OWNER) ───────────────────────────
+  if (scope === "product") {
+    const product = await buildProductAnalytics(workspaceId, dateFrom, dateTo, now);
+
+    if (exportFormat === "csv") {
+      const rows = product.projectMetrics.map((p) => ({
+        Project: p.name, Status: p.status, Progress: `${p.progress}%`, Manager: p.manager,
+        Tasks: p.totalTasks, Completed: p.completedTasks, Overdue: p.overdueTasks,
+        Velocity: p.velocity, CompletionRate: `${p.completionRate}%`,
+      }));
+      return csvResponse(toCsv(rows), "product-analytics.csv") as unknown as ReturnType<typeof jsonOk>;
+    }
+
+    return jsonOk({ success: true, data: { scope: "product", product } });
+  }
+
+  // ── PERSONAL scope (all other roles) ────────────────────────
+  const personal = await buildPersonalAnalytics(user.id, workspaceId, dateFrom, dateTo, now);
+
+  if (exportFormat === "csv") {
+    const rows = personal.productivityTrend.map((w) => ({
+      Week: w.week, TasksCompleted: w.completed, Hours: w.hours,
+    }));
+    return csvResponse(toCsv(rows), "my-analytics.csv") as unknown as ReturnType<typeof jsonOk>;
+  }
+
+  return jsonOk({ success: true, data: { scope: "personal", personal } });
+});

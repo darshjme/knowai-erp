@@ -1,6 +1,6 @@
-import { NextRequest } from "next/server";
 import prisma from "@/lib/prisma";
-import { jsonOk, jsonError, getAuthUser } from "@/lib/api-utils";
+import { createHandler, jsonOk, jsonError } from "@/lib/create-handler";
+import { createExpenseSchema, updateExpenseSchema } from "@/schemas/expenses";
 
 // ─── Role Sets ───────────────────────────────────────────────────────────────
 
@@ -30,93 +30,70 @@ function isTeamApprover(role: string) {
 
 // ─── GET ─────────────────────────────────────────────────────────────────────
 
-export async function GET(req: NextRequest) {
-  try {
-    const user = await getAuthUser(req);
-    if (!user) return jsonError("Unauthorized", 401);
+export const GET = createHandler({}, async (req, { user }) => {
+  const { searchParams } = new URL(req.url);
+  const status = searchParams.get("status");
+  const category = searchParams.get("category");
+  const submitterId = searchParams.get("submitterId");
 
-    const { searchParams } = new URL(req.url);
-    const status = searchParams.get("status");
-    const category = searchParams.get("category");
-    const submitterId = searchParams.get("submitterId");
+  const where: Record<string, unknown> = {
+    // Workspace isolation: only show expenses from users in the same workspace
+    submitter: { workspaceId: user.workspaceId },
+  };
 
-    const where: Record<string, unknown> = {
-      // Workspace isolation: only show expenses from users in the same workspace
-      submitter: { workspaceId: user.workspaceId },
-    };
-
-    if (canSeeAllExpenses(user.role)) {
-      // CEO, CFO, ADMIN, ACCOUNTING — see all expenses in workspace
-      if (submitterId) where.submitterId = submitterId;
-    } else if (isTeamApprover(user.role)) {
-      // HR, PRODUCT_OWNER — see own expenses + team (same department) expenses
-      if (submitterId) {
-        where.submitterId = submitterId;
-      } else {
-        where.OR = [
-          { submitterId: user.id },
-          ...(user.department
-            ? [{ submitter: { workspaceId: user.workspaceId, department: user.department } }]
-            : []),
-        ];
-      }
+  if (canSeeAllExpenses(user.role)) {
+    // CEO, CFO, ADMIN, ACCOUNTING — see all expenses in workspace
+    if (submitterId) where.submitterId = submitterId;
+  } else if (isTeamApprover(user.role)) {
+    // HR, PRODUCT_OWNER — see own expenses + team (same department) expenses
+    if (submitterId) {
+      where.submitterId = submitterId;
     } else {
-      // Everyone else — own expenses only
-      where.submitterId = user.id;
+      where.OR = [
+        { submitterId: user.id },
+        ...(user.department
+          ? [{ submitter: { workspaceId: user.workspaceId, department: user.department } }]
+          : []),
+      ];
     }
-
-    if (status) where.status = status;
-    if (category) where.category = category;
-
-    const expenses = await prisma.expense.findMany({
-      where,
-      include: {
-        submitter: {
-          select: { id: true, firstName: true, lastName: true, department: true },
-        },
-        approver: {
-          select: { id: true, firstName: true, lastName: true },
-        },
-      },
-      orderBy: { createdAt: "desc" },
-    });
-
-    return jsonOk({ success: true, data: expenses, total: expenses.length });
-  } catch (error) {
-    console.error("Expenses GET error:", error);
-    return jsonError("Internal server error", 500);
+  } else {
+    // Everyone else — own expenses only
+    where.submitterId = user.id;
   }
-}
 
-export async function POST(req: NextRequest) {
-  try {
-    const user = await getAuthUser(req);
-    if (!user) return jsonError("Unauthorized", 401);
+  if (status) where.status = status;
+  if (category) where.category = category;
 
-    const body = await req.json();
-    const { title, description, amount, category, receipt, expenseDate, currency } = body;
+  const expenses = await prisma.expense.findMany({
+    where,
+    include: {
+      submitter: {
+        select: { id: true, firstName: true, lastName: true, department: true },
+      },
+      approver: {
+        select: { id: true, firstName: true, lastName: true },
+      },
+    },
+    orderBy: { createdAt: "desc" },
+  });
 
-    if (!title || amount === undefined || !category) {
-      return jsonError("title, amount, and category are required", 400);
-    }
+  return jsonOk({ success: true, data: expenses, total: expenses.length });
+});
 
-    if (typeof amount !== "number" || isNaN(amount) || amount <= 0) {
-      return jsonError("amount must be a positive number", 400);
-    }
+// ─── POST ────────────────────────────────────────────────────────────────────
 
-    if (typeof title !== "string" || !title.trim()) {
-      return jsonError("title must be a non-empty string", 400);
-    }
-
+export const POST = createHandler(
+  { schema: createExpenseSchema, rateLimit: "write" },
+  async (_req, { user, body }) => {
     const expense = await prisma.expense.create({
       data: {
-        title,
-        description,
-        amount,
-        category,
-        receipt,
-        currency: currency || "INR",
-        expenseDate: expenseDate ? new Date(expenseDate) : new Date(),
+        title: body.title,
+        description: body.description,
+        amount: body.amount,
+        category: body.category,
+        receipt: body.receipt,
+        currency: body.currency || "INR",
+        expenseDate: body.expenseDate ? new Date(body.expenseDate) : new Date(),
         submitterId: user.id,
         status: "SUBMITTED",
       },
@@ -131,24 +108,18 @@ export async function POST(req: NextRequest) {
     });
 
     return jsonOk({ success: true, data: expense }, 201);
-  } catch (error) {
-    console.error("Expenses POST error:", error);
-    return jsonError("Internal server error", 500);
   }
-}
+);
+
+// ─── PATCH ───────────────────────────────────────────────────────────────────
 
 /** Accounting approval limit (in currency units) */
 const ACCOUNTING_APPROVAL_LIMIT = 50_000;
 
-export async function PATCH(req: NextRequest) {
-  try {
-    const user = await getAuthUser(req);
-    if (!user) return jsonError("Unauthorized", 401);
-
-    const body = await req.json();
+export const PATCH = createHandler(
+  { schema: updateExpenseSchema, rateLimit: "write" },
+  async (_req, { user, body }) => {
     const { id, status, rejectNote, ...fields } = body;
-
-    if (!id) return jsonError("Expense id is required", 400);
 
     const expense = await prisma.expense.findFirst({
       where: { id, submitter: { workspaceId: user.workspaceId } },
@@ -274,17 +245,14 @@ export async function PATCH(req: NextRequest) {
     });
 
     return jsonOk({ success: true, data: updated });
-  } catch (error) {
-    console.error("Expenses PATCH error:", error);
-    return jsonError("Internal server error", 500);
   }
-}
+);
 
-export async function DELETE(req: NextRequest) {
-  try {
-    const user = await getAuthUser(req);
-    if (!user) return jsonError("Unauthorized", 401);
+// ─── DELETE ──────────────────────────────────────────────────────────────────
 
+export const DELETE = createHandler(
+  { rateLimit: "write" },
+  async (req, { user }) => {
     const { searchParams } = new URL(req.url);
     const id = searchParams.get("id");
 
@@ -312,8 +280,5 @@ export async function DELETE(req: NextRequest) {
     await prisma.expense.delete({ where: { id } });
 
     return jsonOk({ success: true, message: "Expense deleted successfully" });
-  } catch (error) {
-    console.error("Expenses DELETE error:", error);
-    return jsonError("Internal server error", 500);
   }
-}
+);

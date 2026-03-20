@@ -15,6 +15,9 @@ import { logger } from "@/lib/logger";
  *   SSE endpoint receives event ──► push to client ◄┘
  *
  * Channel: "notifications:{userId}" — each user gets their own channel.
+ *
+ * NOTE: This SSE endpoint is NOT wrapped with createHandler because it returns
+ * a streaming Response (not NextResponse/JSON), and manages its own auth.
  */
 
 export const dynamic = "force-dynamic";

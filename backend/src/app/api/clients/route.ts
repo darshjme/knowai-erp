@@ -1,6 +1,6 @@
 import { NextRequest } from "next/server";
 import prisma from "@/lib/prisma";
-import { jsonOk, jsonError, getAuthUser } from "@/lib/api-utils";
+import { createHandler, jsonOk, jsonError } from "@/lib/create-handler";
 
 // ─── CSV parser (no external library) ────────────────────────────────────────
 function parseCSV(csv: string): Record<string, string>[] {
@@ -29,15 +29,9 @@ const CLIENTS_FULL_ACCESS_ROLES = ["CEO", "CTO", "ADMIN", "PRODUCT_OWNER", "BRAN
 const CLIENTS_FINANCIAL_ROLES = ["CFO", "SR_ACCOUNTANT", "JR_ACCOUNTANT"];
 const CLIENTS_ALL_ALLOWED_ROLES = [...CLIENTS_FULL_ACCESS_ROLES, ...CLIENTS_FINANCIAL_ROLES];
 
-export async function GET(req: NextRequest) {
-  try {
-    const user = await getAuthUser(req);
-    if (!user) return jsonError("Unauthorized", 401);
-
-    if (!CLIENTS_ALL_ALLOWED_ROLES.includes(user.role)) {
-      return jsonError("Forbidden: you do not have access to clients", 403);
-    }
-
+export const GET = createHandler(
+  { roles: CLIENTS_ALL_ALLOWED_ROLES },
+  async (req: NextRequest, { user }) => {
     const { searchParams } = new URL(req.url);
     const search = searchParams.get("search");
     const industry = searchParams.get("industry");
@@ -92,21 +86,12 @@ export async function GET(req: NextRequest) {
     ]);
 
     return jsonOk({ success: true, data: clients, total, page, pageSize });
-  } catch (error) {
-    console.error("Clients GET error:", error);
-    return jsonError("Internal server error", 500);
   }
-}
+);
 
-export async function POST(req: NextRequest) {
-  try {
-    const user = await getAuthUser(req);
-    if (!user) return jsonError("Unauthorized", 401);
-
-    if (!CLIENTS_FULL_ACCESS_ROLES.includes(user.role)) {
-      return jsonError("Forbidden: you do not have permission to create clients", 403);
-    }
-
+export const POST = createHandler(
+  { roles: CLIENTS_FULL_ACCESS_ROLES, rateLimit: "write" },
+  async (req: NextRequest, { user }) => {
     const body = await req.json();
 
     // CSV Import
@@ -157,21 +142,12 @@ export async function POST(req: NextRequest) {
     });
 
     return jsonOk({ success: true, data: client }, 201);
-  } catch (error) {
-    console.error("Clients POST error:", error);
-    return jsonError("Internal server error", 500);
   }
-}
+);
 
-export async function PATCH(req: NextRequest) {
-  try {
-    const user = await getAuthUser(req);
-    if (!user) return jsonError("Unauthorized", 401);
-
-    if (!CLIENTS_FULL_ACCESS_ROLES.includes(user.role)) {
-      return jsonError("Forbidden: you do not have permission to update clients", 403);
-    }
-
+export const PATCH = createHandler(
+  { roles: CLIENTS_FULL_ACCESS_ROLES, rateLimit: "write" },
+  async (req: NextRequest, { user }) => {
     const body = await req.json();
     const { id, ...fields } = body;
     if (!id) return jsonError("Client id is required", 400);
@@ -197,21 +173,12 @@ export async function PATCH(req: NextRequest) {
     });
 
     return jsonOk({ success: true, data: client });
-  } catch (error) {
-    console.error("Clients PATCH error:", error);
-    return jsonError("Internal server error", 500);
   }
-}
+);
 
-export async function DELETE(req: NextRequest) {
-  try {
-    const user = await getAuthUser(req);
-    if (!user) return jsonError("Unauthorized", 401);
-
-    if (!CLIENTS_FULL_ACCESS_ROLES.includes(user.role)) {
-      return jsonError("Forbidden: you do not have permission to delete clients", 403);
-    }
-
+export const DELETE = createHandler(
+  { roles: CLIENTS_FULL_ACCESS_ROLES, rateLimit: "write" },
+  async (req: NextRequest, { user }) => {
     const { searchParams } = new URL(req.url);
     const id = searchParams.get("id");
     if (!id) return jsonError("Client id is required", 400);
@@ -223,8 +190,5 @@ export async function DELETE(req: NextRequest) {
 
     await prisma.client.delete({ where: { id } });
     return jsonOk({ success: true, message: "Client deleted" });
-  } catch (error) {
-    console.error("Clients DELETE error:", error);
-    return jsonError("Internal server error", 500);
   }
-}
+);

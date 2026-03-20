@@ -54,7 +54,6 @@ jobs:
 
       - name: Type check
         run: npx tsc --noEmit
-        continue-on-error: true  # Pre-existing TS errors — will be fixed in PR3/PR4
 
       - name: Run tests
         run: npm test
@@ -83,7 +82,6 @@ jobs:
 
       - name: Lint
         run: npm run lint
-        continue-on-error: true  # Pre-existing lint issues — will be fixed in PR4
 
       - name: Build
         run: npm run build

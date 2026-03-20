@@ -1,6 +1,6 @@
 import { NextRequest } from "next/server";
 import prisma from "@/lib/prisma";
-import { jsonOk, jsonError, getAuthFromHeaders } from "@/lib/api-utils";
+import { createHandler, jsonOk, jsonError } from "@/lib/create-handler";
 
 // Roles that see ALL time entries in the workspace
 const FULL_ACCESS_ROLES = ["ADMIN", "CEO"];
@@ -12,11 +12,8 @@ const MANAGER_ROLES = [
   "BRAND_PARTNER", "SR_CONTENT_STRATEGIST", "JR_CONTENT_STRATEGIST", "SR_DEVELOPER",
 ];
 
-export async function GET(req: NextRequest) {
+export const GET = createHandler({}, async (req: NextRequest, { user }) => {
   try {
-    const auth = getAuthFromHeaders(req);
-    if (!auth) return jsonError("Unauthorized", 401);
-
     const { searchParams } = new URL(req.url);
     const requestedUserId = searchParams.get("userId");
     const taskId = searchParams.get("taskId");
@@ -30,7 +27,7 @@ export async function GET(req: NextRequest) {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const where: Record<string, any> = {};
 
-    if (auth.workspaceId) where.workspaceId = auth.workspaceId;
+    if (user.workspaceId) where.workspaceId = user.workspaceId;
     if (taskId) where.taskId = taskId;
     if (projectId) where.projectId = projectId;
     if (billable !== null && billable !== undefined && billable !== "") {
@@ -47,15 +44,15 @@ export async function GET(req: NextRequest) {
     // ADMIN/CEO: see all time entries
     // Manager roles: see own + direct reports' entries
     // Others: see only own entries
-    if (FULL_ACCESS_ROLES.includes(auth.role)) {
+    if (FULL_ACCESS_ROLES.includes(user.role)) {
       // Full access - apply userId filter only if explicitly requested
       if (requestedUserId) where.userId = requestedUserId;
-    } else if (MANAGER_ROLES.includes(auth.role)) {
+    } else if (MANAGER_ROLES.includes(user.role)) {
       if (requestedUserId) {
         // Manager requesting specific user: allow if it's themselves or a direct report
-        if (requestedUserId !== auth.userId) {
+        if (requestedUserId !== user.id) {
           const reportee = await prisma.user.findFirst({
-            where: { id: requestedUserId, reportingTo: auth.userId },
+            where: { id: requestedUserId, reportingTo: user.id },
           });
           if (!reportee) {
             return jsonError("You can only view time entries for yourself or your direct reports", 403);
@@ -65,15 +62,15 @@ export async function GET(req: NextRequest) {
       } else {
         // No userId specified: show own entries + direct reports
         const directReports = await prisma.user.findMany({
-          where: { reportingTo: auth.userId },
+          where: { reportingTo: user.id },
           select: { id: true },
         });
-        const teamUserIds = [auth.userId, ...directReports.map((r) => r.id)];
+        const teamUserIds = [user.id, ...directReports.map((r) => r.id)];
         where.userId = { in: teamUserIds };
       }
     } else {
       // Regular users: only their own entries
-      where.userId = auth.userId;
+      where.userId = user.id;
     }
 
     const [entries, total] = await Promise.all([
@@ -100,8 +97,6 @@ export async function GET(req: NextRequest) {
       totalPages: Math.ceil(total / pageSize),
     });
   } catch (error) {
-    console.error("Time tracking GET error:", error);
-
     // Fallback mock data if table doesn't exist yet
     if (
       (error as Error).message?.includes("does not exist") ||
@@ -110,119 +105,95 @@ export async function GET(req: NextRequest) {
       return getMockTimeEntries();
     }
 
-    return jsonError("Internal server error", 500);
+    throw error;
   }
-}
+});
 
 // All roles can track their own time
-export async function POST(req: NextRequest) {
-  try {
-    const auth = getAuthFromHeaders(req);
-    if (!auth) return jsonError("Unauthorized", 401);
+export const POST = createHandler({ rateLimit: "write" }, async (req: NextRequest, { user }) => {
+  const body = await req.json();
+  const { taskId, projectId, description, startTime, endTime, duration, billable } = body;
 
-    const body = await req.json();
-    const { taskId, projectId, description, startTime, endTime, duration, billable } = body;
+  if (!startTime) return jsonError("startTime is required", 400);
 
-    if (!startTime) return jsonError("startTime is required", 400);
+  const entry = await prisma.timeEntry.create({
+    data: {
+      userId: user.id,
+      taskId: taskId || null,
+      projectId: projectId || null,
+      description: description || null,
+      startTime: new Date(startTime),
+      endTime: endTime ? new Date(endTime) : null,
+      duration: duration ?? null,
+      billable: billable !== undefined ? billable : true,
+      workspaceId: user.workspaceId || "",
+    },
+    include: {
+      task: { select: { id: true, title: true } },
+      project: { select: { id: true, name: true } },
+      user: { select: { id: true, firstName: true, lastName: true, avatar: true } },
+    },
+  });
 
-    const entry = await prisma.timeEntry.create({
-      data: {
-        userId: auth.userId,
-        taskId: taskId || null,
-        projectId: projectId || null,
-        description: description || null,
-        startTime: new Date(startTime),
-        endTime: endTime ? new Date(endTime) : null,
-        duration: duration ?? null,
-        billable: billable !== undefined ? billable : true,
-        workspaceId: auth.workspaceId || "",
-      },
-      include: {
-        task: { select: { id: true, title: true } },
-        project: { select: { id: true, name: true } },
-        user: { select: { id: true, firstName: true, lastName: true, avatar: true } },
-      },
-    });
-
-    return jsonOk({ success: true, data: entry }, 201);
-  } catch (error) {
-    console.error("Time tracking POST error:", error);
-    return jsonError("Internal server error", 500);
-  }
-}
+  return jsonOk({ success: true, data: entry }, 201);
+});
 
 // Users can update their own entries. ADMIN/CEO can update any entry.
-export async function PATCH(req: NextRequest) {
-  try {
-    const auth = getAuthFromHeaders(req);
-    if (!auth) return jsonError("Unauthorized", 401);
+export const PATCH = createHandler({ rateLimit: "write" }, async (req: NextRequest, { user }) => {
+  const body = await req.json();
+  const { id, endTime, duration, description, billable, taskId, projectId } = body;
 
-    const body = await req.json();
-    const { id, endTime, duration, description, billable, taskId, projectId } = body;
+  if (!id) return jsonError("id is required", 400);
 
-    if (!id) return jsonError("id is required", 400);
+  // ADMIN/CEO can edit any entry; others only their own
+  const isFullAccess = FULL_ACCESS_ROLES.includes(user.role);
 
-    // ADMIN/CEO can edit any entry; others only their own
-    const isFullAccess = FULL_ACCESS_ROLES.includes(auth.role);
+  const existing = isFullAccess
+    ? await prisma.timeEntry.findFirst({ where: { id } })
+    : await prisma.timeEntry.findFirst({ where: { id, userId: user.id } });
 
-    const existing = isFullAccess
-      ? await prisma.timeEntry.findFirst({ where: { id } })
-      : await prisma.timeEntry.findFirst({ where: { id, userId: auth.userId } });
+  if (!existing) return jsonError("Time entry not found", 404);
 
-    if (!existing) return jsonError("Time entry not found", 404);
+  const updateData: Record<string, unknown> = {};
+  if (endTime !== undefined) updateData.endTime = endTime ? new Date(endTime) : null;
+  if (duration !== undefined) updateData.duration = duration;
+  if (description !== undefined) updateData.description = description;
+  if (billable !== undefined) updateData.billable = billable;
+  if (taskId !== undefined) updateData.taskId = taskId || null;
+  if (projectId !== undefined) updateData.projectId = projectId || null;
 
-    const updateData: Record<string, unknown> = {};
-    if (endTime !== undefined) updateData.endTime = endTime ? new Date(endTime) : null;
-    if (duration !== undefined) updateData.duration = duration;
-    if (description !== undefined) updateData.description = description;
-    if (billable !== undefined) updateData.billable = billable;
-    if (taskId !== undefined) updateData.taskId = taskId || null;
-    if (projectId !== undefined) updateData.projectId = projectId || null;
+  const entry = await prisma.timeEntry.update({
+    where: { id },
+    data: updateData,
+    include: {
+      task: { select: { id: true, title: true } },
+      project: { select: { id: true, name: true } },
+      user: { select: { id: true, firstName: true, lastName: true, avatar: true } },
+    },
+  });
 
-    const entry = await prisma.timeEntry.update({
-      where: { id },
-      data: updateData,
-      include: {
-        task: { select: { id: true, title: true } },
-        project: { select: { id: true, name: true } },
-        user: { select: { id: true, firstName: true, lastName: true, avatar: true } },
-      },
-    });
-
-    return jsonOk({ success: true, data: entry });
-  } catch (error) {
-    console.error("Time tracking PATCH error:", error);
-    return jsonError("Internal server error", 500);
-  }
-}
+  return jsonOk({ success: true, data: entry });
+});
 
 // Users can delete their own entries. ADMIN/CEO can delete any entry.
-export async function DELETE(req: NextRequest) {
-  try {
-    const auth = getAuthFromHeaders(req);
-    if (!auth) return jsonError("Unauthorized", 401);
+export const DELETE = createHandler({ rateLimit: "write" }, async (req: NextRequest, { user }) => {
+  const { searchParams } = new URL(req.url);
+  const id = searchParams.get("id");
 
-    const { searchParams } = new URL(req.url);
-    const id = searchParams.get("id");
+  if (!id) return jsonError("id is required", 400);
 
-    if (!id) return jsonError("id is required", 400);
+  const isFullAccess = FULL_ACCESS_ROLES.includes(user.role);
 
-    const isFullAccess = FULL_ACCESS_ROLES.includes(auth.role);
+  const existing = isFullAccess
+    ? await prisma.timeEntry.findFirst({ where: { id } })
+    : await prisma.timeEntry.findFirst({ where: { id, userId: user.id } });
 
-    const existing = isFullAccess
-      ? await prisma.timeEntry.findFirst({ where: { id } })
-      : await prisma.timeEntry.findFirst({ where: { id, userId: auth.userId } });
+  if (!existing) return jsonError("Time entry not found", 404);
 
-    if (!existing) return jsonError("Time entry not found", 404);
+  await prisma.timeEntry.delete({ where: { id } });
 
-    await prisma.timeEntry.delete({ where: { id } });
-
-    return jsonOk({ success: true, message: "Time entry deleted" });
-  } catch (error) {
-    console.error("Time tracking DELETE error:", error);
-    return jsonError("Internal server error", 500);
-  }
-}
+  return jsonOk({ success: true, message: "Time entry deleted" });
+});
 
 function getMockTimeEntries() {
   const now = new Date();

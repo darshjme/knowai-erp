@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getAuthUser } from "@/lib/api-utils";
+import { createHandler, jsonError } from "@/lib/create-handler";
 import { readFile } from "fs/promises";
 import { existsSync } from "fs";
 import path from "path";
@@ -43,47 +43,37 @@ const INLINE_TYPES = new Set([
   ".mp4", ".mp3", ".wav", ".txt", ".csv", ".html",
 ]);
 
-export async function GET(
-  req: NextRequest,
-  { params }: { params: Promise<{ filename: string }> }
-) {
-  try {
-    const user = await getAuthUser(req);
-    if (!user) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
+const _GET = createHandler({}, async (req: NextRequest) => {
+  const segments = req.nextUrl.pathname.split("/");
+  const filename = segments[segments.length - 1];
 
-    const { filename } = await params;
-
-    if (!filename || filename.includes("..") || filename.includes("/")) {
-      return NextResponse.json({ error: "Invalid filename" }, { status: 400 });
-    }
-
-    const filePath = path.join(UPLOAD_DIR, filename);
-
-    if (!existsSync(filePath)) {
-      return NextResponse.json({ error: "File not found" }, { status: 404 });
-    }
-
-    const fileBuffer = await readFile(filePath);
-    const ext = path.extname(filename).toLowerCase();
-    const contentType = MIME_TYPES[ext] || "application/octet-stream";
-    const disposition = INLINE_TYPES.has(ext) ? "inline" : "attachment";
-
-    // Extract original filename (remove UUID prefix)
-    const originalName = filename.replace(/^[a-f0-9-]+-/, "");
-
-    return new NextResponse(fileBuffer, {
-      status: 200,
-      headers: {
-        "Content-Type": contentType,
-        "Content-Disposition": `${disposition}; filename="${originalName}"`,
-        "Content-Length": fileBuffer.length.toString(),
-        "Cache-Control": "private, max-age=3600",
-      },
-    });
-  } catch (error) {
-    console.error("GET /api/files/serve error:", error);
-    return NextResponse.json({ error: "Failed to serve file" }, { status: 500 });
+  if (!filename || filename.includes("..") || filename.includes("/")) {
+    return jsonError("Invalid filename", 400);
   }
-}
+
+  const filePath = path.join(UPLOAD_DIR, filename);
+
+  if (!existsSync(filePath)) {
+    return jsonError("File not found", 404);
+  }
+
+  const fileBuffer = await readFile(filePath);
+  const ext = path.extname(filename).toLowerCase();
+  const contentType = MIME_TYPES[ext] || "application/octet-stream";
+  const disposition = INLINE_TYPES.has(ext) ? "inline" : "attachment";
+
+  // Extract original filename (remove UUID prefix)
+  const originalName = filename.replace(/^[a-f0-9-]+-/, "");
+
+  return new NextResponse(fileBuffer, {
+    status: 200,
+    headers: {
+      "Content-Type": contentType,
+      "Content-Disposition": `${disposition}; filename="${originalName}"`,
+      "Content-Length": fileBuffer.length.toString(),
+      "Cache-Control": "private, max-age=3600",
+    },
+  });
+});
+
+export async function GET(req: NextRequest) { return _GET(req); }

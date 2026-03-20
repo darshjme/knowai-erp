@@ -1,6 +1,6 @@
 import { NextRequest } from "next/server";
 import prisma from "@/lib/prisma";
-import { jsonOk, jsonError, getAuthUser } from "@/lib/api-utils";
+import { createHandler, jsonOk, jsonError } from "@/lib/create-handler";
 import { getPaginationParams } from "@/lib/pagination";
 import { NotificationType } from "@prisma/client";
 
@@ -54,248 +54,216 @@ function getAllowedTypesForRole(role: string): NotificationType[] {
 }
 
 // ─── GET: List notifications ────────────────────────────────────
-export async function GET(req: NextRequest) {
-  try {
-    const user = await getAuthUser(req);
-    if (!user) return jsonError("Unauthorized", 401);
+export const GET = createHandler({}, async (req: NextRequest, { user }) => {
+  const { searchParams } = new URL(req.url);
+  const { page = 1, pageSize = 50 } = getPaginationParams(searchParams, { pageSize: 50 });
+  const readFilter = searchParams.get("read"); // "true" | "false" | null (all)
+  const typeFilter = searchParams.get("type"); // comma-separated NotificationType values
 
-    const { searchParams } = new URL(req.url);
-    const { page = 1, pageSize = 50 } = getPaginationParams(searchParams, { pageSize: 50 });
-    const readFilter = searchParams.get("read"); // "true" | "false" | null (all)
-    const typeFilter = searchParams.get("type"); // comma-separated NotificationType values
+  // Determine which notification types this user's role can see
+  const allowedTypes = getAllowedTypesForRole(user.role);
 
-    // Determine which notification types this user's role can see
-    const allowedTypes = getAllowedTypesForRole(user.role);
+  // Build where clause -- user only sees THEIR notifications
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const where: Record<string, any> = {
+    userId: user.id,
+    type: { in: allowedTypes },
+  };
 
-    // Build where clause -- user only sees THEIR notifications
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const where: Record<string, any> = {
-      userId: user.id,
-      type: { in: allowedTypes },
-    };
+  if (readFilter === "true") where.read = true;
+  else if (readFilter === "false") where.read = false;
 
-    if (readFilter === "true") where.read = true;
-    else if (readFilter === "false") where.read = false;
-
-    // If client requests specific types, intersect with allowed types
-    if (typeFilter) {
-      const requestedTypes = typeFilter.split(",").map((t) => t.trim()).filter(Boolean);
-      const intersected = requestedTypes.filter((t) => allowedTypes.includes(t as NotificationType)) as NotificationType[];
-      if (intersected.length > 0) {
-        where.type = { in: intersected };
-      } else {
-        // None of the requested types are allowed for this role
-        return jsonOk({
-          success: true,
-          data: [],
-          total: 0,
-          page,
-          pageSize,
-          totalPages: 0,
-          hasMore: false,
-          unreadCount: 0,
-        });
-      }
-    }
-
-    const [notifications, total, unreadCount] = await Promise.all([
-      prisma.notification.findMany({
-        where,
-        orderBy: { createdAt: "desc" },
-        skip: (page - 1) * pageSize,
-        take: pageSize,
-      }),
-      prisma.notification.count({ where }),
-      prisma.notification.count({
-        where: { userId: user.id, read: false, type: { in: allowedTypes } },
-      }),
-    ]);
-
-    const totalPages = Math.ceil(total / pageSize);
-    return jsonOk({
-      success: true,
-      data: notifications,
-      total,
-      page,
-      pageSize,
-      totalPages,
-      hasMore: page < totalPages,
-      unreadCount,
-    });
-  } catch (error) {
-    console.error("Notifications GET error:", error);
-    return jsonError("Internal server error", 500);
-  }
-}
-
-// ─── PATCH: Mark notification(s) as read ────────────────────────
-export async function PATCH(req: NextRequest) {
-  try {
-    const user = await getAuthUser(req);
-    if (!user) return jsonError("Unauthorized", 401);
-
-    const body = await req.json();
-
-    // Mark ALL as read
-    if (body.action === "markAllRead") {
-      const allowedTypes = getAllowedTypesForRole(user.role);
-      const result = await prisma.notification.updateMany({
-        where: { userId: user.id, read: false, type: { in: allowedTypes } },
-        data: { read: true },
-      });
-      return jsonOk({ success: true, message: "All notifications marked as read", count: result.count });
-    }
-
-    // Bulk mark as read (array of ids)
-    if (body.action === "markBulkRead" && Array.isArray(body.ids) && body.ids.length > 0) {
-      const result = await prisma.notification.updateMany({
-        where: { id: { in: body.ids }, userId: user.id },
-        data: { read: true },
-      });
-      return jsonOk({ success: true, message: `${result.count} notifications marked as read`, count: result.count });
-    }
-
-    // Mark single as read
-    const { id } = body;
-    if (!id) return jsonError("Notification id is required", 400);
-
-    const existing = await prisma.notification.findFirst({
-      where: { id, userId: user.id },
-    });
-    if (!existing) return jsonError("Notification not found", 404);
-
-    const notification = await prisma.notification.update({
-      where: { id },
-      data: { read: true },
-    });
-
-    return jsonOk({ success: true, data: notification });
-  } catch (error) {
-    console.error("Notifications PATCH error:", error);
-    return jsonError("Internal server error", 500);
-  }
-}
-
-// ─── DELETE: Delete notification(s) ─────────────────────────────
-export async function DELETE(req: NextRequest) {
-  try {
-    const user = await getAuthUser(req);
-    if (!user) return jsonError("Unauthorized", 401);
-
-    const body = await req.json().catch(() => null);
-
-    // Clear all read notifications
-    if (body?.action === "clearAll") {
-      const allowedTypes = getAllowedTypesForRole(user.role);
-      const result = await prisma.notification.deleteMany({
-        where: { userId: user.id, read: true, type: { in: allowedTypes } },
-      });
-      return jsonOk({ success: true, message: "All read notifications cleared", count: result.count });
-    }
-
-    // Bulk delete (array of ids)
-    if (body?.action === "bulkDelete" && Array.isArray(body.ids) && body.ids.length > 0) {
-      const result = await prisma.notification.deleteMany({
-        where: { id: { in: body.ids }, userId: user.id },
-      });
-      return jsonOk({ success: true, message: `${result.count} notifications deleted`, count: result.count });
-    }
-
-    // Delete older than X days
-    if (body?.action === "deleteOlderThan" && typeof body.days === "number") {
-      const cutoff = new Date(Date.now() - body.days * 86400000);
-      const result = await prisma.notification.deleteMany({
-        where: { userId: user.id, createdAt: { lt: cutoff } },
-      });
-      return jsonOk({ success: true, message: `${result.count} old notifications deleted`, count: result.count });
-    }
-
-    // Delete single by id
-    const id = body?.id;
-    if (!id) return jsonError("Notification id is required", 400);
-
-    const existing = await prisma.notification.findFirst({
-      where: { id, userId: user.id },
-    });
-    if (!existing) return jsonError("Notification not found", 404);
-
-    await prisma.notification.delete({ where: { id } });
-    return jsonOk({ success: true, message: "Notification deleted" });
-  } catch (error) {
-    console.error("Notifications DELETE error:", error);
-    return jsonError("Internal server error", 500);
-  }
-}
-
-// ─── POST: Create announcement / mark read ──────────────────────
-export async function POST(req: NextRequest) {
-  try {
-    const user = await getAuthUser(req);
-    if (!user) return jsonError("Unauthorized", 401);
-
-    const body = await req.json();
-
-    // Legacy: mark single as read (from frontend notificationsApi.markRead)
-    if (body.id && body.read === true) {
-      const existing = await prisma.notification.findFirst({
-        where: { id: body.id, userId: user.id },
-      });
-      if (!existing) return jsonError("Notification not found", 404);
-      const notification = await prisma.notification.update({
-        where: { id: body.id },
-        data: { read: true },
-      });
-      return jsonOk({ success: true, data: notification });
-    }
-
-    // Create system announcement — only C-level and ADMIN
-    if (body.action === "announce") {
-      if (!C_LEVEL_AND_ADMIN.includes(user.role)) {
-        return jsonError("Only C-level executives and admins can create announcements", 403);
-      }
-
-      const { title, message, priority = "NORMAL", linkUrl } = body;
-      if (!title || !message) {
-        return jsonError("Title and message are required for announcements", 400);
-      }
-
-      const validPriorities = ["NORMAL", "IMPORTANT", "URGENT"];
-      if (!validPriorities.includes(priority)) {
-        return jsonError("Priority must be NORMAL, IMPORTANT, or URGENT", 400);
-      }
-
-      // Get all users in the workspace
-      const workspaceUsers = await prisma.user.findMany({
-        where: { workspaceId: user.workspaceId },
-        select: { id: true },
-      });
-
-      if (workspaceUsers.length === 0) {
-        return jsonOk({ success: true, message: "No users in workspace", count: 0 });
-      }
-
-      // Create a notification for every user in the workspace
-      const result = await prisma.notification.createMany({
-        data: workspaceUsers.map((u) => ({
-          userId: u.id,
-          type: "ANNOUNCEMENT" as const,
-          title,
-          message,
-          linkUrl: linkUrl ?? null,
-          metadata: JSON.stringify({ priority, announcedBy: user.id, announcerName: `${user.firstName} ${user.lastName}` }),
-        })),
-      });
-
+  // If client requests specific types, intersect with allowed types
+  if (typeFilter) {
+    const requestedTypes = typeFilter.split(",").map((t) => t.trim()).filter(Boolean);
+    const intersected = requestedTypes.filter((t) => allowedTypes.includes(t as NotificationType)) as NotificationType[];
+    if (intersected.length > 0) {
+      where.type = { in: intersected };
+    } else {
+      // None of the requested types are allowed for this role
       return jsonOk({
         success: true,
-        message: `Announcement sent to ${result.count} users`,
-        count: result.count,
+        data: [],
+        total: 0,
+        page,
+        pageSize,
+        totalPages: 0,
+        hasMore: false,
+        unreadCount: 0,
       });
     }
-
-    return jsonError("Invalid action", 400);
-  } catch (error) {
-    console.error("Notifications POST error:", error);
-    return jsonError("Internal server error", 500);
   }
-}
+
+  const [notifications, total, unreadCount] = await Promise.all([
+    prisma.notification.findMany({
+      where,
+      orderBy: { createdAt: "desc" },
+      skip: (page - 1) * pageSize,
+      take: pageSize,
+    }),
+    prisma.notification.count({ where }),
+    prisma.notification.count({
+      where: { userId: user.id, read: false, type: { in: allowedTypes } },
+    }),
+  ]);
+
+  const totalPages = Math.ceil(total / pageSize);
+  return jsonOk({
+    success: true,
+    data: notifications,
+    total,
+    page,
+    pageSize,
+    totalPages,
+    hasMore: page < totalPages,
+    unreadCount,
+  });
+});
+
+// ─── PATCH: Mark notification(s) as read ────────────────────────
+export const PATCH = createHandler({ rateLimit: "write" }, async (req: NextRequest, { user }) => {
+  const body = await req.json();
+
+  // Mark ALL as read
+  if (body.action === "markAllRead") {
+    const allowedTypes = getAllowedTypesForRole(user.role);
+    const result = await prisma.notification.updateMany({
+      where: { userId: user.id, read: false, type: { in: allowedTypes } },
+      data: { read: true },
+    });
+    return jsonOk({ success: true, message: "All notifications marked as read", count: result.count });
+  }
+
+  // Bulk mark as read (array of ids)
+  if (body.action === "markBulkRead" && Array.isArray(body.ids) && body.ids.length > 0) {
+    const result = await prisma.notification.updateMany({
+      where: { id: { in: body.ids }, userId: user.id },
+      data: { read: true },
+    });
+    return jsonOk({ success: true, message: `${result.count} notifications marked as read`, count: result.count });
+  }
+
+  // Mark single as read
+  const { id } = body;
+  if (!id) return jsonError("Notification id is required", 400);
+
+  const existing = await prisma.notification.findFirst({
+    where: { id, userId: user.id },
+  });
+  if (!existing) return jsonError("Notification not found", 404);
+
+  const notification = await prisma.notification.update({
+    where: { id },
+    data: { read: true },
+  });
+
+  return jsonOk({ success: true, data: notification });
+});
+
+// ─── DELETE: Delete notification(s) ─────────────────────────────
+export const DELETE = createHandler({ rateLimit: "write" }, async (req: NextRequest, { user }) => {
+  const body = await req.json().catch(() => null);
+
+  // Clear all read notifications
+  if (body?.action === "clearAll") {
+    const allowedTypes = getAllowedTypesForRole(user.role);
+    const result = await prisma.notification.deleteMany({
+      where: { userId: user.id, read: true, type: { in: allowedTypes } },
+    });
+    return jsonOk({ success: true, message: "All read notifications cleared", count: result.count });
+  }
+
+  // Bulk delete (array of ids)
+  if (body?.action === "bulkDelete" && Array.isArray(body.ids) && body.ids.length > 0) {
+    const result = await prisma.notification.deleteMany({
+      where: { id: { in: body.ids }, userId: user.id },
+    });
+    return jsonOk({ success: true, message: `${result.count} notifications deleted`, count: result.count });
+  }
+
+  // Delete older than X days
+  if (body?.action === "deleteOlderThan" && typeof body.days === "number") {
+    const cutoff = new Date(Date.now() - body.days * 86400000);
+    const result = await prisma.notification.deleteMany({
+      where: { userId: user.id, createdAt: { lt: cutoff } },
+    });
+    return jsonOk({ success: true, message: `${result.count} old notifications deleted`, count: result.count });
+  }
+
+  // Delete single by id
+  const id = body?.id;
+  if (!id) return jsonError("Notification id is required", 400);
+
+  const existing = await prisma.notification.findFirst({
+    where: { id, userId: user.id },
+  });
+  if (!existing) return jsonError("Notification not found", 404);
+
+  await prisma.notification.delete({ where: { id } });
+  return jsonOk({ success: true, message: "Notification deleted" });
+});
+
+// ─── POST: Create announcement / mark read ──────────────────────
+export const POST = createHandler({ rateLimit: "write" }, async (req: NextRequest, { user }) => {
+  const body = await req.json();
+
+  // Legacy: mark single as read (from frontend notificationsApi.markRead)
+  if (body.id && body.read === true) {
+    const existing = await prisma.notification.findFirst({
+      where: { id: body.id, userId: user.id },
+    });
+    if (!existing) return jsonError("Notification not found", 404);
+    const notification = await prisma.notification.update({
+      where: { id: body.id },
+      data: { read: true },
+    });
+    return jsonOk({ success: true, data: notification });
+  }
+
+  // Create system announcement — only C-level and ADMIN
+  if (body.action === "announce") {
+    if (!C_LEVEL_AND_ADMIN.includes(user.role)) {
+      return jsonError("Only C-level executives and admins can create announcements", 403);
+    }
+
+    const { title, message, priority = "NORMAL", linkUrl } = body;
+    if (!title || !message) {
+      return jsonError("Title and message are required for announcements", 400);
+    }
+
+    const validPriorities = ["NORMAL", "IMPORTANT", "URGENT"];
+    if (!validPriorities.includes(priority)) {
+      return jsonError("Priority must be NORMAL, IMPORTANT, or URGENT", 400);
+    }
+
+    // Get all users in the workspace
+    const workspaceUsers = await prisma.user.findMany({
+      where: { workspaceId: user.workspaceId },
+      select: { id: true },
+    });
+
+    if (workspaceUsers.length === 0) {
+      return jsonOk({ success: true, message: "No users in workspace", count: 0 });
+    }
+
+    // Create a notification for every user in the workspace
+    const result = await prisma.notification.createMany({
+      data: workspaceUsers.map((u) => ({
+        userId: u.id,
+        type: "ANNOUNCEMENT" as const,
+        title,
+        message,
+        linkUrl: linkUrl ?? null,
+        metadata: JSON.stringify({ priority, announcedBy: user.id, announcerName: `${user.firstName} ${user.lastName}` }),
+      })),
+    });
+
+    return jsonOk({
+      success: true,
+      message: `Announcement sent to ${result.count} users`,
+      count: result.count,
+    });
+  }
+
+  return jsonError("Invalid action", 400);
+});

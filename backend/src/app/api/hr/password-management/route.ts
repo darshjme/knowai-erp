@@ -1,17 +1,15 @@
 import prisma from "@/lib/prisma";
-import { jsonOk, jsonError, getAuthUser } from "@/lib/api-utils";
+import { createHandler, jsonOk, jsonError } from "@/lib/create-handler";
+import { passwordManagementSchema } from "@/schemas/admin";
 import bcrypt from "bcryptjs";
 
 const ALLOWED_ROLES = ["CTO", "CEO", "ADMIN", "HR"];
 
 // ── GET: List users with password status ─────────────────────────────────
 
-export async function GET(req: Request) {
-  try {
-    const user = await getAuthUser(req);
-    if (!user) return jsonError("Unauthorized", 401);
-    if (!ALLOWED_ROLES.includes(user.role)) return jsonError("Access denied", 403);
-
+export const GET = createHandler(
+  { roles: ALLOWED_ROLES },
+  async (req, { user }) => {
     const users = await prisma.user.findMany({
       where: { workspaceId: user.workspaceId },
       select: {
@@ -52,25 +50,15 @@ export async function GET(req: Request) {
     }));
 
     return jsonOk({ users: userList });
-  } catch (err: unknown) {
-    console.error("Password management GET error:", err);
-    return jsonError("Failed to fetch password management data", 500);
   }
-}
+);
 
 // ── POST: HR actions on user passwords ───────────────────────────────────
 
-export async function POST(req: Request) {
-  try {
-    const user = await getAuthUser(req);
-    if (!user) return jsonError("Unauthorized", 401);
-    if (!ALLOWED_ROLES.includes(user.role)) return jsonError("Access denied", 403);
-
-    const body = await req.json();
+export const POST = createHandler(
+  { roles: ALLOWED_ROLES, schema: passwordManagementSchema, rateLimit: "write" },
+  async (req, { user, body }) => {
     const { action, userId } = body;
-
-    if (!userId) return jsonError("userId is required", 400);
-    if (!action) return jsonError("action is required", 400);
 
     // Verify the target user exists and belongs to the same workspace
     const targetUser = await prisma.user.findFirst({
@@ -135,11 +123,8 @@ export async function POST(req: Request) {
       default:
         return jsonError(`Unknown action: ${action}. Supported: resetPassword, unlockAccount, forceChangePassword`, 400);
     }
-  } catch (err: unknown) {
-    console.error("Password management POST error:", err);
-    return jsonError("Failed to process password management action", 500);
   }
-}
+);
 
 // ── Helper: Generate a temp password ─────────────────────────────────────
 

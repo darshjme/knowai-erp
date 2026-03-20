@@ -1,13 +1,12 @@
-import { NextRequest } from "next/server";
 import bcrypt from "bcryptjs";
 import crypto from "crypto";
 import prisma from "@/lib/prisma";
-import { jsonOk, jsonError } from "@/lib/api-utils";
+import { createHandler, jsonOk, jsonError } from "@/lib/create-handler";
+import { forgotPasswordSchema } from "@/schemas/auth";
 
-// POST: Forgot password flow
-export async function POST(req: NextRequest) {
-  try {
-    const body = await req.json();
+export const POST = createHandler(
+  { public: true, schema: forgotPasswordSchema, rateLimit: "write" },
+  async (_req, { body }) => {
     const { action } = body;
 
     // Step 1: Find account by email or phone
@@ -134,8 +133,5 @@ export async function POST(req: NextRequest) {
     }
 
     return jsonError("Invalid action", 400);
-  } catch (error) {
-    console.error("Forgot password error:", error);
-    return jsonError("Internal server error", 500);
   }
-}
+);

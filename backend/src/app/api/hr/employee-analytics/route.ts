@@ -1,5 +1,5 @@
 import prisma from "@/lib/prisma";
-import { jsonOk, jsonError, getAuthUser } from "@/lib/api-utils";
+import { createHandler, jsonOk, jsonError } from "@/lib/create-handler";
 
 const HR_ROLES = ["CTO", "CEO", "ADMIN", "HR", "BRAND_FACE"];
 
@@ -24,12 +24,9 @@ const TYPE_TITLES: Record<string, string> = {
   ESFP: "The Entertainer",
 };
 
-export async function GET(req: Request) {
-  try {
-    const user = await getAuthUser(req);
-    if (!user) return jsonError("Unauthorized", 401);
-    if (!HR_ROLES.includes(user.role)) return jsonError("Access denied", 403);
-
+export const GET = createHandler(
+  { roles: HR_ROLES },
+  async (req, { user }) => {
     const { searchParams } = new URL(req.url);
     const userId = searchParams.get("userId");
 
@@ -38,11 +35,8 @@ export async function GET(req: Request) {
     }
 
     return await getTeamOverview(user.workspaceId);
-  } catch (err: unknown) {
-    console.error("Employee analytics GET error:", err);
-    return jsonError("Failed to fetch employee analytics", 500);
   }
-}
+);
 
 // ── Single Employee Full Profile ──────────────────────────────────────────
 

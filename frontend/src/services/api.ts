@@ -41,6 +41,7 @@ export const authApi = {
 // Onboarding
 export const onboardingApi = {
   getStatus: () => api.get('/onboarding'),
+  saveProgress: (data) => api.patch('/onboarding', data),
   complete: (formData) => api.post('/onboarding', formData, { headers: { 'Content-Type': 'multipart/form-data' } }),
 };
 

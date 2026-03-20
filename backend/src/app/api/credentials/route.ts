@@ -1,6 +1,6 @@
 import { NextRequest } from "next/server";
 import prisma from "@/lib/prisma";
-import { jsonOk, jsonError, getAuthUser } from "@/lib/api-utils";
+import { createHandler, jsonOk, jsonError } from "@/lib/create-handler";
 
 // Roles with full credential access
 const C_LEVEL = ["CEO", "CTO", "ADMIN"];
@@ -19,152 +19,142 @@ function decryptPassword(encoded: string): string {
 }
 
 // ── GET ──────────────────────────────────────────────────────────────────
-export async function GET(req: NextRequest) {
-  try {
-    const user = await getAuthUser(req);
-    if (!user) return jsonError("Unauthorized", 401);
+export const GET = createHandler({}, async (req: NextRequest, { user }) => {
+  const { searchParams } = new URL(req.url);
+  const action = searchParams.get("action");
 
-    const { searchParams } = new URL(req.url);
-    const action = searchParams.get("action");
-
-    // ── Access Logs (C-level report) ──
-    if (action === "logs") {
-      if (!C_LEVEL.includes(user.role)) {
-        return jsonError("Only C-level can view access logs", 403);
-      }
-
-      const logs = await prisma.credentialAccessLog.findMany({
-        orderBy: { createdAt: "desc" },
-        take: 500,
-      });
-
-      // Enrich with user + credential info
-      const userIds = [...new Set(logs.map((l) => l.userId))];
-      const credIds = [...new Set(logs.map((l) => l.credentialId))];
-
-      const [users, creds] = await Promise.all([
-        prisma.user.findMany({
-          where: { id: { in: userIds } },
-          select: { id: true, firstName: true, lastName: true, email: true, role: true },
-        }),
-        prisma.credential.findMany({
-          where: { id: { in: credIds } },
-          select: { id: true, title: true, category: true },
-        }),
-      ]);
-
-      const userMap = Object.fromEntries(users.map((u) => [u.id, u]));
-      const credMap = Object.fromEntries(creds.map((c) => [c.id, c]));
-
-      // Group: credential -> user -> action -> count + timestamps
-      const grouped: Record<string, Record<string, Record<string, { count: number; timestamps: string[] }>>> = {};
-      for (const log of logs) {
-        const cKey = log.credentialId;
-        const uKey = log.userId;
-        const aKey = log.action;
-        if (!grouped[cKey]) grouped[cKey] = {};
-        if (!grouped[cKey][uKey]) grouped[cKey][uKey] = {};
-        if (!grouped[cKey][uKey][aKey]) grouped[cKey][uKey][aKey] = { count: 0, timestamps: [] };
-        grouped[cKey][uKey][aKey].count++;
-        grouped[cKey][uKey][aKey].timestamps.push(log.createdAt.toISOString());
-      }
-
-      const report = Object.entries(grouped).map(([credId, users]) => ({
-        credential: credMap[credId] || { id: credId, title: "Deleted" },
-        users: Object.entries(users).map(([userId, actions]) => ({
-          user: userMap[userId] || { id: userId, firstName: "Unknown", lastName: "" },
-          actions: Object.entries(actions).map(([action, data]) => ({
-            action,
-            count: data.count,
-            timestamps: data.timestamps.slice(0, 10),
-          })),
-        })),
-      }));
-
-      return jsonOk({ success: true, data: report });
+  // ── Access Logs (C-level report) ──
+  if (action === "logs") {
+    if (!C_LEVEL.includes(user.role)) {
+      return jsonError("Only C-level can view access logs", 403);
     }
 
-    // ── List credentials ──
-    const category = searchParams.get("category");
-    const projectId = searchParams.get("projectId");
-    const search = searchParams.get("search");
-
-    const isFullAccess = C_LEVEL.includes(user.role);
-
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const where: any = {};
-
-    if (!isFullAccess) {
-      // Manager sees credentials they manage; others see granted or by accessLevel
-      where.OR = [
-        { createdById: user.id },
-        { managedById: user.id },
-        { accessGrants: { some: { userId: user.id } } },
-        { accessLevel: "ALL_STAFF" },
-        ...(["HR", "PRODUCT_OWNER", "CFO", "BRAND_FACE"].includes(user.role)
-          ? [{ accessLevel: { in: ["MANAGER_AND_ABOVE", "TEAM_AND_ABOVE", "ALL_STAFF"] } }]
-          : []),
-        ...(user.role.startsWith("SR_")
-          ? [{ accessLevel: { in: ["TEAM_AND_ABOVE", "ALL_STAFF"] } }]
-          : []),
-      ];
-    }
-
-    if (category && category !== "All") where.category = category;
-    if (projectId) where.projectId = projectId;
-    if (search) {
-      const searchFilter = [
-        { title: { contains: search, mode: "insensitive" } },
-        { username: { contains: search, mode: "insensitive" } },
-        { url: { contains: search, mode: "insensitive" } },
-      ];
-      if (where.OR) {
-        where.AND = [{ OR: where.OR }, { OR: searchFilter }];
-        delete where.OR;
-      } else {
-        where.OR = searchFilter;
-      }
-    }
-
-    const credentials = await prisma.credential.findMany({
-      where,
-      include: {
-        createdBy: {
-          select: { id: true, firstName: true, lastName: true, email: true, role: true },
-        },
-        accessGrants: {
-          select: { id: true, userId: true, canView: true, canCopy: true, canEdit: true, expiresAt: true, grantedById: true },
-        },
-        accessLogs: {
-          orderBy: { createdAt: "desc" },
-          take: 1,
-          select: { createdAt: true },
-        },
-      },
+    const logs = await prisma.credentialAccessLog.findMany({
       orderBy: { createdAt: "desc" },
+      take: 500,
     });
 
-    // Decrypt passwords for response and add metadata
-    const enriched = credentials.map((c) => ({
-      ...c,
-      password: decryptPassword(c.password),
-      _grantsCount: c.accessGrants.length,
-      _lastAccessed: c.accessLogs[0]?.createdAt || null,
+    // Enrich with user + credential info
+    const userIds = [...new Set(logs.map((l) => l.userId))];
+    const credIds = [...new Set(logs.map((l) => l.credentialId))];
+
+    const [users, creds] = await Promise.all([
+      prisma.user.findMany({
+        where: { id: { in: userIds } },
+        select: { id: true, firstName: true, lastName: true, email: true, role: true },
+      }),
+      prisma.credential.findMany({
+        where: { id: { in: credIds } },
+        select: { id: true, title: true, category: true },
+      }),
+    ]);
+
+    const userMap = Object.fromEntries(users.map((u) => [u.id, u]));
+    const credMap = Object.fromEntries(creds.map((c) => [c.id, c]));
+
+    // Group: credential -> user -> action -> count + timestamps
+    const grouped: Record<string, Record<string, Record<string, { count: number; timestamps: string[] }>>> = {};
+    for (const log of logs) {
+      const cKey = log.credentialId;
+      const uKey = log.userId;
+      const aKey = log.action;
+      if (!grouped[cKey]) grouped[cKey] = {};
+      if (!grouped[cKey][uKey]) grouped[cKey][uKey] = {};
+      if (!grouped[cKey][uKey][aKey]) grouped[cKey][uKey][aKey] = { count: 0, timestamps: [] };
+      grouped[cKey][uKey][aKey].count++;
+      grouped[cKey][uKey][aKey].timestamps.push(log.createdAt.toISOString());
+    }
+
+    const report = Object.entries(grouped).map(([credId, users]) => ({
+      credential: credMap[credId] || { id: credId, title: "Deleted" },
+      users: Object.entries(users).map(([userId, actions]) => ({
+        user: userMap[userId] || { id: userId, firstName: "Unknown", lastName: "" },
+        actions: Object.entries(actions).map(([action, data]) => ({
+          action,
+          count: data.count,
+          timestamps: data.timestamps.slice(0, 10),
+        })),
+      })),
     }));
 
-    return jsonOk({ success: true, data: enriched });
-  } catch (error) {
-    console.error("Credentials GET error:", error);
-    return jsonError("Internal server error", 500);
+    return jsonOk({ success: true, data: report });
   }
-}
+
+  // ── List credentials ──
+  const category = searchParams.get("category");
+  const projectId = searchParams.get("projectId");
+  const search = searchParams.get("search");
+
+  const isFullAccess = C_LEVEL.includes(user.role);
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const where: any = {};
+
+  if (!isFullAccess) {
+    // Manager sees credentials they manage; others see granted or by accessLevel
+    where.OR = [
+      { createdById: user.id },
+      { managedById: user.id },
+      { accessGrants: { some: { userId: user.id } } },
+      { accessLevel: "ALL_STAFF" },
+      ...(["HR", "PRODUCT_OWNER", "CFO", "BRAND_FACE"].includes(user.role)
+        ? [{ accessLevel: { in: ["MANAGER_AND_ABOVE", "TEAM_AND_ABOVE", "ALL_STAFF"] } }]
+        : []),
+      ...(user.role.startsWith("SR_")
+        ? [{ accessLevel: { in: ["TEAM_AND_ABOVE", "ALL_STAFF"] } }]
+        : []),
+    ];
+  }
+
+  if (category && category !== "All") where.category = category;
+  if (projectId) where.projectId = projectId;
+  if (search) {
+    const searchFilter = [
+      { title: { contains: search, mode: "insensitive" } },
+      { username: { contains: search, mode: "insensitive" } },
+      { url: { contains: search, mode: "insensitive" } },
+    ];
+    if (where.OR) {
+      where.AND = [{ OR: where.OR }, { OR: searchFilter }];
+      delete where.OR;
+    } else {
+      where.OR = searchFilter;
+    }
+  }
+
+  const credentials = await prisma.credential.findMany({
+    where,
+    include: {
+      createdBy: {
+        select: { id: true, firstName: true, lastName: true, email: true, role: true },
+      },
+      accessGrants: {
+        select: { id: true, userId: true, canView: true, canCopy: true, canEdit: true, expiresAt: true, grantedById: true },
+      },
+      accessLogs: {
+        orderBy: { createdAt: "desc" },
+        take: 1,
+        select: { createdAt: true },
+      },
+    },
+    orderBy: { createdAt: "desc" },
+  });
+
+  // Decrypt passwords for response and add metadata
+  const enriched = credentials.map((c) => ({
+    ...c,
+    password: decryptPassword(c.password),
+    _grantsCount: c.accessGrants.length,
+    _lastAccessed: c.accessLogs[0]?.createdAt || null,
+  }));
+
+  return jsonOk({ success: true, data: enriched });
+});
 
 // ── POST ─────────────────────────────────────────────────────────────────
-export async function POST(req: NextRequest) {
-  try {
-    const user = await getAuthUser(req);
-    if (!user) return jsonError("Unauthorized", 401);
-
+export const POST = createHandler(
+  { rateLimit: "write" },
+  async (req: NextRequest, { user }) => {
     const body = await req.json();
     const { action } = body;
 
@@ -294,18 +284,13 @@ export async function POST(req: NextRequest) {
         _lastAccessed: null,
       },
     }, 201);
-  } catch (error) {
-    console.error("Credentials POST error:", error);
-    return jsonError("Internal server error", 500);
   }
-}
+);
 
 // ── PATCH ────────────────────────────────────────────────────────────────
-export async function PATCH(req: NextRequest) {
-  try {
-    const user = await getAuthUser(req);
-    if (!user) return jsonError("Unauthorized", 401);
-
+export const PATCH = createHandler(
+  { rateLimit: "write" },
+  async (req: NextRequest, { user }) => {
     const body = await req.json();
     const { id, title, username, password, url, category, notes, accessLevel, projectId } = body;
     if (!id) return jsonError("Credential id is required", 400);
@@ -349,18 +334,13 @@ export async function PATCH(req: NextRequest) {
         _lastAccessed: credential.accessLogs[0]?.createdAt || null,
       },
     });
-  } catch (error) {
-    console.error("Credentials PATCH error:", error);
-    return jsonError("Internal server error", 500);
   }
-}
+);
 
 // ── DELETE ───────────────────────────────────────────────────────────────
-export async function DELETE(req: NextRequest) {
-  try {
-    const user = await getAuthUser(req);
-    if (!user) return jsonError("Unauthorized", 401);
-
+export const DELETE = createHandler(
+  { rateLimit: "write" },
+  async (req: NextRequest, { user }) => {
     const { searchParams } = new URL(req.url);
     const id = searchParams.get("id");
     if (!id) return jsonError("Credential id is required", 400);
@@ -375,8 +355,5 @@ export async function DELETE(req: NextRequest) {
     await prisma.credential.delete({ where: { id } });
 
     return jsonOk({ success: true, message: "Credential deleted successfully" });
-  } catch (error) {
-    console.error("Credentials DELETE error:", error);
-    return jsonError("Internal server error", 500);
   }
-}
+);

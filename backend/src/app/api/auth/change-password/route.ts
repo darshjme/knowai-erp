@@ -1,15 +1,13 @@
-import { NextRequest } from "next/server";
 import bcrypt from "bcryptjs";
 import prisma from "@/lib/prisma";
-import { jsonOk, jsonError, getAuthUser } from "@/lib/api-utils";
+import { createHandler, jsonOk, jsonError } from "@/lib/create-handler";
+import { changePasswordSchema } from "@/schemas/auth";
 
-export async function POST(req: NextRequest) {
-  try {
-    const user = await getAuthUser(req);
-    if (!user) return jsonError("Unauthorized", 401);
+export const POST = createHandler(
+  { schema: changePasswordSchema, rateLimit: "write" },
+  async (_req, { user, body }) => {
+    const { currentPassword, newPassword } = body;
 
-    const { currentPassword, newPassword } = await req.json();
-    if (!currentPassword || !newPassword) return jsonError("Both passwords required", 400);
     if (newPassword.length < 8) return jsonError("Password must be at least 8 characters", 400);
 
     // Verify current password
@@ -21,8 +19,5 @@ export async function POST(req: NextRequest) {
     await prisma.user.update({ where: { id: user.id }, data: { password: hashed } });
 
     return jsonOk({ success: true, message: "Password changed successfully" });
-  } catch (error) {
-    console.error("Change password error:", error);
-    return jsonError("Internal server error", 500);
   }
-}
+);
