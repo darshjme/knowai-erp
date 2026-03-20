@@ -1042,6 +1042,8 @@ enum AuditAction {
   LOGOUT
   EXPORT
   IMPORT
+  APPROVE
+  REJECT
 }
 
 enum AuditEntity {
@@ -1056,6 +1058,7 @@ enum AuditEntity {
   PAYROLL
   EXPENSE
   CREDENTIAL
+  LEAVE
 }
 
 model AuditLog {

@@ -3,6 +3,7 @@ import bcrypt from "bcryptjs";
 import prisma from "@/lib/prisma";
 import { createHandler, jsonOk, jsonError } from "@/lib/create-handler";
 import { teamCreateSchema, teamPatchSchema } from "@/schemas/admin";
+import { logAudit } from "@/lib/audit";
 
 // Roles that can see all team members with full details
 const FULL_ACCESS_ROLES = ["CEO", "CTO", "ADMIN", "HR"];
@@ -258,6 +259,19 @@ export const POST = createHandler(
       select: FULL_MEMBER_SELECT,
     });
 
+    // Audit log: team member creation
+    logAudit({
+      userId: user.id,
+      userName: `${user.firstName} ${user.lastName}`,
+      action: "CREATE",
+      entity: "USER",
+      entityId: newUser.id,
+      entityName: `${firstName} ${lastName}`,
+      description: `Onboarded team member ${firstName} ${lastName} with role ${role}`,
+      metadata: { email, role, department: department || null },
+      workspaceId: user.workspaceId,
+    });
+
     return jsonOk({ success: true, data: newUser }, 201);
   }
 );
@@ -301,6 +315,23 @@ export const PATCH = createHandler(
       select: FULL_MEMBER_SELECT,
     });
 
+    // Audit log: team member update (role change, status change, etc.)
+    const changes: string[] = [];
+    if (role !== undefined) changes.push(`role to ${role}`);
+    if (status !== undefined) changes.push(`status to ${status}`);
+    if (department !== undefined) changes.push(`department to ${department || "none"}`);
+    logAudit({
+      userId: user.id,
+      userName: `${user.firstName} ${user.lastName}`,
+      action: "UPDATE",
+      entity: "USER",
+      entityId: id,
+      entityName: `${target.firstName} ${target.lastName}`,
+      description: `Updated ${target.firstName} ${target.lastName}: ${changes.join(", ")}`,
+      metadata: { role, status, department, previousRole: target.role },
+      workspaceId: user.workspaceId,
+    });
+
     return jsonOk({ success: true, data: updated });
   }
 );
@@ -324,6 +355,19 @@ export const DELETE = createHandler(
     if (!deleteTarget) return jsonError("User not found", 404);
 
     await prisma.user.delete({ where: { id } });
+
+    // Audit log: team member deletion
+    logAudit({
+      userId: user.id,
+      userName: `${user.firstName} ${user.lastName}`,
+      action: "DELETE",
+      entity: "USER",
+      entityId: id,
+      entityName: `${deleteTarget.firstName} ${deleteTarget.lastName}`,
+      description: `Deleted team member ${deleteTarget.firstName} ${deleteTarget.lastName} (${deleteTarget.role})`,
+      metadata: { email: deleteTarget.email, role: deleteTarget.role },
+      workspaceId: user.workspaceId,
+    });
 
     return jsonOk({ success: true, message: "Member deleted successfully" });
   }

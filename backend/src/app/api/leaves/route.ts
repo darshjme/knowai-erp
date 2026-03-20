@@ -2,7 +2,9 @@ import { NextRequest } from "next/server";
 import prisma from "@/lib/prisma";
 import { createHandler, jsonOk, jsonError } from "@/lib/create-handler";
 import { notifyLeaveDecision, createNotification } from "@/lib/notifications";
-import { sendEmail, approvalEmailHtml } from "@/lib/email";
+import { approvalEmailHtml } from "@/lib/email";
+import { enqueueEmail } from "@/lib/email-queue";
+import { logAudit } from "@/lib/audit";
 
 // ─── GET — List leave requests ─────────────────────────────────────────────
 export const GET = createHandler({}, async (req: NextRequest, { user }) => {
@@ -135,6 +137,19 @@ export const POST = createHandler({ rateLimit: "write" }, async (req: NextReques
     ).catch(console.error);
   }
 
+  // Audit log: leave request creation
+  logAudit({
+    userId: user.id,
+    userName: employeeName || user.email,
+    action: "CREATE",
+    entity: "LEAVE",
+    entityId: leave.id,
+    entityName: `${type} leave`,
+    description: `Submitted ${type} leave request from ${start.toLocaleDateString()} to ${end.toLocaleDateString()}`,
+    metadata: { type, startDate, endDate, reason },
+    workspaceId: user.workspaceId,
+  });
+
   return jsonOk({ success: true, data: leave }, 201);
 });
 
@@ -200,6 +215,21 @@ export const PATCH = createHandler({ rateLimit: "write" }, async (req: NextReque
     },
   });
 
+  // Audit log: leave approval/rejection
+  const empName = `${updated.employee.firstName ?? ""} ${updated.employee.lastName ?? ""}`.trim();
+  const auditAction = action === "approve" ? "APPROVE" : "REJECT";
+  logAudit({
+    userId: user.id,
+    userName: `${user.firstName} ${user.lastName}`,
+    action: auditAction,
+    entity: "LEAVE",
+    entityId: id,
+    entityName: `${updated.type} leave`,
+    description: `${auditAction === "APPROVE" ? "Approved" : "Rejected"} ${updated.type} leave request for ${empName}`,
+    metadata: { employeeId: leave.employeeId, type: updated.type, note: note || null },
+    workspaceId: user.workspaceId,
+  });
+
   // Notify the employee about the leave decision
   notifyLeaveDecision(id, leave.employeeId, action === "approve").catch(console.error);
 
@@ -213,11 +243,11 @@ export const PATCH = createHandler({ rateLimit: "write" }, async (req: NextReque
       "End Date": new Date(updated.endDate).toLocaleDateString(),
       Reason: updated.reason || undefined,
     });
-    sendEmail(
+    enqueueEmail(
       updated.employee.email,
       `Leave request ${emailStatus}`,
       html
-    ).catch((err) => console.error("[LEAVE EMAIL]", err));
+    );
   }
 
   return jsonOk({ success: true, data: updated });

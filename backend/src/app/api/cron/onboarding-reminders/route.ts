@@ -1,6 +1,7 @@
 import { createHandler, jsonOk, jsonError } from "@/lib/create-handler";
 import prisma from "@/lib/prisma";
-import { sendEmail, onboardingReminderEmailHtml } from "@/lib/email";
+import { onboardingReminderEmailHtml } from "@/lib/email";
+import { enqueueEmail } from "@/lib/email-queue";
 import { logger } from "@/lib/logger";
 
 /**
@@ -63,27 +64,23 @@ export const GET = createHandler({ public: true }, async (req) => {
       continue;
     }
 
-    try {
-      await sendEmail(
-        user.email,
-        daysRemaining === 1
-          ? "⚠️ Final Warning: Complete Your KnowAI Profile Today"
-          : daysRemaining <= 3
-          ? "⏰ Urgent: Your Profile Deadline is Approaching"
-          : "📋 Reminder: Complete Your KnowAI Profile",
-        onboardingReminderEmailHtml(`${user.firstName} ${user.lastName}`, daysRemaining)
-      );
+    enqueueEmail(
+      user.email,
+      daysRemaining === 1
+        ? "⚠️ Final Warning: Complete Your KnowAI Profile Today"
+        : daysRemaining <= 3
+        ? "⏰ Urgent: Your Profile Deadline is Approaching"
+        : "📋 Reminder: Complete Your KnowAI Profile",
+      onboardingReminderEmailHtml(`${user.firstName} ${user.lastName}`, daysRemaining)
+    );
 
-      await prisma.user.update({
-        where: { id: user.id },
-        data: { lastReminderSentAt: now },
-      });
+    await prisma.user.update({
+      where: { id: user.id },
+      data: { lastReminderSentAt: now },
+    });
 
-      emailsSent++;
-      logger.info({ userId: user.id, daysRemaining }, "Onboarding reminder sent");
-    } catch (err) {
-      logger.error({ userId: user.id, err }, "Failed to send onboarding reminder");
-    }
+    emailsSent++;
+    logger.info({ userId: user.id, daysRemaining }, "Onboarding reminder enqueued");
   }
 
   return jsonOk({

@@ -1,7 +1,9 @@
 import prisma from "@/lib/prisma";
 import { createHandler, jsonOk, jsonError } from "@/lib/create-handler";
 import { createExpenseSchema, updateExpenseSchema } from "@/schemas/expenses";
-import { sendEmail, approvalEmailHtml } from "@/lib/email";
+import { approvalEmailHtml } from "@/lib/email";
+import { enqueueEmail } from "@/lib/email-queue";
+import { logAudit } from "@/lib/audit";
 
 // ─── Role Sets ───────────────────────────────────────────────────────────────
 
@@ -106,6 +108,19 @@ export const POST = createHandler(
           select: { id: true, firstName: true, lastName: true },
         },
       },
+    });
+
+    // Audit log: expense creation
+    logAudit({
+      userId: user.id,
+      userName: `${user.firstName} ${user.lastName}`,
+      action: "CREATE",
+      entity: "EXPENSE",
+      entityId: expense.id,
+      entityName: body.title,
+      description: `Submitted expense "${body.title}" for ${body.currency || "INR"} ${body.amount}`,
+      metadata: { amount: body.amount, category: body.category, currency: body.currency || "INR" },
+      workspaceId: user.workspaceId,
     });
 
     return jsonOk({ success: true, data: expense }, 201);
@@ -245,6 +260,22 @@ export const PATCH = createHandler(
       },
     });
 
+    // Audit log: expense approval/rejection
+    if (data.status === "APPROVED" || data.status === "REJECTED") {
+      const auditAction = data.status === "APPROVED" ? "APPROVE" : "REJECT";
+      logAudit({
+        userId: user.id,
+        userName: `${user.firstName} ${user.lastName}`,
+        action: auditAction,
+        entity: "EXPENSE",
+        entityId: id,
+        entityName: updated.title,
+        description: `${auditAction === "APPROVE" ? "Approved" : "Rejected"} expense "${updated.title}" (${updated.currency} ${Number(updated.amount).toLocaleString()})`,
+        metadata: { amount: Number(updated.amount), status: data.status, rejectNote: rejectNote || null },
+        workspaceId: user.workspaceId,
+      });
+    }
+
     // Fire-and-forget approval/rejection email to the submitter
     if ((data.status === "APPROVED" || data.status === "REJECTED") && updated.submitter.email) {
       const empName = `${updated.submitter.firstName ?? ""} ${updated.submitter.lastName ?? ""}`.trim() || "there";
@@ -254,11 +285,11 @@ export const PATCH = createHandler(
         Amount: `${updated.currency} ${Number(updated.amount).toLocaleString()}`,
         Category: updated.category || undefined,
       });
-      sendEmail(
+      enqueueEmail(
         updated.submitter.email,
         `Expense ${emailStatus}: ${updated.title}`,
         html
-      ).catch((err) => console.error("[EXPENSE EMAIL]", err));
+      );
     }
 
     return jsonOk({ success: true, data: updated });
@@ -283,6 +314,18 @@ export const DELETE = createHandler(
     // CEO, CFO, ADMIN can delete any expense; others can only delete own DRAFT
     if (canApproveAll(user.role)) {
       await prisma.expense.delete({ where: { id } });
+
+      logAudit({
+        userId: user.id,
+        userName: `${user.firstName} ${user.lastName}`,
+        action: "DELETE",
+        entity: "EXPENSE",
+        entityId: id,
+        entityName: expense.title,
+        description: `Deleted expense "${expense.title}"`,
+        workspaceId: user.workspaceId,
+      });
+
       return jsonOk({ success: true, message: "Expense deleted successfully" });
     }
 
@@ -295,6 +338,17 @@ export const DELETE = createHandler(
     }
 
     await prisma.expense.delete({ where: { id } });
+
+    logAudit({
+      userId: user.id,
+      userName: `${user.firstName} ${user.lastName}`,
+      action: "DELETE",
+      entity: "EXPENSE",
+      entityId: id,
+      entityName: expense.title,
+      description: `Deleted draft expense "${expense.title}"`,
+      workspaceId: user.workspaceId,
+    });
 
     return jsonOk({ success: true, message: "Expense deleted successfully" });
   }

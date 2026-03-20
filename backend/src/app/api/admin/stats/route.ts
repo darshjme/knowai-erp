@@ -1,5 +1,6 @@
 import prisma from "@/lib/prisma";
 import { createHandler, jsonOk } from "@/lib/create-handler";
+import { getQueueStatus } from "@/lib/email-queue";
 
 const ADMIN_ROLES = ["CTO", "CEO", "ADMIN"];
 
@@ -164,6 +165,7 @@ export const GET = createHandler(
           platform: process.platform,
           memoryUsageMB: Math.round(process.memoryUsage().heapUsed / (1024 * 1024) * 100) / 100,
         },
+        emailQueue: getQueueStatus(),
         dbTables,
       },
     });

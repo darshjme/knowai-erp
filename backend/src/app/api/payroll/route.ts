@@ -5,6 +5,7 @@ import {
   addPayrollLogSchema,
   updatePayrollSchema,
 } from "@/schemas/payroll";
+import { logAudit } from "@/lib/audit";
 
 // ─── Role Sets ───────────────────────────────────────────────────────────────
 
@@ -223,6 +224,19 @@ export const POST = createHandler(
       // Auto-update payroll status
       await recalculatePayrollStatus(body.payrollId);
 
+      // Audit log: payroll payment
+      logAudit({
+        userId: user.id,
+        userName: `${user.firstName} ${user.lastName}`,
+        action: "CREATE",
+        entity: "PAYROLL",
+        entityId: body.payrollId,
+        entityName: `Payment of ${Math.round(body.amount)}`,
+        description: `Processed payroll payment of ${Math.round(body.amount)} via ${body.mode} for payroll ${body.payrollId}`,
+        metadata: { amount: Math.round(body.amount), mode: body.mode, purpose: body.purpose, logId: log.id },
+        workspaceId: user.workspaceId,
+      });
+
       return jsonOk({ success: true, data: log }, 201);
     }
 
@@ -283,6 +297,20 @@ export const POST = createHandler(
       },
     });
 
+    // Audit log: payroll creation
+    const empName = `${employee.firstName} ${employee.lastName}`;
+    logAudit({
+      userId: user.id,
+      userName: `${user.firstName} ${user.lastName}`,
+      action: "CREATE",
+      entity: "PAYROLL",
+      entityId: payroll.id,
+      entityName: `Payroll ${body.month}/${body.year} - ${empName}`,
+      description: `Created payroll for ${empName} (${body.month}/${body.year}), total: ${calculatedTotal}`,
+      metadata: { employeeId: body.employeeId, month: body.month, year: body.year, totalPay: calculatedTotal },
+      workspaceId: user.workspaceId,
+    });
+
     return jsonOk({ success: true, data: payroll }, 201);
   }
 );
@@ -337,6 +365,20 @@ export const PATCH = createHandler(
       },
     });
 
+    // Audit log: payroll update
+    const payrollEmpName = `${payroll.employee.firstName} ${payroll.employee.lastName}`;
+    logAudit({
+      userId: user.id,
+      userName: `${user.firstName} ${user.lastName}`,
+      action: "UPDATE",
+      entity: "PAYROLL",
+      entityId: id,
+      entityName: `Payroll ${payroll.month}/${payroll.year} - ${payrollEmpName}`,
+      description: `Updated payroll for ${payrollEmpName} (${payroll.month}/${payroll.year})`,
+      metadata: { updates, employeeId: payroll.employeeId },
+      workspaceId: user.workspaceId,
+    });
+
     return jsonOk({ success: true, data: payroll });
   }
 );
@@ -365,6 +407,19 @@ export const DELETE = createHandler(
       // Recalculate payroll status after removing a log
       await recalculatePayrollStatus(log.payrollId);
 
+      // Audit log: payment log deletion
+      logAudit({
+        userId: user.id,
+        userName: `${user.firstName} ${user.lastName}`,
+        action: "DELETE",
+        entity: "PAYROLL",
+        entityId: log.payrollId,
+        entityName: `Payment log ${logId}`,
+        description: `Deleted payment log of ${log.amount} from payroll ${log.payrollId}`,
+        metadata: { logId, amount: log.amount, payrollId: log.payrollId },
+        workspaceId: user.workspaceId,
+      });
+
       return jsonOk({
         success: true,
         message: "Payment log deleted successfully",
@@ -383,6 +438,19 @@ export const DELETE = createHandler(
     // Delete associated logs first, then the payroll record
     await prisma.payrollLog.deleteMany({ where: { payrollId: id } });
     await prisma.payroll.delete({ where: { id } });
+
+    // Audit log: payroll deletion
+    logAudit({
+      userId: user.id,
+      userName: `${user.firstName} ${user.lastName}`,
+      action: "DELETE",
+      entity: "PAYROLL",
+      entityId: id,
+      entityName: `Payroll ${payrollToDelete.month}/${payrollToDelete.year}`,
+      description: `Deleted payroll record ${payrollToDelete.month}/${payrollToDelete.year} (total: ${payrollToDelete.totalPay})`,
+      metadata: { employeeId: payrollToDelete.employeeId, month: payrollToDelete.month, year: payrollToDelete.year },
+      workspaceId: user.workspaceId,
+    });
 
     return jsonOk({
       success: true,

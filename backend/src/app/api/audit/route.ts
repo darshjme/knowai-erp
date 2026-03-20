@@ -51,10 +51,13 @@ export const GET = createHandler(
     const entity = searchParams.get("entity");
     const userId = searchParams.get("userId");
     const search = searchParams.get("search");
-    const startDate = searchParams.get("startDate");
-    const endDate = searchParams.get("endDate");
+    const startDate = searchParams.get("startDate") || searchParams.get("from");
+    const endDate = searchParams.get("endDate") || searchParams.get("to");
     const page = parseInt(searchParams.get("page") || "1", 10);
-    const pageSize = parseInt(searchParams.get("pageSize") || "50", 10);
+    const limit = parseInt(
+      searchParams.get("pageSize") || searchParams.get("limit") || "50",
+      10
+    );
 
     const where: Record<string, unknown> = {
       workspaceId: user.workspaceId,
@@ -81,6 +84,8 @@ export const GET = createHandler(
 
     if (search) {
       where.OR = [
+        { action: { contains: search, mode: "insensitive" } },
+        { entity: { contains: search, mode: "insensitive" } },
         { entityName: { contains: search, mode: "insensitive" } },
         { description: { contains: search, mode: "insensitive" } },
         { userName: { contains: search, mode: "insensitive" } },
@@ -99,8 +104,8 @@ export const GET = createHandler(
         prisma.auditLog.findMany({
           where,
           orderBy: { createdAt: "desc" },
-          skip: (page - 1) * pageSize,
-          take: pageSize,
+          skip: (page - 1) * limit,
+          take: limit,
         }),
         prisma.auditLog.count({ where }),
       ]);
@@ -110,8 +115,8 @@ export const GET = createHandler(
         data: logs,
         total,
         page,
-        pageSize,
-        totalPages: Math.ceil(total / pageSize),
+        limit,
+        totalPages: Math.ceil(total / limit),
       });
     } catch (error) {
       // If audit_logs table doesn't exist yet, return mock data
@@ -330,14 +335,17 @@ function getMockAuditLogs(req: NextRequest) {
 
   const { searchParams } = new URL(req.url);
   const page = parseInt(searchParams.get("page") || "1", 10);
-  const pageSize = parseInt(searchParams.get("pageSize") || "50", 10);
+  const limit = parseInt(
+    searchParams.get("pageSize") || searchParams.get("limit") || "50",
+    10
+  );
 
   return jsonOk({
     success: true,
-    data: mockLogs.slice((page - 1) * pageSize, page * pageSize),
+    data: mockLogs.slice((page - 1) * limit, page * limit),
     total: mockLogs.length,
     page,
-    pageSize,
-    totalPages: Math.ceil(mockLogs.length / pageSize),
+    limit,
+    totalPages: Math.ceil(mockLogs.length / limit),
   });
 }

@@ -2,7 +2,8 @@ import { NextRequest } from "next/server";
 import prisma from "@/lib/prisma";
 import { createHandler, jsonOk, jsonError } from "@/lib/create-handler";
 import { createNotification } from "@/lib/notifications";
-import { sendEmail, approvalEmailHtml } from "@/lib/email";
+import { approvalEmailHtml } from "@/lib/email";
+import { enqueueEmail } from "@/lib/email-queue";
 
 // Full management access: CEO/CTO/ADMIN/HR/PRODUCT_OWNER
 const MANAGE_ROLES = ["CEO", "CTO", "ADMIN", "HR", "PRODUCT_OWNER"];
@@ -462,11 +463,11 @@ export const POST = createHandler(
           Status: status === "HIRED" ? "Selected" : "Not selected",
           ...(rejectionReason ? { Reason: rejectionReason } : {}),
         });
-        sendEmail(
+        enqueueEmail(
           candidate.email,
           status === "HIRED" ? "Congratulations — You have been selected!" : "Application Update",
           html
-        ).catch((err) => console.error("[HIRING EMAIL]", err));
+        );
       }
 
       return jsonOk({ success: true, data: updated });
@@ -682,7 +683,7 @@ export const POST = createHandler(
           Status: "Not selected",
           ...(rejectionReason ? { Reason: rejectionReason } : {}),
         });
-        sendEmail(candidate.email, "Application Update", html).catch((err) => console.error("[HIRING EMAIL]", err));
+        enqueueEmail(candidate.email, "Application Update", html);
       }
 
       return jsonOk({ success: true, data: updated });

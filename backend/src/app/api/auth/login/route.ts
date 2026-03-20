@@ -5,6 +5,7 @@ import { signToken } from "@/lib/auth";
 import { createHandler, jsonOk, jsonError } from "@/lib/create-handler";
 import { getRoleContext } from "@/lib/roles";
 import { loginSchema } from "@/schemas/auth";
+import { logAudit } from "@/lib/audit";
 
 // ── Rate limiting for brute-force protection ──
 const loginAttempts = new Map<string, { count: number; blockedUntil: number }>();
@@ -177,6 +178,18 @@ export const POST = createHandler(
           ...roleContext,
         },
       },
+    });
+
+    // Audit log: user login
+    logAudit({
+      userId: user.id,
+      userName: `${user.firstName} ${user.lastName}`,
+      action: "LOGIN",
+      entity: "USER",
+      entityId: user.id,
+      entityName: `${user.firstName} ${user.lastName}`,
+      description: `User ${user.firstName} ${user.lastName} logged in`,
+      workspaceId: user.workspaceId,
     });
 
     response.cookies.set("token", token, {

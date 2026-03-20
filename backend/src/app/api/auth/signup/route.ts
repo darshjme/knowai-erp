@@ -2,7 +2,9 @@ import bcrypt from "bcryptjs";
 import prisma from "@/lib/prisma";
 import { createHandler, jsonOk, jsonError } from "@/lib/create-handler";
 import { adminCreateUserSchema } from "@/schemas/auth";
-import { sendEmail, welcomeEmailHtml } from "@/lib/email";
+import { welcomeEmailHtml } from "@/lib/email";
+import { enqueueEmail } from "@/lib/email-queue";
+import { logAudit } from "@/lib/audit";
 
 // Only these roles can create new users (no public signup)
 const ALLOWED_CREATOR_ROLES = ["ADMIN", "HR", "CEO"];
@@ -94,13 +96,24 @@ export const POST = createHandler(
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const { password: _, ...userWithoutPassword } = user;
 
-    // Fire-and-forget: send welcome email to employee's personal email
-    sendEmail(
+    // Queue welcome email to employee's personal email
+    enqueueEmail(
       email,
       "Welcome to KnowAI — Your Account is Ready",
       welcomeEmailHtml(`${firstName} ${lastName}`, companyEmail, password)
-    ).catch((err) => {
-      console.error(`[SIGNUP] Failed to send welcome email to ${email}:`, err);
+    );
+
+    // Audit log: user creation
+    logAudit({
+      userId: authUser.id,
+      userName: `${authUser.firstName} ${authUser.lastName}`,
+      action: "CREATE",
+      entity: "USER",
+      entityId: user.id,
+      entityName: `${firstName} ${lastName}`,
+      description: `Created user ${firstName} ${lastName} with role ${assignedRole}`,
+      metadata: { email, role: assignedRole, department: department || null },
+      workspaceId: targetWorkspaceId,
     });
 
     // Return the created user (no auto-login token — the new user is not the caller)
