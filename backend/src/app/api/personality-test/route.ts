@@ -1,5 +1,6 @@
+import { NextRequest } from "next/server";
 import prisma from "@/lib/prisma";
-import { jsonOk, jsonError, getAuthUser } from "@/lib/api-utils";
+import { createHandler, jsonOk, jsonError } from "@/lib/create-handler";
 
 // ── Carl Jung / MBTI Question Bank (20 questions, 5 per axis) ────────────
 
@@ -256,126 +257,110 @@ const TYPE_DESCRIPTIONS: Record<string, { title: string; description: string; st
 
 // ── GET: Return personality test status + result ─────────────────────────
 
-export async function GET(req: Request) {
-  try {
-    const user = await getAuthUser(req);
-    if (!user) return jsonError("Unauthorized", 401);
-
-    if (user.personalityTestTaken && user.personalityType) {
-      const typeInfo = TYPE_DESCRIPTIONS[user.personalityType] || {
-        title: user.personalityType,
-        description: "Personality type details not available.",
-        strengths: [],
-        growthAreas: [],
-      };
-
-      return jsonOk({
-        taken: true,
-        personalityType: user.personalityType,
-        testDate: user.personalityTestDate,
-        testData: user.personalityTestData,
-        typeInfo,
-        questions: QUESTIONS,
-      });
-    }
-
-    return jsonOk({
-      taken: false,
-      questions: QUESTIONS,
-    });
-  } catch (err: unknown) {
-    console.error("Personality test GET error:", err);
-    return jsonError("Failed to fetch personality test data", 500);
-  }
-}
-
-// ── POST: Accept answers, calculate MBTI type, store in DB ───────────────
-
-export async function POST(req: Request) {
-  try {
-    const user = await getAuthUser(req);
-    if (!user) return jsonError("Unauthorized", 401);
-
-    const body = await req.json();
-    const { answers } = body;
-
-    // Validate: 20 answers, each "A" or "B"
-    if (!answers || !Array.isArray(answers) || answers.length !== 20) {
-      return jsonError("Exactly 20 answers are required", 400);
-    }
-
-    for (let i = 0; i < answers.length; i++) {
-      if (answers[i] !== "A" && answers[i] !== "B") {
-        return jsonError(`Answer ${i + 1} must be "A" or "B"`, 400);
-      }
-    }
-
-    // Score each axis: A = first letter, B = second letter
-    // EI: A=E, B=I | SN: A=S, B=N | TF: A=T, B=F | JP: A=J, B=P
-    const axisMap: Record<string, { first: string; second: string }> = {
-      EI: { first: "E", second: "I" },
-      SN: { first: "S", second: "N" },
-      TF: { first: "T", second: "F" },
-      JP: { first: "J", second: "P" },
-    };
-
-    const scores: Record<string, { A: number; B: number }> = {
-      EI: { A: 0, B: 0 },
-      SN: { A: 0, B: 0 },
-      TF: { A: 0, B: 0 },
-      JP: { A: 0, B: 0 },
-    };
-
-    for (let i = 0; i < 20; i++) {
-      const q = QUESTIONS[i];
-      const answer = answers[i] as "A" | "B";
-      scores[q.axis][answer]++;
-    }
-
-    // Determine the 4-letter type
-    let personalityType = "";
-    const axisResults: Record<string, { winner: string; scoreA: number; scoreB: number }> = {};
-
-    for (const axis of ["EI", "SN", "TF", "JP"]) {
-      const { first, second } = axisMap[axis];
-      const winner = scores[axis].A >= scores[axis].B ? first : second;
-      personalityType += winner;
-      axisResults[axis] = {
-        winner,
-        scoreA: scores[axis].A,
-        scoreB: scores[axis].B,
-      };
-    }
-
-    const typeInfo = TYPE_DESCRIPTIONS[personalityType] || {
-      title: personalityType,
+export const GET = createHandler({}, async (_req: NextRequest, { user }) => {
+  if (user.personalityTestTaken && user.personalityType) {
+    const typeInfo = TYPE_DESCRIPTIONS[user.personalityType] || {
+      title: user.personalityType,
       description: "Personality type details not available.",
       strengths: [],
       growthAreas: [],
     };
 
-    // Store in DB
-    await prisma.user.update({
-      where: { id: user.id },
-      data: {
-        personalityType,
-        personalityTestTaken: true,
-        personalityTestDate: new Date(),
-        personalityTestData: {
-          answers,
-          scores: axisResults,
-          calculatedAt: new Date().toISOString(),
-        },
-      },
-    });
-
     return jsonOk({
-      personalityType,
+      taken: true,
+      personalityType: user.personalityType,
+      testDate: user.personalityTestDate,
+      testData: user.personalityTestData,
       typeInfo,
-      scores: axisResults,
+      questions: QUESTIONS,
     });
-  } catch (err: unknown) {
-    console.error("Personality test POST error:", err);
-    return jsonError("Failed to process personality test", 500);
   }
-}
+
+  return jsonOk({
+    taken: false,
+    questions: QUESTIONS,
+  });
+});
+
+// ── POST: Accept answers, calculate MBTI type, store in DB ───────────────
+
+export const POST = createHandler({ rateLimit: "write" }, async (req: NextRequest, { user }) => {
+  const body = await req.json();
+  const { answers } = body;
+
+  // Validate: 20 answers, each "A" or "B"
+  if (!answers || !Array.isArray(answers) || answers.length !== 20) {
+    return jsonError("Exactly 20 answers are required", 400);
+  }
+
+  for (let i = 0; i < answers.length; i++) {
+    if (answers[i] !== "A" && answers[i] !== "B") {
+      return jsonError(`Answer ${i + 1} must be "A" or "B"`, 400);
+    }
+  }
+
+  // Score each axis: A = first letter, B = second letter
+  // EI: A=E, B=I | SN: A=S, B=N | TF: A=T, B=F | JP: A=J, B=P
+  const axisMap: Record<string, { first: string; second: string }> = {
+    EI: { first: "E", second: "I" },
+    SN: { first: "S", second: "N" },
+    TF: { first: "T", second: "F" },
+    JP: { first: "J", second: "P" },
+  };
+
+  const scores: Record<string, { A: number; B: number }> = {
+    EI: { A: 0, B: 0 },
+    SN: { A: 0, B: 0 },
+    TF: { A: 0, B: 0 },
+    JP: { A: 0, B: 0 },
+  };
+
+  for (let i = 0; i < 20; i++) {
+    const q = QUESTIONS[i];
+    const answer = answers[i] as "A" | "B";
+    scores[q.axis][answer]++;
+  }
+
+  // Determine the 4-letter type
+  let personalityType = "";
+  const axisResults: Record<string, { winner: string; scoreA: number; scoreB: number }> = {};
+
+  for (const axis of ["EI", "SN", "TF", "JP"]) {
+    const { first, second } = axisMap[axis];
+    const winner = scores[axis].A >= scores[axis].B ? first : second;
+    personalityType += winner;
+    axisResults[axis] = {
+      winner,
+      scoreA: scores[axis].A,
+      scoreB: scores[axis].B,
+    };
+  }
+
+  const typeInfo = TYPE_DESCRIPTIONS[personalityType] || {
+    title: personalityType,
+    description: "Personality type details not available.",
+    strengths: [],
+    growthAreas: [],
+  };
+
+  // Store in DB
+  await prisma.user.update({
+    where: { id: user.id },
+    data: {
+      personalityType,
+      personalityTestTaken: true,
+      personalityTestDate: new Date(),
+      personalityTestData: {
+        answers,
+        scores: axisResults,
+        calculatedAt: new Date().toISOString(),
+      },
+    },
+  });
+
+  return jsonOk({
+    personalityType,
+    typeInfo,
+    scores: axisResults,
+  });
+});

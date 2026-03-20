@@ -1,12 +1,13 @@
-import { NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
+import { createHandler, jsonOk } from "@/lib/create-handler";
+import { NextResponse } from "next/server";
 
 /**
  * GET /api/health
  * Returns service health: DB connectivity, uptime, and version.
  * Used by load balancers, monitoring, and CI smoke tests.
  */
-export async function GET() {
+export const GET = createHandler({ public: true }, async () => {
   const start = Date.now();
   let dbStatus: "ok" | "error" = "error";
   let dbLatencyMs = 0;
@@ -36,4 +37,4 @@ export async function GET() {
     },
     { status }
   );
-}
+});

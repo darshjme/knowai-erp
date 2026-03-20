@@ -1,5 +1,5 @@
 import { NextRequest } from "next/server";
-import { jsonOk, jsonError, getAuthUser } from "@/lib/api-utils";
+import { createHandler, jsonOk, jsonError } from "@/lib/create-handler";
 
 // ---------------------------------------------------------------------------
 // In-memory SOP store (MVP — resets on server restart)
@@ -93,163 +93,131 @@ function seedIfEmpty() {
 // ---------------------------------------------------------------------------
 // GET /api/sops?department=X&status=X
 // ---------------------------------------------------------------------------
-export async function GET(req: NextRequest) {
-  try {
-    const user = await getAuthUser(req);
-    if (!user) return jsonError("Unauthorized", 401);
+export const GET = createHandler({}, async (req: NextRequest) => {
+  seedIfEmpty();
 
-    seedIfEmpty();
+  const { searchParams } = new URL(req.url);
+  const department = searchParams.get("department");
+  const status = searchParams.get("status");
 
-    const { searchParams } = new URL(req.url);
-    const department = searchParams.get("department");
-    const status = searchParams.get("status");
+  let sops = Array.from(sopStore.values());
 
-    let sops = Array.from(sopStore.values());
-
-    if (department && department !== "All") {
-      sops = sops.filter((s) => s.department === department);
-    }
-    if (status && status !== "All") {
-      sops = sops.filter((s) => s.status === status);
-    }
-
-    sops.sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime());
-
-    return jsonOk({ success: true, data: sops });
-  } catch (error) {
-    console.error("SOP GET error:", error);
-    return jsonError("Internal server error", 500);
+  if (department && department !== "All") {
+    sops = sops.filter((s) => s.department === department);
   }
-}
+  if (status && status !== "All") {
+    sops = sops.filter((s) => s.status === status);
+  }
+
+  sops.sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime());
+
+  return jsonOk({ success: true, data: sops });
+});
 
 // ---------------------------------------------------------------------------
 // POST /api/sops — create SOP (ADMIN, PROJECT_MANAGER, HR only)
 // ---------------------------------------------------------------------------
-export async function POST(req: NextRequest) {
-  try {
-    const user = await getAuthUser(req);
-    if (!user) return jsonError("Unauthorized", 401);
-
-    if (!["ADMIN", "PRODUCT_OWNER", "HR"].includes(user.role)) {
-      return jsonError("Only Admin, PM, or HR can create SOPs", 403);
-    }
-
-    seedIfEmpty();
-
-    const body = await req.json();
-    const { title, description, department, steps, status } = body;
-
-    if (!title || !department) {
-      return jsonError("Title and department are required", 400);
-    }
-
-    const id = generateId();
-    const now = new Date().toISOString();
-
-    const sop: SOP = {
-      id,
-      title,
-      description: description || "",
-      department,
-      steps: (steps || []).map((s: SOPStep, i: number) => ({
-        order: s.order ?? i + 1,
-        title: s.title || "",
-        description: s.description || "",
-        assigneeRole: s.assigneeRole || "",
-      })),
-      status: status === "ACTIVE" ? "ACTIVE" : "DRAFT",
-      version: 1,
-      createdBy: user.id,
-      createdAt: now,
-      updatedAt: now,
-    };
-
-    sopStore.set(id, sop);
-
-    return jsonOk({ success: true, data: sop }, 201);
-  } catch (error) {
-    console.error("SOP POST error:", error);
-    return jsonError("Internal server error", 500);
+export const POST = createHandler({ rateLimit: "write" }, async (req: NextRequest, { user }) => {
+  if (!["ADMIN", "PRODUCT_OWNER", "HR"].includes(user.role)) {
+    return jsonError("Only Admin, PM, or HR can create SOPs", 403);
   }
-}
+
+  seedIfEmpty();
+
+  const body = await req.json();
+  const { title, description, department, steps, status } = body;
+
+  if (!title || !department) {
+    return jsonError("Title and department are required", 400);
+  }
+
+  const id = generateId();
+  const now = new Date().toISOString();
+
+  const sop: SOP = {
+    id,
+    title,
+    description: description || "",
+    department,
+    steps: (steps || []).map((s: SOPStep, i: number) => ({
+      order: s.order ?? i + 1,
+      title: s.title || "",
+      description: s.description || "",
+      assigneeRole: s.assigneeRole || "",
+    })),
+    status: status === "ACTIVE" ? "ACTIVE" : "DRAFT",
+    version: 1,
+    createdBy: user.id,
+    createdAt: now,
+    updatedAt: now,
+  };
+
+  sopStore.set(id, sop);
+
+  return jsonOk({ success: true, data: sop }, 201);
+});
 
 // ---------------------------------------------------------------------------
 // PATCH /api/sops — update SOP
 // ---------------------------------------------------------------------------
-export async function PATCH(req: NextRequest) {
-  try {
-    const user = await getAuthUser(req);
-    if (!user) return jsonError("Unauthorized", 401);
-
-    if (!["ADMIN", "PRODUCT_OWNER", "HR"].includes(user.role)) {
-      return jsonError("Only Admin, PM, or HR can update SOPs", 403);
-    }
-
-    seedIfEmpty();
-
-    const body = await req.json();
-    const { id, ...updates } = body;
-
-    if (!id) return jsonError("SOP id is required", 400);
-
-    const sop = sopStore.get(id);
-    if (!sop) return jsonError("SOP not found", 404);
-
-    const previousStatus = sop.status;
-
-    if (updates.title !== undefined) sop.title = updates.title;
-    if (updates.description !== undefined) sop.description = updates.description;
-    if (updates.department !== undefined) sop.department = updates.department;
-    if (updates.steps !== undefined) {
-      sop.steps = updates.steps.map((s: SOPStep, i: number) => ({
-        order: s.order ?? i + 1,
-        title: s.title || "",
-        description: s.description || "",
-        assigneeRole: s.assigneeRole || "",
-      }));
-    }
-    if (updates.status !== undefined) sop.status = updates.status;
-
-    // Bump version when publishing (transitioning to ACTIVE or re-publishing while already ACTIVE)
-    if (updates.status === "ACTIVE" && (previousStatus === "DRAFT" || previousStatus === "ACTIVE")) {
-      sop.version += 1;
-    }
-
-    sop.updatedAt = new Date().toISOString();
-    sopStore.set(id, sop);
-
-    return jsonOk({ success: true, data: sop });
-  } catch (error) {
-    console.error("SOP PATCH error:", error);
-    return jsonError("Internal server error", 500);
+export const PATCH = createHandler({ rateLimit: "write" }, async (req: NextRequest, { user }) => {
+  if (!["ADMIN", "PRODUCT_OWNER", "HR"].includes(user.role)) {
+    return jsonError("Only Admin, PM, or HR can update SOPs", 403);
   }
-}
+
+  seedIfEmpty();
+
+  const body = await req.json();
+  const { id, ...updates } = body;
+
+  if (!id) return jsonError("SOP id is required", 400);
+
+  const sop = sopStore.get(id);
+  if (!sop) return jsonError("SOP not found", 404);
+
+  const previousStatus = sop.status;
+
+  if (updates.title !== undefined) sop.title = updates.title;
+  if (updates.description !== undefined) sop.description = updates.description;
+  if (updates.department !== undefined) sop.department = updates.department;
+  if (updates.steps !== undefined) {
+    sop.steps = updates.steps.map((s: SOPStep, i: number) => ({
+      order: s.order ?? i + 1,
+      title: s.title || "",
+      description: s.description || "",
+      assigneeRole: s.assigneeRole || "",
+    }));
+  }
+  if (updates.status !== undefined) sop.status = updates.status;
+
+  // Bump version when publishing (transitioning to ACTIVE or re-publishing while already ACTIVE)
+  if (updates.status === "ACTIVE" && (previousStatus === "DRAFT" || previousStatus === "ACTIVE")) {
+    sop.version += 1;
+  }
+
+  sop.updatedAt = new Date().toISOString();
+  sopStore.set(id, sop);
+
+  return jsonOk({ success: true, data: sop });
+});
 
 // ---------------------------------------------------------------------------
 // DELETE /api/sops?id=X — delete SOP (ADMIN only)
 // ---------------------------------------------------------------------------
-export async function DELETE(req: NextRequest) {
-  try {
-    const user = await getAuthUser(req);
-    if (!user) return jsonError("Unauthorized", 401);
-
-    if (user.role !== "ADMIN") {
-      return jsonError("Only Admin can delete SOPs", 403);
-    }
-
-    seedIfEmpty();
-
-    const { searchParams } = new URL(req.url);
-    const id = searchParams.get("id");
-
-    if (!id) return jsonError("SOP id is required", 400);
-
-    const existed = sopStore.delete(id);
-    if (!existed) return jsonError("SOP not found", 404);
-
-    return jsonOk({ success: true, message: "SOP deleted" });
-  } catch (error) {
-    console.error("SOP DELETE error:", error);
-    return jsonError("Internal server error", 500);
+export const DELETE = createHandler({ rateLimit: "write" }, async (req: NextRequest, { user }) => {
+  if (user.role !== "ADMIN") {
+    return jsonError("Only Admin can delete SOPs", 403);
   }
-}
+
+  seedIfEmpty();
+
+  const { searchParams } = new URL(req.url);
+  const id = searchParams.get("id");
+
+  if (!id) return jsonError("SOP id is required", 400);
+
+  const existed = sopStore.delete(id);
+  if (!existed) return jsonError("SOP not found", 404);
+
+  return jsonOk({ success: true, message: "SOP deleted" });
+});

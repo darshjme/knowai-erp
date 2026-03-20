@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getAuthFromHeaders, jsonError } from "@/lib/api-utils";
+import { createHandler, jsonError } from "@/lib/create-handler";
 import { webhooksDB } from "@/lib/webhooks-store";
 import { resolve } from "dns/promises";
 
@@ -92,75 +92,78 @@ async function isUrlSafe(urlString: string): Promise<boolean> {
 }
 
 // POST /api/webhooks/:id/test - Test webhook delivery
-export async function POST(
-  request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
-  const auth = getAuthFromHeaders(request);
-  if (!auth) return jsonError("Unauthorized", 401);
-  if (auth.role !== "ADMIN") return jsonError("Forbidden: Admin access required", 403);
+const _POST = createHandler(
+  { roles: ["ADMIN"], rateLimit: "write" },
+  async (req: NextRequest, { user }) => {
+    const segments = req.nextUrl.pathname.split("/");
+    // URL pattern: /api/webhooks/[id]/test → segments = ["", "api", "webhooks", "<id>", "test"]
+    const id = segments[segments.length - 2];
 
-  const { id } = await params;
-  const webhook = webhooksDB.get(id);
+    const webhook = webhooksDB.get(id);
 
-  if (!webhook) {
-    return NextResponse.json(
-      { success: false, error: "Webhook not found" },
-      { status: 404 }
-    );
-  }
+    if (!webhook) {
+      return NextResponse.json(
+        { success: false, error: "Webhook not found" },
+        { status: 404 }
+      );
+    }
 
-  // SSRF protection: validate the webhook URL before making requests
-  const safe = await isUrlSafe(webhook.url);
-  if (!safe) {
-    return NextResponse.json(
-      {
+    // SSRF protection: validate the webhook URL before making requests
+    const safe = await isUrlSafe(webhook.url);
+    if (!safe) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: "Webhook URL is not allowed: internal or private addresses are blocked",
+        },
+        { status: 400 }
+      );
+    }
+
+    try {
+      const testPayload = {
+        event: "webhook.test",
+        webhook_id: webhook.id,
+        timestamp: new Date().toISOString(),
+        data: {
+          message: "This is a test webhook delivery",
+        },
+      };
+
+      const controller = new AbortController();
+      const timeout = setTimeout(() => controller.abort(), 10000); // 10s timeout
+
+      const response = await fetch(webhook.url, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "X-Webhook-Secret": webhook.secret || "",
+        },
+        body: JSON.stringify(testPayload),
+        signal: controller.signal,
+        redirect: "error", // Prevent redirect-based SSRF
+      }).catch(() => null).finally(() => clearTimeout(timeout));
+
+      const delivered = response?.ok ?? false;
+
+      return NextResponse.json({
+        success: true,
+        delivered,
+        status: response?.status ?? 0,
+        message: delivered
+          ? "Test webhook delivered successfully"
+          : "Test delivery failed - webhook endpoint may be unreachable",
+      });
+    } catch {
+      return NextResponse.json({
         success: false,
-        error: "Webhook URL is not allowed: internal or private addresses are blocked",
-      },
-      { status: 400 }
-    );
+        delivered: false,
+        message: "Failed to deliver test webhook",
+      });
+    }
   }
+);
 
-  try {
-    const testPayload = {
-      event: "webhook.test",
-      webhook_id: webhook.id,
-      timestamp: new Date().toISOString(),
-      data: {
-        message: "This is a test webhook delivery",
-      },
-    };
-
-    const controller = new AbortController();
-    const timeout = setTimeout(() => controller.abort(), 10000); // 10s timeout
-
-    const response = await fetch(webhook.url, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "X-Webhook-Secret": webhook.secret || "",
-      },
-      body: JSON.stringify(testPayload),
-      signal: controller.signal,
-      redirect: "error", // Prevent redirect-based SSRF
-    }).catch(() => null).finally(() => clearTimeout(timeout));
-
-    const delivered = response?.ok ?? false;
-
-    return NextResponse.json({
-      success: true,
-      delivered,
-      status: response?.status ?? 0,
-      message: delivered
-        ? "Test webhook delivered successfully"
-        : "Test delivery failed - webhook endpoint may be unreachable",
-    });
-  } catch {
-    return NextResponse.json({
-      success: false,
-      delivered: false,
-      message: "Failed to deliver test webhook",
-    });
-  }
+export async function POST(req: NextRequest) {
+  return _POST(req);
 }
