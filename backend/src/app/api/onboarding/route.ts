@@ -3,8 +3,7 @@ import bcrypt from "bcryptjs";
 import prisma from "@/lib/prisma";
 import { createHandler, jsonOk, jsonError } from "@/lib/create-handler";
 import { isProfileComplete } from "@/lib/profile-complete";
-import { writeFile, mkdir } from "fs/promises";
-import path from "path";
+import { uploadFile } from "@/lib/storage";
 
 /**
  * Onboarding API — 4-step wizard with save/resume.
@@ -132,7 +131,6 @@ export const POST = createHandler({ rateLimit: "write" }, async (req: NextReques
   const hashedSecretAnswer = await bcrypt.hash(fields.secretAnswer, 12);
 
   // ── File uploads ──
-  const uploadsDir = path.join(process.cwd(), "uploads");
   const allowedDocTypes = [
     "application/pdf",
     "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
@@ -153,7 +151,7 @@ export const POST = createHandler({ rateLimit: "write" }, async (req: NextReques
     if (!allowedDocTypes.includes(resumeFile.type)) {
       return jsonError("Resume must be a PDF or DOCX file", 400);
     }
-    resumeUrl = await saveFile(resumeFile, uploadsDir, "resumes", user.id);
+    resumeUrl = await saveFile(resumeFile, "resumes", user.id);
   }
 
   // Gov ID
@@ -164,7 +162,7 @@ export const POST = createHandler({ rateLimit: "write" }, async (req: NextReques
     if (![...allowedDocTypes, ...allowedImageTypes].includes(govIdFile.type)) {
       return jsonError("Government ID must be a PDF, DOCX, or image file", 400);
     }
-    govIdUrl = await saveFile(govIdFile, uploadsDir, "gov-ids", user.id);
+    govIdUrl = await saveFile(govIdFile, "gov-ids", user.id);
   }
 
   // Profile photo
@@ -175,7 +173,7 @@ export const POST = createHandler({ rateLimit: "write" }, async (req: NextReques
     if (!allowedImageTypes.includes(profilePhotoFile.type)) {
       return jsonError("Profile photo must be a JPEG, PNG, WebP, or GIF image", 400);
     }
-    avatarUrl = await saveFile(profilePhotoFile, uploadsDir, "avatars", user.id);
+    avatarUrl = await saveFile(profilePhotoFile, "avatars", user.id);
   }
 
   // Build update data
@@ -237,24 +235,17 @@ export const POST = createHandler({ rateLimit: "write" }, async (req: NextReques
   });
 });
 
-// ─── Helper: Save uploaded file to disk ─────────────────────────────────────
+// ─── Helper: Save uploaded file to cloud / local storage ─────────────────────
 
 async function saveFile(
   file: File,
-  baseDir: string,
   subDir: string,
   userId: string
 ): Promise<string> {
-  const dir = path.join(baseDir, subDir);
-  await mkdir(dir, { recursive: true });
-
   const ext = file.name.split(".").pop() || "bin";
   const sanitizedExt = ext.replace(/[^a-zA-Z0-9]/g, "");
-  const fileName = `${userId}-${Date.now()}.${sanitizedExt}`;
-  const filePath = path.join(dir, fileName);
+  const key = `${subDir}/${userId}-${Date.now()}.${sanitizedExt}`;
 
   const buffer = Buffer.from(await file.arrayBuffer());
-  await writeFile(filePath, buffer);
-
-  return `/api/files/serve/${fileName}`;
+  return uploadFile(key, buffer, file.type);
 }

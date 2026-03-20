@@ -23,17 +23,17 @@
   3. **P95 latency:** Alert when p95 transaction duration > 3 seconds
 - **Status:** Requires manual Sentry dashboard configuration — cannot be automated via code
 
-### Figma Design Tokens Sync
-- **What:** Script to sync DESIGN.md tokens (colors, spacing, typography) to Figma variables via REST API
-- **Why:** Eliminates manual translation between design and code. Single source of truth.
-- **Effort:** M (human: 1 week / CC: ~45 min)
-- **Depends on:** DESIGN.md (done), Figma Premium API access
+~~### Figma Design Tokens Sync~~ ✅ DONE
+- Script at scripts/sync-figma-tokens.ts syncs design-tokens.json to Figma Variables API
+- Run: `npm run sync:figma` (or `--dry-run` to preview)
+- Requires FIGMA_ACCESS_TOKEN and FIGMA_FILE_KEY env vars
 
-### Cloud File Storage (S3/R2)
-- **What:** Migrate file uploads (resumes, profile photos, gov IDs) from local filesystem to S3 or Cloudflare R2
-- **Why:** Local filesystem storage is lost if server is replaced. Not suitable for horizontal scaling or container deployments.
-- **Effort:** S (human: 2 days / CC: ~30 min)
-- **Depends on:** Onboarding overhaul (file uploads now include photos + gov IDs)
+~~### Cloud File Storage (S3/R2)~~ ✅ DONE
+- S3-compatible storage abstraction at backend/src/lib/storage.ts
+- Works with Hetzner Object Storage (or any S3-compatible service)
+- Falls back to local filesystem when S3 env vars are not set
+- Onboarding uploads (resume, photo, gov ID) use the new abstraction
+- Requires S3_ENDPOINT, S3_BUCKET, S3_ACCESS_KEY, S3_SECRET_KEY env vars
 
 ~~### Staging Environment~~ ✅ DONE
 - docker-compose.staging.yml with Postgres 16, backend (Next.js), frontend (nginx)
