@@ -22,7 +22,7 @@ module.exports = {
     },
     {
       name: 'knowai-frontend',
-      script: 'node_modules/.bin/serve',
+      script: '/usr/bin/serve',
       args: 'dist -l 5173 -s',
       cwd: '/opt/knowai-erp/frontend',
       instances: 1,
