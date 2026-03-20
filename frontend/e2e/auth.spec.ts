@@ -1,7 +1,7 @@
 import { test, expect } from '@playwright/test';
 
-const TEST_USER = { email: 'darsh@knowai.com', password: 'admin123' };
-const INVALID_USER = { email: 'nonexistent@knowai.com', password: 'wrongpassword' };
+const TEST_USER = { email: 'darsh@knowai.biz', password: 'admin123' };
+const INVALID_USER = { email: 'nonexistent@knowai.biz', password: 'wrongpassword' };
 
 test.describe('Authentication', () => {
   test.beforeEach(async ({ page }) => {
@@ -16,7 +16,7 @@ test.describe('Authentication', () => {
 
   test('shows login page with sign-in form', async ({ page }) => {
     await page.goto('/login');
-    await expect(page.locator('text=Sign in')).toBeVisible();
+    await expect(page.locator('text=Welcome back')).toBeVisible();
     await expect(page.locator('input[type="email"]')).toBeVisible();
     await expect(page.locator('input[type="password"]')).toBeVisible();
   });

@@ -1,6 +1,6 @@
 import { test, expect } from '@playwright/test';
 
-const TEST_USER = { email: 'darsh@knowai.com', password: 'admin123' };
+const TEST_USER = { email: 'darsh@knowai.biz', password: 'admin123' };
 
 test.describe('Navigation & Dashboard', () => {
   test.beforeEach(async ({ page }) => {
@@ -15,6 +15,11 @@ test.describe('Navigation & Dashboard', () => {
     await page.fill('input[type="password"]', TEST_USER.password);
     await page.click('button[type="submit"]');
     await page.waitForURL(/\/(dashboard|onboarding)/, { timeout: 10000 });
+    // Dismiss welcome tour if present
+    const skipTour = page.locator('text=Skip tour');
+    if (await skipTour.isVisible({ timeout: 2000 }).catch(() => false)) {
+      await skipTour.click();
+    }
   });
 
   test('dashboard loads with key widgets', async ({ page }) => {
