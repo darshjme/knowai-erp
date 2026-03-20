@@ -1,5 +1,13 @@
 # TODOS
 
+## P1 — High Priority
+
+### E2E Test Suite (Playwright)
+- **What:** Playwright E2E tests for critical user journeys (auth, payroll, hiring, expenses)
+- **Why:** Catches integration bugs that unit tests miss. Prevents regressions in UI flows. Biggest testing gap after Foundation First completion.
+- **Effort:** M (human: 1 week / CC: ~1 hour)
+- **Depends on:** Foundation First (test framework, rich seed data) — now unblocked
+
 ## P2 — Post Foundation First
 
 ### API Documentation (OpenAPI)
@@ -8,11 +16,11 @@
 - **Effort:** S (human: 2 days / CC: ~20 min)
 - **Depends on:** Zod validation layer (Foundation First)
 
-### E2E Test Suite (Playwright)
-- **What:** Playwright E2E tests for critical user journeys (auth, payroll, hiring, expenses)
-- **Why:** Catches integration bugs that unit tests miss. Prevents regressions in UI flows
-- **Effort:** M (human: 1 week / CC: ~1 hour)
-- **Depends on:** Foundation First (test framework, rich seed data)
+### Sentry Alert Rules
+- **What:** Configure Sentry alert rules for error rate spikes, new error types, and p95 latency threshold breaches
+- **Why:** Without alert rules, errors go to Sentry dashboard but nobody gets notified. Errors are invisible until someone manually checks.
+- **Effort:** S (human: 1 day / CC: ~15 min)
+- **Depends on:** Sentry integration (Foundation First PR1)
 
 ### Figma Design Tokens Sync
 - **What:** Script to sync DESIGN.md tokens (colors, spacing, typography) to Figma variables via REST API
