@@ -49,6 +49,7 @@ const Requests = lazy(() => import('./pages/Requests'));
 const ChangeRequests = lazy(() => import('./pages/ChangeRequests'));
 const Careers = lazy(() => import('./pages/Careers'));
 const ContentWorkspace = lazy(() => import('./pages/ContentWorkspace'));
+const NotFound = lazy(() => import('./pages/NotFound'));
 
 import 'bootstrap/dist/css/bootstrap.min.css';
 import 'react-toastify/dist/ReactToastify.css';
@@ -156,7 +157,7 @@ function AppRoutes() {
           <Route path="content-workspace" element={<ContentWorkspace />} />
         </Route>
         <Route path="/careers" element={<Careers />} />
-        <Route path="*" element={<ProtectedRoute><Navigate to="/dashboard" replace /></ProtectedRoute>} />
+        <Route path="*" element={<NotFound />} />
       </Routes>
     </Suspense>
   );

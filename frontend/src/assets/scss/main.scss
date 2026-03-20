@@ -651,6 +651,28 @@ a { color: var(--kai-primary); text-decoration: none; &:hover { color: var(--kai
   .settings-layout > *:first-child { width: 100% !important; flex: none !important; }
 }
 
+// ── Mobile: stat cards stack + tables scroll ─────────
+@media (max-width: 768px) {
+  // Stat cards: full width stacking
+  .stat-card { min-width: 0; }
+
+  // Force Bootstrap grid columns to stack
+  .row > [class*="col-sm-6"],
+  .row > [class*="col-md-3"] {
+    flex: 0 0 100%;
+    max-width: 100%;
+  }
+
+  // Tables: horizontal scroll
+  .kai-card > div:has(> .kai-table),
+  .kai-card > .kai-card-body:has(> table) {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .kai-table { min-width: 600px; }
+}
+
 // Prevent horizontal scroll everywhere
 html, body { overflow-x: hidden; max-width: 100vw; }
 .app-content { overflow-x: hidden; max-width: 100%; }
@@ -746,6 +768,51 @@ html, body { overflow-x: hidden; max-width: 100vw; }
 
   .doc-upload-card { background: var(--kai-surface); }
   .backup-codes-grid .backup-code { background: var(--kai-surface); }
+}
+
+// ── Skeleton Shimmer Component ─────────────────────────
+.kai-skeleton {
+  background: rgba(0, 0, 0, 0.06);
+  border-radius: var(--kai-radius);
+  position: relative;
+  overflow: hidden;
+
+  &::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(
+      90deg,
+      transparent 0%,
+      rgba(255, 255, 255, 0.4) 50%,
+      transparent 100%
+    );
+    animation: kai-skeleton-shimmer 1.5s ease-in-out infinite;
+  }
+}
+
+@keyframes kai-skeleton-shimmer {
+  0% { transform: translateX(-100%); }
+  100% { transform: translateX(100%); }
+}
+
+[data-theme="dark"] .kai-skeleton {
+  background: rgba(255, 255, 255, 0.06);
+
+  &::after {
+    background: linear-gradient(
+      90deg,
+      transparent 0%,
+      rgba(255, 255, 255, 0.08) 50%,
+      transparent 100%
+    );
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .kai-skeleton::after {
+    animation: none;
+  }
 }
 
 // ── Page-specific styles ──

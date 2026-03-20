@@ -17,6 +17,7 @@ import {
   FolderKanban,
 } from 'lucide-react';
 import { projectsApi, teamApi } from '../services/api';
+import EmptyState from '../components/ui/EmptyState';
 
 const STATUS_COLORS = {
   PLANNING: '#e3e7ed',
@@ -296,12 +297,14 @@ export default function Projects() {
       {/* Empty State */}
       {!loading && !error && filteredProjects.length === 0 && (
         <div className="kai-card">
-          <div className="kai-card-body flex-center" style={{ padding: 60, flexDirection: 'column', gap: 12 }}>
-            <FolderKanban size={48} style={{ color: 'var(--kai-text-muted)' }} />
-            <p style={{ color: 'var(--kai-text-muted)', margin: 0 }}>No projects found</p>
-            <button className="kai-btn kai-btn-primary" onClick={() => setShowCreateModal(true)}>
-              <Plus /> Create Your First Project
-            </button>
+          <div className="kai-card-body">
+            <EmptyState
+              icon={FolderKanban}
+              title="No projects yet"
+              description="Create a project to organize your team's work"
+              actionLabel="New Project"
+              onAction={() => setShowCreateModal(true)}
+            />
           </div>
         </div>
       )}

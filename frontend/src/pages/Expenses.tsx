@@ -2,7 +2,9 @@ import ExportButtons from '../components/ui/ExportButtons';
 import { useState, useEffect, useCallback } from 'react';
 import { useDispatch } from 'react-redux';
 import { toast } from 'react-toastify';
+import { Receipt } from 'lucide-react';
 import { expensesApi } from '../services/api';
+import EmptyState from '../components/ui/EmptyState';
 
 const CATEGORIES = [
   { key: 'TRAVEL', label: 'Travel', icon: '✈', color: '#2563EB' },
@@ -263,10 +265,14 @@ export default function Expenses() {
         </div>
       ) : expenses.length === 0 ? (
         <div className="kai-card">
-          <div className="kai-card-body" style={{ textAlign: 'center', padding: 60 }}>
-            <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="var(--kai-text-muted)" strokeWidth="1.5" style={{ marginBottom: 12 }}><rect x="1" y="4" width="22" height="16" rx="2" ry="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>
-            <h5 style={{ color: 'var(--kai-text)', margin: '0 0 4px' }}>No expenses found</h5>
-            <p style={{ color: 'var(--kai-text-muted)', margin: 0 }}>Submit your first expense to get started</p>
+          <div className="kai-card-body">
+            <EmptyState
+              icon={Receipt}
+              title="No expenses"
+              description="Submit your first expense report"
+              actionLabel="Submit Expense"
+              onAction={openSubmit}
+            />
           </div>
         </div>
       ) : (

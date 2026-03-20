@@ -388,7 +388,7 @@ export default function Settings() {
       <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
         <Icon size={18} style={{ color: '#146DF7' }} />
         <h4 style={{ fontSize: 15, fontWeight: 600, color: 'var(--kai-text)', margin: 0 }}>{title}</h4>
-        {optional && <span style={{ fontSize: 11, color: 'var(--kai-text-muted)', fontWeight: 500, background: '#F1F5F9', padding: '2px 8px', borderRadius: 8 }}>Optional</span>}
+        {optional && <span style={{ fontSize: 11, color: 'var(--kai-text-muted)', fontWeight: 500, background: 'var(--kai-bg)', padding: '2px 8px', borderRadius: 8 }}>Optional</span>}
       </div>
       {subtitle && <p style={{ fontSize: 12, color: 'var(--kai-text-muted)', margin: '0 0 0 26px' }}>{subtitle}</p>}
     </div>
@@ -403,7 +403,7 @@ export default function Settings() {
       }}>
         <span style={{
           position: 'absolute', top: 2, left: checked ? 22 : 2,
-          width: 20, height: 20, borderRadius: '50%', background: '#fff',
+          width: 20, height: 20, borderRadius: '50%', background: 'var(--kai-surface-solid)',
           transition: 'left 0.2s', boxShadow: '0 1px 3px rgba(0,0,0,0.15)',
         }} />
       </button>
@@ -563,12 +563,12 @@ export default function Settings() {
                     <div>
                       <label className="kai-label">Company Email</label>
                       <input className="kai-input" type="email" value={profile.companyEmail || profile.email} disabled style={{ background: 'var(--kai-bg)', color: 'var(--kai-text-muted)', cursor: 'not-allowed' }} />
-                      <span style={{ fontSize: 11, color: '#94A3B8' }}>Auto-generated @knowai.biz email</span>
+                      <span style={{ fontSize: 11, color: 'var(--kai-text-muted)' }}>Auto-generated @knowai.biz email</span>
                     </div>
                     <div>
                       <label className="kai-label">Alternate Email<RequiredMark /></label>
                       <input className="kai-input" type="email" value={profile.alternateEmail} onChange={e => setProfile(p => ({ ...p, alternateEmail: e.target.value }))} placeholder="personal@example.com" required />
-                      <span style={{ fontSize: 11, color: '#94A3B8' }}>Personal email for account recovery</span>
+                      <span style={{ fontSize: 11, color: 'var(--kai-text-muted)' }}>Personal email for account recovery</span>
                     </div>
                     <div>
                       <label className="kai-label">Phone Number<RequiredMark /></label>
@@ -948,7 +948,7 @@ export default function Settings() {
                           background: active ? 'rgba(20,109,247,0.1)' : 'var(--kai-surface)',
                           display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8,
                         }}>
-                          <Icon size={24} style={{ color: active ? '#146DF7' : '#5B6B76' }} />
+                          <Icon size={24} style={{ color: active ? 'var(--kai-primary)' : 'var(--kai-text-secondary)' }} />
                           <span style={{ fontSize: 14, fontWeight: active ? 600 : 400, color: active ? '#146DF7' : 'var(--kai-text-secondary)' }}>{opt.label}</span>
                         </button>
                       );
@@ -974,7 +974,7 @@ export default function Settings() {
                           background: active ? 'rgba(20,109,247,0.1)' : 'var(--kai-surface)',
                           display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8,
                         }}>
-                          <Icon size={24} style={{ color: active ? '#146DF7' : '#5B6B76' }} />
+                          <Icon size={24} style={{ color: active ? 'var(--kai-primary)' : 'var(--kai-text-secondary)' }} />
                           <span style={{ fontSize: 14, fontWeight: active ? 600 : 400, color: active ? '#146DF7' : 'var(--kai-text-secondary)' }}>{opt.label}</span>
                         </button>
                       );

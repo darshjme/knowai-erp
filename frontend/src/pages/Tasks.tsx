@@ -10,6 +10,7 @@ import {
   Calendar,
   Filter,
   CheckCircle2,
+  CheckSquare,
   Clock,
   AlertTriangle,
   Trash2,
@@ -22,6 +23,7 @@ import {
   User,
 } from 'lucide-react';
 import { tasksApi, projectsApi, teamApi } from '../services/api';
+import EmptyState from '../components/ui/EmptyState';
 
 const STATUS_OPTIONS = [
   { value: '', label: 'All Statuses' },
@@ -41,18 +43,18 @@ const PRIORITY_OPTIONS = [
 ];
 
 const STATUS_BADGE = {
-  TODO: { bg: '#e3e7ed', color: '#596882' },
-  IN_PROGRESS: { bg: '#cce5ff', color: '#004085' },
-  IN_REVIEW: { bg: '#fff3cd', color: '#856404' },
-  COMPLETED: { bg: '#d4edda', color: '#155724' },
-  BLOCKED: { bg: '#f8d7da', color: '#721c24' },
+  TODO: { bg: 'rgba(0,0,0,0.06)', color: 'var(--kai-text-secondary)' },
+  IN_PROGRESS: { bg: 'rgba(0,122,255,0.12)', color: 'var(--kai-primary)' },
+  IN_REVIEW: { bg: 'rgba(255,149,0,0.12)', color: 'var(--kai-warning)' },
+  COMPLETED: { bg: 'rgba(52,199,89,0.12)', color: 'var(--kai-success)' },
+  BLOCKED: { bg: 'rgba(255,59,48,0.12)', color: 'var(--kai-danger)' },
 };
 
 const PRIORITY_BADGE = {
-  LOW: { bg: '#e3e7ed', color: '#596882' },
-  MEDIUM: { bg: '#cce5ff', color: '#004085' },
-  HIGH: { bg: '#fff3cd', color: '#856404' },
-  URGENT: { bg: '#f8d7da', color: '#721c24' },
+  LOW: { bg: 'rgba(0,0,0,0.06)', color: 'var(--kai-text-secondary)' },
+  MEDIUM: { bg: 'rgba(0,122,255,0.12)', color: 'var(--kai-primary)' },
+  HIGH: { bg: 'rgba(255,149,0,0.12)', color: 'var(--kai-warning)' },
+  URGENT: { bg: 'rgba(255,59,48,0.12)', color: 'var(--kai-danger)' },
 };
 
 const FILTER_TABS = [
@@ -469,12 +471,14 @@ export default function Tasks() {
       {/* Empty State */}
       {!loading && !error && tasks.length === 0 && (
         <div className="kai-card">
-          <div className="kai-card-body flex-center" style={{ padding: 60, flexDirection: 'column', gap: 12 }}>
-            <ListTodo size={48} style={{ color: 'var(--kai-text-muted)' }} />
-            <p style={{ color: 'var(--kai-text-muted)', margin: 0 }}>No tasks found</p>
-            <button className="kai-btn kai-btn-primary" onClick={() => setShowCreateModal(true)}>
-              <Plus /> Create Your First Task
-            </button>
+          <div className="kai-card-body">
+            <EmptyState
+              icon={CheckSquare}
+              title="No tasks yet"
+              description="Create your first task to get started"
+              actionLabel="New Task"
+              onAction={() => setShowCreateModal(true)}
+            />
           </div>
         </div>
       )}
@@ -544,16 +548,12 @@ export default function Tasks() {
 
                       {/* Task Type */}
                       <td>
-                        <span className="kai-badge" style={{
-                          background: task.taskType === 'CONTENT_REVIEW' ? '#EDE9FE' :
-                                      task.taskType === 'BUG' ? '#FEE2E2' :
-                                      task.taskType === 'FEATURE' ? '#DBEAFE' :
-                                      task.taskType === 'IMPROVEMENT' ? '#D1FAE5' : '#F1F5F9',
-                          color: task.taskType === 'CONTENT_REVIEW' ? '#7C3AED' :
-                                 task.taskType === 'BUG' ? '#DC2626' :
-                                 task.taskType === 'FEATURE' ? '#2563EB' :
-                                 task.taskType === 'IMPROVEMENT' ? '#059669' : '#64748B',
-                        }}>
+                        <span className={`task-type-badge ${
+                          task.taskType === 'CONTENT_REVIEW' ? 'content-review' :
+                          task.taskType === 'BUG' ? 'bug' :
+                          task.taskType === 'FEATURE' ? 'feature' :
+                          task.taskType === 'IMPROVEMENT' ? 'improvement' : 'regular'
+                        }`}>
                           {(task.taskType || 'REGULAR').replace('_', ' ')}
                         </span>
                       </td>

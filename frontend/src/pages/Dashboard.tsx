@@ -24,6 +24,102 @@ import {
 import { dashboardApi } from '../services/api';
 import AccountabilityWidget from '../components/dashboard/AccountabilityWidget';
 import { canSeeWidget, ROLE_LABELS, ROLE_COLORS } from '../utils/roleConfig';
+import Skeleton from '../components/ui/Skeleton';
+
+function DashboardSkeleton() {
+  return (
+    <div>
+      {/* Greeting skeleton */}
+      <Skeleton width="100%" height={140} borderRadius={16} style={{ marginBottom: 24 }} />
+
+      {/* Stat cards skeleton */}
+      <Row className="g-3 mb-4">
+        {Array.from({ length: 6 }).map((_, i) => (
+          <Col key={i} xs={12} sm={6} lg={4} xl={2}>
+            <div className="stat-card" style={{ padding: 20 }}>
+              <div className="flex-between" style={{ marginBottom: 16 }}>
+                <Skeleton width={48} height={48} borderRadius={16} />
+                <Skeleton width={50} height={16} borderRadius={8} />
+              </div>
+              <Skeleton width="60%" height={28} borderRadius={8} style={{ marginBottom: 8 }} />
+              <Skeleton width="80%" height={14} borderRadius={6} />
+            </div>
+          </Col>
+        ))}
+      </Row>
+
+      {/* Charts skeleton */}
+      <Row className="g-3 mb-4">
+        <Col xs={12} lg={8}>
+          <div className="kai-card">
+            <div className="kai-card-header">
+              <Skeleton width={140} height={18} borderRadius={6} />
+            </div>
+            <div className="kai-card-body">
+              <Skeleton width="100%" height={320} borderRadius={12} />
+            </div>
+          </div>
+        </Col>
+        <Col xs={12} lg={4}>
+          <div className="kai-card">
+            <div className="kai-card-header">
+              <Skeleton width={140} height={18} borderRadius={6} />
+            </div>
+            <div className="kai-card-body">
+              <Skeleton width="100%" height={320} borderRadius={12} />
+            </div>
+          </div>
+        </Col>
+      </Row>
+
+      {/* Activity feed skeleton */}
+      <Row className="g-3">
+        <Col xs={12} lg={5}>
+          <div className="kai-card">
+            <div className="kai-card-header">
+              <Skeleton width={120} height={18} borderRadius={6} />
+            </div>
+            <div className="kai-card-body">
+              {Array.from({ length: 5 }).map((_, i) => (
+                <div key={i} style={{ display: 'flex', gap: 12, marginBottom: 14 }}>
+                  <Skeleton width={32} height={32} borderRadius={8} />
+                  <div style={{ flex: 1 }}>
+                    <Skeleton width="90%" height={14} borderRadius={6} style={{ marginBottom: 6 }} />
+                    <Skeleton width="50%" height={12} borderRadius={6} />
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </Col>
+        <Col xs={12} lg={3}>
+          <div className="kai-card">
+            <div className="kai-card-header">
+              <Skeleton width={110} height={18} borderRadius={6} />
+            </div>
+            <div className="kai-card-body">
+              {Array.from({ length: 4 }).map((_, i) => (
+                <Skeleton key={i} width="100%" height={40} borderRadius={8} style={{ marginBottom: 10 }} />
+              ))}
+            </div>
+          </div>
+        </Col>
+        <Col xs={12} lg={4}>
+          <div className="kai-card">
+            <div className="kai-card-header">
+              <Skeleton width={150} height={18} borderRadius={6} />
+            </div>
+            <div className="kai-card-body">
+              {Array.from({ length: 4 }).map((_, i) => (
+                <Skeleton key={i} width="100%" height={48} borderRadius={8} style={{ marginBottom: 12 }} />
+              ))}
+            </div>
+          </div>
+        </Col>
+      </Row>
+    </div>
+  );
+}
 
 const STAT_CARD_CONFIG = [
   { key: 'totalTeam', label: 'Total Team', icon: Users, color: '#146DF7', bg: '#EBF3FF', widget: 'team' },
@@ -182,15 +278,15 @@ export default function Dashboard() {
       categories: revenueChart.length > 0
         ? revenueChart.map((r) => r.month || r.label || r.name || '')
         : ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
-      labels: { style: { colors: '#5B6B76', fontSize: '12px' } },
+      labels: { style: { colors: 'var(--kai-text-secondary)', fontSize: '12px' } },
     },
     yaxis: {
       labels: {
-        style: { colors: '#5B6B76', fontSize: '12px' },
+        style: { colors: 'var(--kai-text-secondary)', fontSize: '12px' },
         formatter: (v) => `₹${(v / 1000).toFixed(0)}k`,
       },
     },
-    grid: { borderColor: '#E7E7E8', strokeDashArray: 4 },
+    grid: { borderColor: 'var(--kai-border)', strokeDashArray: 4 },
     tooltip: {
       y: { formatter: (v) => formatCurrency(v, 'INR') },
     },
@@ -216,10 +312,10 @@ export default function Dashboard() {
     chart: { type: 'donut', fontFamily: 'inherit' },
     colors: ['#EA580C', '#146DF7', '#8B3FE9', '#16A34A'],
     labels: taskLabels,
-    legend: { position: 'bottom', fontSize: '13px', labels: { colors: '#5B6B76' } },
+    legend: { position: 'bottom', fontSize: '13px', labels: { colors: 'var(--kai-text-secondary)' } },
     dataLabels: { enabled: true, formatter: (val) => `${val.toFixed(0)}%` },
     plotOptions: { pie: { donut: { size: '60%' } } },
-    stroke: { width: 2, colors: ['#fff'] },
+    stroke: { width: 2, colors: ['var(--kai-surface-solid)'] },
     tooltip: { y: { formatter: (v) => `${v} tasks` } },
   };
 
@@ -259,11 +355,7 @@ export default function Dashboard() {
   const showBottomRow = showRecentActivity || showQuickActions || showDeadlines;
 
   if (loading) {
-    return (
-      <div className="flex-center" style={{ minHeight: 400 }}>
-        <Spinner animation="border" style={{ color: 'var(--kai-primary)' }} />
-      </div>
-    );
+    return <DashboardSkeleton />;
   }
 
   if (error) {
@@ -387,10 +479,10 @@ export default function Dashboard() {
             <Activity size={20} color="#fff" />
           </div>
           <div style={{ flex: 1 }}>
-            <div style={{ fontSize: 14, fontWeight: 600, color: '#10222F', marginBottom: 2 }}>
+            <div style={{ fontSize: 14, fontWeight: 600, color: 'var(--kai-text)', marginBottom: 2 }}>
               Take your personality assessment!
             </div>
-            <div style={{ fontSize: 13, color: '#5B6B76' }}>
+            <div style={{ fontSize: 13, color: 'var(--kai-text-secondary)' }}>
               Discover your work style and improve team collaboration.
             </div>
           </div>
@@ -605,9 +697,9 @@ export default function Dashboard() {
                               justifyContent: 'space-between',
                               alignItems: 'center',
                               padding: '10px 12px',
-                              background: isOverdue ? '#FEF2F2' : 'var(--kai-bg)',
+                              background: isOverdue ? 'rgba(255,59,48,0.08)' : 'var(--kai-bg)',
                               borderRadius: 8,
-                              border: `1px solid ${isOverdue ? '#FECACA' : 'var(--kai-border-light)'}`,
+                              border: `1px solid ${isOverdue ? 'rgba(255,59,48,0.2)' : 'var(--kai-border-light)'}`,
                             }}
                           >
                             <div style={{ minWidth: 0 }}>

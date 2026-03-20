@@ -7,4 +7,5 @@ export { default as UserAvatar } from './UserAvatar';
 export { default as PageHeader } from './PageHeader';
 export { default as RoleBadge } from './RoleBadge';
 export { default as Loader } from './Loader';
+export { default as Skeleton } from './Skeleton';
 export { confirmDelete, confirmAction, showSuccess, showError } from './ConfirmDialog';
