@@ -10,22 +10,22 @@ const adapter = new PrismaPg(pool);
 const prisma = new PrismaClient({ adapter });
 
 const SAMPLE_USERS = [
-  { firstName: 'Admin', lastName: 'User', email: 'admin@knowai.com', role: 'ADMIN', designation: 'System Administrator', department: 'Operations' },
-  { firstName: 'Darsh', lastName: 'Mehta', email: 'darsh@knowai.com', role: 'CEO', designation: 'Chief Executive Officer', department: 'Executive' },
-  { firstName: 'Ravi', lastName: 'Kumar', email: 'ravi@knowai.com', role: 'CTO', designation: 'Chief Technology Officer', department: 'Engineering' },
-  { firstName: 'Priya', lastName: 'Sharma', email: 'priya@knowai.com', role: 'CFO', designation: 'Chief Financial Officer', department: 'Finance' },
-  { firstName: 'Neha', lastName: 'Patel', email: 'neha@knowai.com', role: 'BRAND_FACE', designation: 'Brand Ambassador', department: 'Marketing' },
-  { firstName: 'Anjali', lastName: 'Singh', email: 'anjali@knowai.com', role: 'HR', designation: 'HR Manager', department: 'Human Resources' },
-  { firstName: 'Vikram', lastName: 'Joshi', email: 'vikram@knowai.com', role: 'SR_ACCOUNTANT', designation: 'Senior Accountant', department: 'Finance' },
-  { firstName: 'Arjun', lastName: 'Reddy', email: 'arjun@knowai.com', role: 'PRODUCT_OWNER', designation: 'Product Owner', department: 'Product' },
-  { firstName: 'Meera', lastName: 'Nair', email: 'meera@knowai.com', role: 'SR_CONTENT_STRATEGIST', designation: 'Content Strategist', department: 'Content' },
-  { firstName: 'Rahul', lastName: 'Gupta', email: 'rahul@knowai.com', role: 'BRAND_PARTNER', designation: 'Brand Partner', department: 'Marketing' },
-  { firstName: 'Aditya', lastName: 'Verma', email: 'aditya@knowai.com', role: 'SR_DEVELOPER', designation: 'Senior React Developer', department: 'Engineering' },
-  { firstName: 'Kavya', lastName: 'Iyer', email: 'kavya@knowai.com', role: 'SR_EDITOR', designation: 'Senior Editor', department: 'Content' },
-  { firstName: 'Sanjay', lastName: 'Das', email: 'sanjay@knowai.com', role: 'SR_GRAPHIC_DESIGNER', designation: 'Lead Designer', department: 'Design' },
-  { firstName: 'Pooja', lastName: 'Mishra', email: 'pooja@knowai.com', role: 'JR_DEVELOPER', designation: 'Junior Developer', department: 'Engineering' },
-  { firstName: 'Amit', lastName: 'Tiwari', email: 'amit@knowai.com', role: 'GUY', designation: 'Team Member', department: 'Operations' },
-  { firstName: 'Deepak', lastName: 'Yadav', email: 'deepak@knowai.com', role: 'OFFICE_BOY', designation: 'Office Assistant', department: 'Operations' },
+  { firstName: 'Admin', lastName: 'User', email: 'admin@knowai.biz', role: 'ADMIN', designation: 'System Administrator', department: 'Operations' },
+  { firstName: 'Darsh', lastName: 'Mehta', email: 'darsh@knowai.biz', role: 'CEO', designation: 'Chief Executive Officer', department: 'Executive' },
+  { firstName: 'Ravi', lastName: 'Kumar', email: 'ravi@knowai.biz', role: 'CTO', designation: 'Chief Technology Officer', department: 'Engineering' },
+  { firstName: 'Priya', lastName: 'Sharma', email: 'priya@knowai.biz', role: 'CFO', designation: 'Chief Financial Officer', department: 'Finance' },
+  { firstName: 'Neha', lastName: 'Patel', email: 'neha@knowai.biz', role: 'BRAND_FACE', designation: 'Brand Ambassador', department: 'Marketing' },
+  { firstName: 'Anjali', lastName: 'Singh', email: 'anjali@knowai.biz', role: 'HR', designation: 'HR Manager', department: 'Human Resources' },
+  { firstName: 'Vikram', lastName: 'Joshi', email: 'vikram@knowai.biz', role: 'SR_ACCOUNTANT', designation: 'Senior Accountant', department: 'Finance' },
+  { firstName: 'Arjun', lastName: 'Reddy', email: 'arjun@knowai.biz', role: 'PRODUCT_OWNER', designation: 'Product Owner', department: 'Product' },
+  { firstName: 'Meera', lastName: 'Nair', email: 'meera@knowai.biz', role: 'SR_CONTENT_STRATEGIST', designation: 'Content Strategist', department: 'Content' },
+  { firstName: 'Rahul', lastName: 'Gupta', email: 'rahul@knowai.biz', role: 'BRAND_PARTNER', designation: 'Brand Partner', department: 'Marketing' },
+  { firstName: 'Aditya', lastName: 'Verma', email: 'aditya@knowai.biz', role: 'SR_DEVELOPER', designation: 'Senior React Developer', department: 'Engineering' },
+  { firstName: 'Kavya', lastName: 'Iyer', email: 'kavya@knowai.biz', role: 'SR_EDITOR', designation: 'Senior Editor', department: 'Content' },
+  { firstName: 'Sanjay', lastName: 'Das', email: 'sanjay@knowai.biz', role: 'SR_GRAPHIC_DESIGNER', designation: 'Lead Designer', department: 'Design' },
+  { firstName: 'Pooja', lastName: 'Mishra', email: 'pooja@knowai.biz', role: 'JR_DEVELOPER', designation: 'Junior Developer', department: 'Engineering' },
+  { firstName: 'Amit', lastName: 'Tiwari', email: 'amit@knowai.biz', role: 'GUY', designation: 'Team Member', department: 'Operations' },
+  { firstName: 'Deepak', lastName: 'Yadav', email: 'deepak@knowai.biz', role: 'OFFICE_BOY', designation: 'Office Assistant', department: 'Operations' },
 ];
 
 async function main() {
@@ -59,6 +59,7 @@ async function main() {
 
   // Create users
   for (const u of SAMPLE_USERS) {
+    const companyEmail = `${u.firstName.toLowerCase()}.${u.lastName.toLowerCase()}@knowai.biz`;
     const user = await prisma.user.create({
       data: {
         email: u.email,
@@ -70,6 +71,10 @@ async function main() {
         department: u.department,
         workspaceId: workspace.id,
         status: 'ONLINE',
+        companyEmail,
+        onboardingComplete: true,
+        onboardingStep: 3,
+        profileComplete: true,
       }
     });
     console.log(`  Created ${u.role}: ${u.firstName} ${u.lastName} (${u.email})`);
