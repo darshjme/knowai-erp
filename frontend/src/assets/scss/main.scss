@@ -564,6 +564,67 @@ a { color: var(--kai-primary); text-decoration: none; &:hover { color: var(--kai
 // Responsive table wrapper
 .table-responsive-wrapper { overflow-x: auto; -webkit-overflow-scrolling: touch; }
 
+// ── Reduced Motion ────────────────────────────────────
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+  .kai-card:hover { transform: none; }
+  .stat-card:hover { transform: none; }
+}
+
+// ── Focus Ring (Accessibility) ────────────────────────
+:focus-visible {
+  outline: 2px solid var(--kai-primary);
+  outline-offset: 2px;
+  border-radius: var(--kai-radius-sm);
+}
+
+// Remove default outline for mouse users
+:focus:not(:focus-visible) {
+  outline: none;
+}
+
+// ── Skeleton Loader ───────────────────────────────────
+.skeleton {
+  background: var(--kai-surface);
+  border-radius: var(--kai-radius);
+  position: relative;
+  overflow: hidden;
+
+  &::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(90deg, transparent, rgba(0,0,0,0.04), transparent);
+    animation: skeleton-shimmer 1.5s ease-in-out infinite;
+  }
+}
+
+.skeleton-text { height: 14px; margin-bottom: 8px; }
+.skeleton-title { height: 24px; width: 60%; margin-bottom: 16px; }
+.skeleton-card { height: 120px; }
+.skeleton-avatar { width: 40px; height: 40px; border-radius: 50%; }
+.skeleton-row { height: 48px; margin-bottom: 4px; }
+
+@keyframes skeleton-shimmer {
+  0% { transform: translateX(-100%); }
+  100% { transform: translateX(100%); }
+}
+
+[data-theme="dark"] .skeleton::after {
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.04), transparent);
+}
+
+// ── Tabular Numbers ───────────────────────────────────
+.tabular-nums {
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: 'tnum';
+}
+
 // Mobile responsive
 @media (max-width: 767px) {
   .page-header { flex-direction: column; align-items: flex-start !important; }

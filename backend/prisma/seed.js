@@ -16,13 +16,13 @@ const SAMPLE_USERS = [
   { firstName: 'Priya', lastName: 'Sharma', email: 'priya@knowai.com', role: 'CFO', designation: 'Chief Financial Officer', department: 'Finance' },
   { firstName: 'Neha', lastName: 'Patel', email: 'neha@knowai.com', role: 'BRAND_FACE', designation: 'Brand Ambassador', department: 'Marketing' },
   { firstName: 'Anjali', lastName: 'Singh', email: 'anjali@knowai.com', role: 'HR', designation: 'HR Manager', department: 'Human Resources' },
-  { firstName: 'Vikram', lastName: 'Joshi', email: 'vikram@knowai.com', role: 'ACCOUNTING', designation: 'Senior Accountant', department: 'Finance' },
+  { firstName: 'Vikram', lastName: 'Joshi', email: 'vikram@knowai.com', role: 'SR_ACCOUNTANT', designation: 'Senior Accountant', department: 'Finance' },
   { firstName: 'Arjun', lastName: 'Reddy', email: 'arjun@knowai.com', role: 'PRODUCT_OWNER', designation: 'Product Owner', department: 'Product' },
-  { firstName: 'Meera', lastName: 'Nair', email: 'meera@knowai.com', role: 'CONTENT_STRATEGIST', designation: 'Content Strategist', department: 'Content' },
+  { firstName: 'Meera', lastName: 'Nair', email: 'meera@knowai.com', role: 'SR_CONTENT_STRATEGIST', designation: 'Content Strategist', department: 'Content' },
   { firstName: 'Rahul', lastName: 'Gupta', email: 'rahul@knowai.com', role: 'BRAND_PARTNER', designation: 'Brand Partner', department: 'Marketing' },
   { firstName: 'Aditya', lastName: 'Verma', email: 'aditya@knowai.com', role: 'SR_DEVELOPER', designation: 'Senior React Developer', department: 'Engineering' },
-  { firstName: 'Kavya', lastName: 'Iyer', email: 'kavya@knowai.com', role: 'EDITOR', designation: 'Senior Editor', department: 'Content' },
-  { firstName: 'Sanjay', lastName: 'Das', email: 'sanjay@knowai.com', role: 'GRAPHIC_DESIGNER', designation: 'Lead Designer', department: 'Design' },
+  { firstName: 'Kavya', lastName: 'Iyer', email: 'kavya@knowai.com', role: 'SR_EDITOR', designation: 'Senior Editor', department: 'Content' },
+  { firstName: 'Sanjay', lastName: 'Das', email: 'sanjay@knowai.com', role: 'SR_GRAPHIC_DESIGNER', designation: 'Lead Designer', department: 'Design' },
   { firstName: 'Pooja', lastName: 'Mishra', email: 'pooja@knowai.com', role: 'JR_DEVELOPER', designation: 'Junior Developer', department: 'Engineering' },
   { firstName: 'Amit', lastName: 'Tiwari', email: 'amit@knowai.com', role: 'GUY', designation: 'Team Member', department: 'Operations' },
   { firstName: 'Deepak', lastName: 'Yadav', email: 'deepak@knowai.com', role: 'OFFICE_BOY', designation: 'Office Assistant', department: 'Operations' },
@@ -108,15 +108,15 @@ async function main() {
   // Fetch all users by role for reference
   const srDev = await prisma.user.findFirst({ where: { role: 'SR_DEVELOPER' } });
   const jrDev = await prisma.user.findFirst({ where: { role: 'JR_DEVELOPER' } });
-  const editor = await prisma.user.findFirst({ where: { role: 'EDITOR' } });
-  const designer = await prisma.user.findFirst({ where: { role: 'GRAPHIC_DESIGNER' } });
+  const editor = await prisma.user.findFirst({ where: { role: 'SR_EDITOR' } });
+  const designer = await prisma.user.findFirst({ where: { role: 'SR_GRAPHIC_DESIGNER' } });
   const ceo = await prisma.user.findFirst({ where: { role: 'CEO' } });
   const cto = await prisma.user.findFirst({ where: { role: 'CTO' } });
   const cfo = await prisma.user.findFirst({ where: { role: 'CFO' } });
   const hr = await prisma.user.findFirst({ where: { role: 'HR' } });
-  const accounting = await prisma.user.findFirst({ where: { role: 'ACCOUNTING' } });
+  const accounting = await prisma.user.findFirst({ where: { role: 'SR_ACCOUNTANT' } });
   const brandFace = await prisma.user.findFirst({ where: { role: 'BRAND_FACE' } });
-  const contentStrat = await prisma.user.findFirst({ where: { role: 'CONTENT_STRATEGIST' } });
+  const contentStrat = await prisma.user.findFirst({ where: { role: 'SR_CONTENT_STRATEGIST' } });
   const brandPartner = await prisma.user.findFirst({ where: { role: 'BRAND_PARTNER' } });
   const guy = await prisma.user.findFirst({ where: { role: 'GUY' } });
   const officeBoy = await prisma.user.findFirst({ where: { role: 'OFFICE_BOY' } });
