@@ -5,8 +5,8 @@ module.exports = {
   apps: [
     {
       name: 'knowai-backend',
-      script: 'node_modules/.bin/next',
-      args: 'start -p 3001',
+      script: 'npx',
+      args: 'next start -p 3001',
       cwd: '/opt/knowai-erp/backend',
       instances: 1,
       exec_mode: 'fork',

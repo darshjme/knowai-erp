@@ -1,4 +1,3 @@
-import "zod-openapi/extend";
 import { createDocument } from "zod-openapi";
 import { z } from "zod";
 
