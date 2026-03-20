@@ -661,7 +661,7 @@ export default function Dashboard() {
                               {item.title || item.message || item.description || 'Activity'}
                             </div>
                             <div style={{ fontSize: 12, color: 'var(--kai-text-muted)', marginTop: 2 }}>
-                              {item.user && <span style={{ fontWeight: 600 }}>{item.user} &middot; </span>}
+                              {item.user && <span style={{ fontWeight: 600 }}>{typeof item.user === 'string' ? item.user : `${item.user.firstName || ''} ${item.user.lastName || ''}`.trim()} &middot; </span>}
                               {item.time || item.createdAt || item.date || ''}
                             </div>
                           </div>
