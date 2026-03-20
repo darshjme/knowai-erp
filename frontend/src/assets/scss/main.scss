@@ -747,3 +747,6 @@ html, body { overflow-x: hidden; max-width: 100vw; }
   .doc-upload-card { background: var(--kai-surface); }
   .backup-codes-grid .backup-code { background: var(--kai-surface); }
 }
+
+// ── Page-specific styles ──
+@import 'onboarding';
