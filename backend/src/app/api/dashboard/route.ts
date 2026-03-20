@@ -773,6 +773,15 @@ export const GET = createHandler({}, async (_req: NextRequest, { user }) => {
       payrollTotal: payrollAgg._sum.totalPay || 0,
       payrollCount: payrollAgg._count.id,
     };
+    // Flat stat card fields (consumed by frontend Dashboard.tsx)
+    data.totalTeam = totalMembers;
+    data.activeProjects = activeProjects;
+    data.openTasks = todoCount + inProgressCount + inReviewCount;
+    data.revenue = revenueAgg._sum.total || 0;
+    data.pendingLeaves = (await prisma.leaveRequest.count({
+      where: { employee: { workspaceId }, status: "PENDING" },
+    }));
+    data.expensesThisMonth = expenseAgg._sum.amount || 0;
     data.revenueVsExpenses = revenueVsExpenses;
     data.taskStatusDistribution = taskStatusDistribution;
     data.teamPerformance = teamPerformance;

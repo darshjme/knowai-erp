@@ -37,7 +37,7 @@ function getInitials(name) {
 
 function formatCurrency(value) {
   if (value === null || value === undefined) return '--';
-  return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', minimumFractionDigits: 0, maximumFractionDigits: 0 }).format(value);
+  return new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', minimumFractionDigits: 0, maximumFractionDigits: 0 }).format(value);
 }
 
 export default function HrDashboard() {

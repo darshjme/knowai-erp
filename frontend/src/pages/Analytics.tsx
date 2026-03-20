@@ -28,7 +28,7 @@ function formatKpiValue(value, format) {
   if (value === null || value === undefined) return '--';
   switch (format) {
     case 'currency':
-      return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', minimumFractionDigits: 0, maximumFractionDigits: 0 }).format(value);
+      return new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', minimumFractionDigits: 0, maximumFractionDigits: 0 }).format(value);
     case 'percent':
       return `${typeof value === 'number' ? value.toFixed(1) : value}%`;
     case 'days':
@@ -140,7 +140,7 @@ export default function Analytics() {
     },
     grid: { borderColor: '#E7E7E8', strokeDashArray: 4 },
     tooltip: {
-      y: { formatter: (v) => new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(v) },
+      y: { formatter: (v) => new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(v) },
     },
   };
 
@@ -184,7 +184,7 @@ export default function Analytics() {
     dataLabels: { enabled: true, formatter: (val) => `${val.toFixed(1)}%` },
     stroke: { width: 2, colors: ['#fff'] },
     tooltip: {
-      y: { formatter: (v) => new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(v) },
+      y: { formatter: (v) => new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(v) },
     },
   };
 

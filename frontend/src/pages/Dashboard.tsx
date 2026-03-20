@@ -35,13 +35,18 @@ const STAT_CARD_CONFIG = [
   { key: 'pendingVerifications', label: 'Pending Verifications', icon: Shield, color: '#7C3AED', bg: '#F3EAFF', widget: 'team' },
 ];
 
+function formatCurrency(value, currency = 'INR') {
+  const locale = currency === 'INR' ? 'en-IN' : currency === 'CNY' ? 'zh-CN' : currency === 'EUR' ? 'de-DE' : 'en-US';
+  return new Intl.NumberFormat(locale, { style: 'currency', currency, minimumFractionDigits: 0, maximumFractionDigits: 0 }).format(value);
+}
+
 function formatValue(value, format) {
   if (value === null || value === undefined) return '--';
   if (format === 'currency') {
-    return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', minimumFractionDigits: 0, maximumFractionDigits: 0 }).format(value);
+    return formatCurrency(value, 'INR');
   }
   if (typeof value === 'number' && value >= 1000) {
-    return new Intl.NumberFormat('en-US').format(value);
+    return new Intl.NumberFormat('en-IN').format(value);
   }
   return value;
 }
@@ -182,12 +187,12 @@ export default function Dashboard() {
     yaxis: {
       labels: {
         style: { colors: '#5B6B76', fontSize: '12px' },
-        formatter: (v) => `$${(v / 1000).toFixed(0)}k`,
+        formatter: (v) => `₹${(v / 1000).toFixed(0)}k`,
       },
     },
     grid: { borderColor: '#E7E7E8', strokeDashArray: 4 },
     tooltip: {
-      y: { formatter: (v) => new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(v) },
+      y: { formatter: (v) => formatCurrency(v, 'INR') },
     },
   };
 
