@@ -20,7 +20,7 @@ export default function Clients() {
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
   const [industryFilter, setIndustryFilter] = useState('');
-  const [viewMode, setViewMode] = useState('table'); // table | cards
+  const [viewMode, setViewMode] = useState('table');
   const [showModal, setShowModal] = useState(false);
   const [editingClient, setEditingClient] = useState(null);
   const [form, setForm] = useState({ ...emptyClient });
@@ -51,7 +51,6 @@ export default function Clients() {
     fetchClients();
   }, [fetchClients]);
 
-  // Stats
   const stats = {
     total: clients.length,
     active: clients.filter(c => c.status === 'active' || !c.status).length,
@@ -64,26 +63,10 @@ export default function Clients() {
     totalRevenue: clients.reduce((sum, c) => sum + (parseFloat(c.total_revenue) || 0), 0),
   };
 
-  const openAdd = () => {
-    setEditingClient(null);
-    setForm({ ...emptyClient });
-    setShowModal(true);
-  };
-
+  const openAdd = () => { setEditingClient(null); setForm({ ...emptyClient }); setShowModal(true); };
   const openEdit = (client) => {
     setEditingClient(client);
-    setForm({
-      name: client.name || '',
-      email: client.email || '',
-      phone: client.phone || '',
-      company: client.company || '',
-      address: client.address || '',
-      website: client.website || '',
-      industry: client.industry || '',
-      contactPerson: client.contactPerson || '',
-      gstNumber: client.gstNumber || '',
-      notes: client.notes || '',
-    });
+    setForm({ name: client.name || '', email: client.email || '', phone: client.phone || '', company: client.company || '', address: client.address || '', website: client.website || '', industry: client.industry || '', contactPerson: client.contactPerson || '', gstNumber: client.gstNumber || '', notes: client.notes || '' });
     setShowModal(true);
   };
 
@@ -94,40 +77,25 @@ export default function Clients() {
     if (!form.phone.trim()) { toast.warning('Phone is required'); return; }
     if (!form.company.trim()) { toast.warning('Company is required'); return; }
     if (!form.industry) { toast.warning('Industry is required'); return; }
-
     try {
       setSaving(true);
-      if (editingClient) {
-        await clientsApi.update(editingClient.id, form);
-        toast.success('Client updated');
-      } else {
-        await clientsApi.create(form);
-        toast.success('Client created');
-      }
+      if (editingClient) { await clientsApi.update(editingClient.id, form); toast.success('Client updated'); }
+      else { await clientsApi.create(form); toast.success('Client created'); }
       setShowModal(false);
       fetchClients();
-    } catch (err) {
-      toast.error(err.response?.data?.message || 'Failed to save client');
-    } finally {
-      setSaving(false);
-    }
+    } catch (err) { toast.error(err.response?.data?.message || 'Failed to save client'); }
+    finally { setSaving(false); }
   };
 
   const handleDelete = async (id) => {
     if (!window.confirm('Delete this client?')) return;
-    try {
-      await clientsApi.delete(id);
-      toast.success('Client deleted');
-      fetchClients();
-    } catch (err) {
-      toast.error('Failed to delete client');
-    }
+    try { await clientsApi.delete(id); toast.success('Client deleted'); fetchClients(); }
+    catch (err) { toast.error('Failed to delete client'); }
   };
 
   const handleCSVImport = () => {
     const input = document.createElement('input');
-    input.type = 'file';
-    input.accept = '.csv';
+    input.type = 'file'; input.accept = '.csv';
     input.onchange = async (e) => {
       const file = e.target.files[0];
       if (!file) return;
@@ -143,25 +111,13 @@ export default function Clients() {
           const record = {};
           headers.forEach((h, i) => { record[h] = cols[i] || ''; });
           if (record.name || record.company) {
-            await clientsApi.create({
-              name: record.name || record.company || '',
-              email: record.email || '',
-              phone: record.phone || '',
-              company: record.company || '',
-              industry: record.industry || '',
-              address: record.address || '',
-              website: record.website || '',
-              notes: record.notes || '',
-            });
+            await clientsApi.create({ name: record.name || record.company || '', email: record.email || '', phone: record.phone || '', company: record.company || '', industry: record.industry || '', address: record.address || '', website: record.website || '', notes: record.notes || '' });
             imported++;
           }
         }
         toast.success(`Imported ${imported} clients`);
         fetchClients();
-      } catch (err) {
-        toast.error('Failed to import CSV');
-        console.error(err);
-      }
+      } catch (err) { toast.error('Failed to import CSV'); console.error(err); }
     };
     input.click();
   };
@@ -175,104 +131,58 @@ export default function Clients() {
 
   return (
     <div>
-      {/* Page Header */}
-      <div className="page-header">
+      <div className="flex items-center justify-between mb-6 flex-wrap gap-4">
         <div>
-          <h1>Clients</h1>
-          <p>Manage your client relationships and contacts</p>
+          <h1 className="text-[24px] font-bold text-[var(--text-primary)] tracking-tight font-[Manrope]">Clients</h1>
+          <p className="text-[13px] text-[var(--text-secondary)] mt-1">Manage your client relationships and contacts</p>
         </div>
-        <div className="page-actions">
-          <button className="kai-btn kai-btn-outline" onClick={handleCSVImport}>
+        <div className="flex items-center gap-2">
+          <button data-testid="import-csv" className="bg-transparent border border-[var(--border-default)] text-[var(--text-secondary)] rounded-lg px-4 py-2 text-[13px] font-semibold hover:bg-[var(--bg-elevated)] transition-colors flex items-center gap-2" onClick={handleCSVImport}>
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
             Import CSV
           </button>
-          <button className="kai-btn kai-btn-primary" onClick={openAdd}>
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          <button data-testid="add-client" className="bg-[#7C3AED] text-white rounded-lg px-4 py-2 text-[13px] font-semibold hover:bg-[#7C3AED]/90 transition-colors flex items-center gap-2" onClick={openAdd}>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
             Add Client
           </button>
         </div>
       </div>
 
       {/* Stats */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: 16, marginBottom: 24 }}>
-        <div className="stat-card">
-          <div className="flex-between" style={{ marginBottom: 12 }}>
-            <div className="stat-icon" style={{ background: 'var(--kai-primary-light, rgba(17,24,39,0.08))', color: 'var(--kai-primary)' }}>
-              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4-4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg>
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+        {[
+          { label: 'Total Clients', value: stats.total, icon: <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4-4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg>, bg: 'rgba(124,58,237,0.1)', color: '#7C3AED' },
+          { label: 'Active Clients', value: stats.active, icon: <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M22 11.08V12a10 10 0 11-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>, bg: 'rgba(22,163,74,0.1)', color: '#16A34A' },
+          { label: 'New This Month', value: stats.newThisMonth, icon: <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M16 21v-2a4 4 0 00-4-4H5a4 4 0 00-4-4v2"/><circle cx="8.5" cy="7" r="4"/><line x1="20" y1="8" x2="20" y2="14"/><line x1="23" y1="11" x2="17" y2="11"/></svg>, bg: 'rgba(139,63,233,0.1)', color: '#8B3FE9' },
+          { label: 'Total Revenue', value: `$${stats.totalRevenue.toLocaleString()}`, icon: <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg>, bg: 'rgba(234,88,12,0.1)', color: '#EA580C' },
+        ].map(s => (
+          <div key={s.label} className="bg-[var(--bg-card)] border border-[var(--border-default)] rounded-xl p-5">
+            <div className="flex items-center justify-between mb-3">
+              <div className="w-12 h-12 rounded-2xl flex items-center justify-center" style={{ background: s.bg, color: s.color }}>{s.icon}</div>
             </div>
+            <div className="text-[22px] font-bold text-[var(--text-primary)]">{s.value}</div>
+            <div className="text-[13px] text-[var(--text-secondary)] mt-1">{s.label}</div>
           </div>
-          <div className="stat-value">{stats.total}</div>
-          <div className="stat-label">Total Clients</div>
-        </div>
-        <div className="stat-card">
-          <div className="flex-between" style={{ marginBottom: 12 }}>
-            <div className="stat-icon" style={{ background: 'rgba(22,163,74,0.1)', color: 'var(--kai-success)' }}>
-              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M22 11.08V12a10 10 0 11-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
-            </div>
-          </div>
-          <div className="stat-value">{stats.active}</div>
-          <div className="stat-label">Active Clients</div>
-        </div>
-        <div className="stat-card">
-          <div className="flex-between" style={{ marginBottom: 12 }}>
-            <div className="stat-icon" style={{ background: 'rgba(139,63,233,0.1)', color: 'var(--kai-secondary)' }}>
-              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M16 21v-2a4 4 0 00-4-4H5a4 4 0 00-4-4v2"/><circle cx="8.5" cy="7" r="4"/><line x1="20" y1="8" x2="20" y2="14"/><line x1="23" y1="11" x2="17" y2="11"/></svg>
-            </div>
-          </div>
-          <div className="stat-value">{stats.newThisMonth}</div>
-          <div className="stat-label">New This Month</div>
-        </div>
-        <div className="stat-card">
-          <div className="flex-between" style={{ marginBottom: 12 }}>
-            <div className="stat-icon" style={{ background: 'rgba(234,88,12,0.1)', color: 'var(--kai-warning)' }}>
-              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg>
-            </div>
-          </div>
-          <div className="stat-value">${stats.totalRevenue.toLocaleString()}</div>
-          <div className="stat-label">Total Revenue</div>
-        </div>
+        ))}
       </div>
 
       {/* Toolbar */}
-      <div className="kai-card" style={{ marginBottom: 24 }}>
-        <div className="kai-card-body" style={{ padding: '12px 20px' }}>
-          <div style={{ display: 'flex', gap: 12, alignItems: 'center', flexWrap: 'wrap' }}>
-            <div className="kai-search" style={{ flex: 1, minWidth: 200 }}>
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-              <input
-                placeholder="Search clients..."
-                value={search}
-                onChange={e => setSearch(e.target.value)}
-              />
+      <div className="bg-[var(--bg-card)] border border-[var(--border-default)] rounded-xl mb-6">
+        <div className="px-5 py-3">
+          <div className="flex gap-3 items-center flex-wrap">
+            <div className="flex-1 min-w-[200px] relative">
+              <svg className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[var(--text-muted)]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+              <input data-testid="search-clients" className="w-full bg-[var(--bg-elevated)] border border-[var(--border-default)] rounded-lg pl-9 pr-3 py-2 text-[var(--text-primary)] placeholder:text-[var(--text-muted)] focus:border-[#7C3AED] focus:ring-2 focus:ring-[#7C3AED]/20 outline-none text-[13px]" placeholder="Search clients..." value={search} onChange={e => setSearch(e.target.value)} />
             </div>
-            <select
-              className="kai-select"
-              style={{ width: 180 }}
-              value={industryFilter}
-              onChange={e => setIndustryFilter(e.target.value)}
-            >
+            <select className="bg-[var(--bg-elevated)] border border-[var(--border-default)] rounded-lg px-3 py-2 text-[var(--text-primary)] focus:border-[#7C3AED] outline-none text-[13px] w-[180px]" value={industryFilter} onChange={e => setIndustryFilter(e.target.value)}>
               <option value="">All Industries</option>
               {INDUSTRIES.map(i => <option key={i} value={i}>{i}</option>)}
             </select>
-            <div style={{ display: 'flex', border: '1px solid var(--kai-border)', borderRadius: 'var(--kai-radius)', overflow: 'hidden' }}>
-              <button
-                onClick={() => setViewMode('table')}
-                style={{
-                  padding: '6px 12px', border: 'none', cursor: 'pointer',
-                  background: viewMode === 'table' ? 'var(--kai-primary)' : 'var(--kai-surface)',
-                  color: viewMode === 'table' ? '#fff' : 'var(--kai-text-muted)'
-                }}
-              >
+            <div className="flex border border-[var(--border-default)] rounded-lg overflow-hidden">
+              <button data-testid="view-table" onClick={() => setViewMode('table')} className={`px-3 py-1.5 border-none cursor-pointer transition-colors ${viewMode === 'table' ? 'bg-[#7C3AED] text-white' : 'bg-[var(--bg-card)] text-[var(--text-muted)]'}`}>
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
               </button>
-              <button
-                onClick={() => setViewMode('cards')}
-                style={{
-                  padding: '6px 12px', border: 'none', cursor: 'pointer',
-                  background: viewMode === 'cards' ? 'var(--kai-primary)' : 'var(--kai-surface)',
-                  color: viewMode === 'cards' ? '#fff' : 'var(--kai-text-muted)'
-                }}
-              >
+              <button data-testid="view-cards" onClick={() => setViewMode('cards')} className={`px-3 py-1.5 border-none cursor-pointer transition-colors ${viewMode === 'cards' ? 'bg-[#7C3AED] text-white' : 'bg-[var(--bg-card)] text-[var(--text-muted)]'}`}>
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
               </button>
             </div>
@@ -282,63 +192,54 @@ export default function Clients() {
 
       {/* Content */}
       {loading ? (
-        <div className="kai-card">
-          <div className="kai-card-body" style={{ textAlign: 'center', padding: 60 }}>
-            <div className="spinner-border text-primary" role="status" />
-            <p style={{ marginTop: 12, color: 'var(--kai-text-muted)' }}>Loading clients...</p>
+        <div className="bg-[var(--bg-card)] border border-[var(--border-default)] rounded-xl">
+          <div className="text-center py-16">
+            <div className="w-8 h-8 border-2 border-[#7C3AED] border-t-transparent rounded-full animate-spin mx-auto" />
+            <p className="mt-3 text-[var(--text-muted)]">Loading clients...</p>
           </div>
         </div>
       ) : filteredClients.length === 0 ? (
-        <div className="kai-card">
-          <div className="kai-card-body" style={{ textAlign: 'center', padding: 60 }}>
-            <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="var(--kai-text-muted)" strokeWidth="1.5" style={{ marginBottom: 12 }}><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4-4v2"/><circle cx="9" cy="7" r="4"/></svg>
-            <h5 style={{ color: 'var(--kai-text)', margin: '0 0 4px' }}>No clients found</h5>
-            <p style={{ color: 'var(--kai-text-muted)', margin: 0 }}>Add your first client to get started</p>
+        <div className="bg-[var(--bg-card)] border border-[var(--border-default)] rounded-xl">
+          <div className="text-center py-16">
+            <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="var(--text-muted)" strokeWidth="1.5" className="mx-auto mb-3"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4-4v2"/><circle cx="9" cy="7" r="4"/></svg>
+            <h5 className="text-[var(--text-primary)] font-semibold mb-1">No clients found</h5>
+            <p className="text-[var(--text-muted)] text-[13px]">Add your first client to get started</p>
           </div>
         </div>
       ) : viewMode === 'table' ? (
-        <div className="kai-card">
-          <div className="kai-card-body" style={{ padding: 0, overflowX: 'auto' }}>
-            <table className="kai-table">
+        <div className="bg-[var(--bg-card)] border border-[var(--border-default)] rounded-xl">
+          <div className="p-0 overflow-x-auto">
+            <table className="w-full text-[13px]">
               <thead>
-                <tr>
-                  <th>Name</th>
-                  <th>Company</th>
-                  <th>Email</th>
-                  <th>Phone</th>
-                  <th>Industry</th>
-                  <th>Invoices</th>
-                  <th>Revenue</th>
-                  <th>Actions</th>
+                <tr className="border-b-2 border-[var(--border-default)]">
+                  {['Name', 'Company', 'Email', 'Phone', 'Industry', 'Invoices', 'Revenue', 'Actions'].map(h => (
+                    <th key={h} className="px-3 py-2.5 text-left text-[11px] font-bold text-[var(--text-muted)] uppercase tracking-wider">{h}</th>
+                  ))}
                 </tr>
               </thead>
               <tbody>
                 {filteredClients.map(client => (
-                  <tr key={client.id} style={{ cursor: 'pointer' }} onClick={() => setSelectedClient(client)}>
-                    <td>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                        <div className="kai-avatar" style={{ background: 'var(--kai-primary)', width: 32, height: 32, fontSize: 12 }}>
+                  <tr key={client.id} className="border-b border-[var(--border-subtle)] cursor-pointer hover:bg-[var(--bg-elevated)] transition-colors" onClick={() => setSelectedClient(client)}>
+                    <td className="px-3 py-2.5">
+                      <div className="flex items-center gap-2.5">
+                        <div className="w-8 h-8 rounded-full bg-[#7C3AED] text-white flex items-center justify-center text-[12px] font-semibold flex-shrink-0">
                           {(client.name || '?')[0].toUpperCase()}
                         </div>
-                        <span style={{ fontWeight: 600 }}>{client.name}</span>
+                        <span className="font-semibold text-[var(--text-primary)]">{client.name}</span>
                       </div>
                     </td>
-                    <td>{client.company || '-'}</td>
-                    <td>{client.email || '-'}</td>
-                    <td>{client.phone || '-'}</td>
-                    <td>
-                      {client.industry ? (
-                        <span className="kai-badge info">{client.industry}</span>
-                      ) : '-'}
-                    </td>
-                    <td>{client.invoices_count || 0}</td>
-                    <td style={{ fontWeight: 600 }}>{formatCurrency(client.total_revenue)}</td>
-                    <td>
-                      <div style={{ display: 'flex', gap: 4 }} onClick={e => e.stopPropagation()}>
-                        <button className="kai-btn kai-btn-outline kai-btn-sm" onClick={() => openEdit(client)} title="Edit">
+                    <td className="px-3 py-2.5 text-[var(--text-secondary)]">{client.company || '-'}</td>
+                    <td className="px-3 py-2.5 text-[var(--text-secondary)]">{client.email || '-'}</td>
+                    <td className="px-3 py-2.5 text-[var(--text-secondary)]">{client.phone || '-'}</td>
+                    <td className="px-3 py-2.5">{client.industry ? <span className="text-[10px] px-2 py-0.5 rounded-full font-medium bg-[#2563EB]/10 text-[#2563EB]">{client.industry}</span> : '-'}</td>
+                    <td className="px-3 py-2.5 text-[var(--text-secondary)]">{client.invoices_count || 0}</td>
+                    <td className="px-3 py-2.5 font-semibold text-[var(--text-primary)]">{formatCurrency(client.total_revenue)}</td>
+                    <td className="px-3 py-2.5">
+                      <div className="flex gap-1" onClick={e => e.stopPropagation()}>
+                        <button className="bg-transparent border border-[var(--border-default)] text-[var(--text-secondary)] rounded-lg px-2 py-1 hover:bg-[var(--bg-elevated)] transition-colors" onClick={() => openEdit(client)} title="Edit">
                           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
                         </button>
-                        <button className="kai-btn kai-btn-danger kai-btn-sm" onClick={() => handleDelete(client.id)} title="Delete">
+                        <button className="bg-[#CB3939] text-white rounded-lg px-2 py-1 hover:bg-[#CB3939]/90 transition-colors" onClick={() => handleDelete(client.id)} title="Delete">
                           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/></svg>
                         </button>
                       </div>
@@ -350,39 +251,32 @@ export default function Clients() {
           </div>
         </div>
       ) : (
-        /* Cards View */
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: 16 }}>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
           {filteredClients.map(client => (
-            <div key={client.id} className="kai-card" style={{ cursor: 'pointer' }} onClick={() => setSelectedClient(client)}>
-              <div className="kai-card-body">
-                <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 16 }}>
-                  <div className="kai-avatar kai-avatar-lg" style={{ background: 'var(--kai-primary)' }}>
+            <div key={client.id} className="bg-[var(--bg-card)] border border-[var(--border-default)] rounded-xl cursor-pointer hover:border-[#7C3AED]/30 transition-colors" onClick={() => setSelectedClient(client)}>
+              <div className="p-4">
+                <div className="flex items-center gap-3 mb-4">
+                  <div className="w-11 h-11 rounded-full bg-[#7C3AED] text-white flex items-center justify-center text-[16px] font-bold flex-shrink-0">
                     {(client.name || '?')[0].toUpperCase()}
                   </div>
                   <div>
-                    <div style={{ fontWeight: 700, fontSize: 15, color: 'var(--kai-text)' }}>{client.name}</div>
-                    <div style={{ fontSize: 13, color: 'var(--kai-text-muted)' }}>{client.company || 'No company'}</div>
+                    <div className="font-bold text-[15px] text-[var(--text-primary)]">{client.name}</div>
+                    <div className="text-[13px] text-[var(--text-muted)]">{client.company || 'No company'}</div>
                   </div>
                 </div>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 6, fontSize: 13, color: 'var(--kai-text-secondary)' }}>
-                  {client.email && <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
-                    {client.email}
-                  </div>}
-                  {client.phone && <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07 19.5 19.5 0 01-6-6 19.79 19.79 0 01-3.07-8.67A2 2 0 014.11 2h3a2 2 0 012 1.72c.127.96.361 1.903.7 2.81a2 2 0 01-.45 2.11L8.09 9.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0122 16.92z"/></svg>
-                    {client.phone}
-                  </div>}
-                  {client.industry && <div><span className="kai-badge info">{client.industry}</span></div>}
+                <div className="flex flex-col gap-1.5 text-[13px] text-[var(--text-secondary)]">
+                  {client.email && <div className="flex items-center gap-1.5"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>{client.email}</div>}
+                  {client.phone && <div className="flex items-center gap-1.5"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07 19.5 19.5 0 01-6-6 19.79 19.79 0 01-3.07-8.67A2 2 0 014.11 2h3a2 2 0 012 1.72c.127.96.361 1.903.7 2.81a2 2 0 01-.45 2.11L8.09 9.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0122 16.92z"/></svg>{client.phone}</div>}
+                  {client.industry && <div><span className="text-[10px] px-2 py-0.5 rounded-full font-medium bg-[#2563EB]/10 text-[#2563EB]">{client.industry}</span></div>}
                 </div>
-                <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 16, paddingTop: 12, borderTop: '1px solid var(--kai-border-light)' }}>
+                <div className="flex justify-between mt-4 pt-3 border-t border-[var(--border-subtle)]">
                   <div>
-                    <div style={{ fontSize: 11, color: 'var(--kai-text-muted)', textTransform: 'uppercase', letterSpacing: 0.5 }}>Invoices</div>
-                    <div style={{ fontWeight: 700, fontSize: 16 }}>{client.invoices_count || 0}</div>
+                    <div className="text-[11px] text-[var(--text-muted)] uppercase tracking-wider">Invoices</div>
+                    <div className="font-bold text-[16px] text-[var(--text-primary)]">{client.invoices_count || 0}</div>
                   </div>
-                  <div style={{ textAlign: 'right' }}>
-                    <div style={{ fontSize: 11, color: 'var(--kai-text-muted)', textTransform: 'uppercase', letterSpacing: 0.5 }}>Revenue</div>
-                    <div style={{ fontWeight: 700, fontSize: 16, color: 'var(--kai-success)' }}>{formatCurrency(client.total_revenue)}</div>
+                  <div className="text-right">
+                    <div className="text-[11px] text-[var(--text-muted)] uppercase tracking-wider">Revenue</div>
+                    <div className="font-bold text-[16px] text-[#16A34A]">{formatCurrency(client.total_revenue)}</div>
                   </div>
                 </div>
               </div>
@@ -393,25 +287,25 @@ export default function Clients() {
 
       {/* Client Detail Drawer */}
       {selectedClient && (
-        <div style={{ position: 'fixed', inset: 0, zIndex: 2000, display: 'flex', justifyContent: 'flex-end' }}>
-          <div style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.4)' }} onClick={() => setSelectedClient(null)} />
-          <div style={{ position: 'relative', width: 480, maxWidth: '90vw', background: 'var(--kai-surface)', height: '100%', overflowY: 'auto', boxShadow: 'var(--kai-shadow-lg)', padding: 24 }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 }}>
-              <h3 style={{ margin: 0, fontSize: 18, fontWeight: 700 }}>Client Details</h3>
-              <button className="kai-btn kai-btn-outline kai-btn-sm" onClick={() => setSelectedClient(null)}>
+        <div className="fixed inset-0 z-[2000] flex justify-end">
+          <div className="absolute inset-0 bg-black/40" onClick={() => setSelectedClient(null)} />
+          <div className="relative w-[480px] max-w-[90vw] bg-[var(--bg-card)] h-full overflow-y-auto shadow-2xl p-6">
+            <div className="flex justify-between items-center mb-6">
+              <h3 className="text-[18px] font-bold text-[var(--text-primary)] m-0">Client Details</h3>
+              <button className="bg-transparent border border-[var(--border-default)] text-[var(--text-secondary)] rounded-lg px-2 py-1.5 hover:bg-[var(--bg-elevated)] transition-colors" onClick={() => setSelectedClient(null)}>
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
               </button>
             </div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 16, marginBottom: 24 }}>
-              <div className="kai-avatar kai-avatar-xl" style={{ background: 'var(--kai-primary)' }}>
+            <div className="flex items-center gap-4 mb-6">
+              <div className="w-16 h-16 rounded-full bg-[#7C3AED] text-white flex items-center justify-center text-[24px] font-bold flex-shrink-0">
                 {(selectedClient.name || '?')[0].toUpperCase()}
               </div>
               <div>
-                <div style={{ fontSize: 20, fontWeight: 700, color: 'var(--kai-text)' }}>{selectedClient.name}</div>
-                <div style={{ color: 'var(--kai-text-muted)' }}>{selectedClient.company || 'No company'}</div>
+                <div className="text-[20px] font-bold text-[var(--text-primary)]">{selectedClient.name}</div>
+                <div className="text-[var(--text-muted)]">{selectedClient.company || 'No company'}</div>
               </div>
             </div>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+            <div className="flex flex-col gap-4">
               {[
                 { label: 'Email', value: selectedClient.email },
                 { label: 'Phone', value: selectedClient.phone },
@@ -423,14 +317,14 @@ export default function Clients() {
                 { label: 'Notes', value: selectedClient.notes },
               ].map(({ label, value }) => value ? (
                 <div key={label}>
-                  <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--kai-text-muted)', textTransform: 'uppercase', letterSpacing: 0.8, marginBottom: 4 }}>{label}</div>
-                  <div style={{ fontSize: 14, color: 'var(--kai-text)' }}>{value}</div>
+                  <div className="text-[11px] font-bold text-[var(--text-muted)] uppercase tracking-wider mb-1">{label}</div>
+                  <div className="text-[14px] text-[var(--text-primary)]">{value}</div>
                 </div>
               ) : null)}
             </div>
-            <div style={{ display: 'flex', gap: 8, marginTop: 24 }}>
-              <button className="kai-btn kai-btn-primary" onClick={() => { openEdit(selectedClient); setSelectedClient(null); }}>Edit Client</button>
-              <button className="kai-btn kai-btn-danger" onClick={() => { handleDelete(selectedClient.id); setSelectedClient(null); }}>Delete</button>
+            <div className="flex gap-2 mt-6">
+              <button className="bg-[#7C3AED] text-white rounded-lg px-4 py-2 text-[13px] font-semibold hover:bg-[#7C3AED]/90 transition-colors" onClick={() => { openEdit(selectedClient); setSelectedClient(null); }}>Edit Client</button>
+              <button className="bg-[#CB3939] text-white rounded-lg px-4 py-2 text-[13px] font-semibold hover:bg-[#CB3939]/90 transition-colors" onClick={() => { handleDelete(selectedClient.id); setSelectedClient(null); }}>Delete</button>
             </div>
           </div>
         </div>
@@ -438,64 +332,59 @@ export default function Clients() {
 
       {/* Add/Edit Modal */}
       {showModal && (
-        <div style={{ position: 'fixed', inset: 0, zIndex: 2000, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-          <div style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.4)' }} onClick={() => setShowModal(false)} />
-          <div style={{ position: 'relative', background: 'var(--kai-surface)', borderRadius: 'var(--kai-radius-lg)', width: 560, maxWidth: '90vw', maxHeight: '90vh', overflowY: 'auto', boxShadow: 'var(--kai-shadow-lg)' }}>
-            <div style={{ padding: '20px 24px', borderBottom: '1px solid var(--kai-border)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <h4 style={{ margin: 0, fontSize: 16, fontWeight: 700 }}>{editingClient ? 'Edit Client' : 'Add Client'}</h4>
-              <button className="kai-btn kai-btn-outline kai-btn-sm" onClick={() => setShowModal(false)}>
+        <div className="fixed inset-0 z-[2000] flex items-center justify-center">
+          <div className="absolute inset-0 bg-black/40" onClick={() => setShowModal(false)} />
+          <div className="relative bg-[var(--bg-card)] border border-[var(--border-default)] rounded-xl w-[560px] max-w-[90vw] max-h-[90vh] overflow-y-auto shadow-2xl">
+            <div className="px-6 py-5 border-b border-[var(--border-subtle)] flex justify-between items-center">
+              <h4 className="text-[16px] font-bold text-[var(--text-primary)] m-0">{editingClient ? 'Edit Client' : 'Add Client'}</h4>
+              <button className="bg-transparent border border-[var(--border-default)] text-[var(--text-secondary)] rounded-lg px-2 py-1.5 hover:bg-[var(--bg-elevated)] transition-colors" onClick={() => setShowModal(false)}>
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
               </button>
             </div>
-            <form onSubmit={handleSave} style={{ padding: 24 }}>
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 16 }}>
+            <form onSubmit={handleSave} className="p-6">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                {[
+                  { label: 'Full Name', key: 'name', required: true, placeholder: 'John Doe' },
+                  { label: 'Email', key: 'email', required: true, placeholder: 'john@company.com', type: 'email' },
+                  { label: 'Phone', key: 'phone', required: true, placeholder: '+1 (555) 000-0000' },
+                  { label: 'Company', key: 'company', required: true, placeholder: 'Acme Inc.' },
+                ].map(f => (
+                  <div key={f.key}>
+                    <label className="block text-[11px] font-semibold text-[var(--text-muted)] uppercase tracking-wider mb-1.5">{f.label} {f.required && <span className="text-[#CB3939]">*</span>}</label>
+                    <input className="w-full bg-[var(--bg-elevated)] border border-[var(--border-default)] rounded-lg px-3 py-2 text-[var(--text-primary)] placeholder:text-[var(--text-muted)] focus:border-[#7C3AED] focus:ring-2 focus:ring-[#7C3AED]/20 outline-none text-[13px]" value={form[f.key]} onChange={e => setForm({ ...form, [f.key]: e.target.value })} placeholder={f.placeholder} required={f.required} type={f.type || 'text'} />
+                  </div>
+                ))}
                 <div>
-                  <label className="kai-label">Full Name <span style={{color:'red'}}>*</span></label>
-                  <input className="kai-input" value={form.name} onChange={e => setForm({ ...form, name: e.target.value })} placeholder="John Doe" required />
-                </div>
-                <div>
-                  <label className="kai-label">Email <span style={{color:'red'}}>*</span></label>
-                  <input className="kai-input" type="email" value={form.email} onChange={e => setForm({ ...form, email: e.target.value })} placeholder="john@company.com" required />
-                </div>
-                <div>
-                  <label className="kai-label">Phone <span style={{color:'red'}}>*</span></label>
-                  <input className="kai-input" value={form.phone} onChange={e => setForm({ ...form, phone: e.target.value })} placeholder="+1 (555) 000-0000" required />
-                </div>
-                <div>
-                  <label className="kai-label">Company <span style={{color:'red'}}>*</span></label>
-                  <input className="kai-input" value={form.company} onChange={e => setForm({ ...form, company: e.target.value })} placeholder="Acme Inc." required />
-                </div>
-                <div>
-                  <label className="kai-label">Industry <span style={{color:'red'}}>*</span></label>
-                  <select className="kai-select" value={form.industry} onChange={e => setForm({ ...form, industry: e.target.value })} required>
+                  <label className="block text-[11px] font-semibold text-[var(--text-muted)] uppercase tracking-wider mb-1.5">Industry <span className="text-[#CB3939]">*</span></label>
+                  <select className="w-full bg-[var(--bg-elevated)] border border-[var(--border-default)] rounded-lg px-3 py-2 text-[var(--text-primary)] focus:border-[#7C3AED] outline-none text-[13px]" value={form.industry} onChange={e => setForm({ ...form, industry: e.target.value })} required>
                     <option value="">Select industry</option>
                     {INDUSTRIES.map(i => <option key={i} value={i}>{i}</option>)}
                   </select>
                 </div>
                 <div>
-                  <label className="kai-label">Contact Person</label>
-                  <input className="kai-input" value={form.contactPerson} onChange={e => setForm({ ...form, contactPerson: e.target.value })} placeholder="Primary contact name" />
+                  <label className="block text-[11px] font-semibold text-[var(--text-muted)] uppercase tracking-wider mb-1.5">Contact Person</label>
+                  <input className="w-full bg-[var(--bg-elevated)] border border-[var(--border-default)] rounded-lg px-3 py-2 text-[var(--text-primary)] placeholder:text-[var(--text-muted)] focus:border-[#7C3AED] focus:ring-2 focus:ring-[#7C3AED]/20 outline-none text-[13px]" value={form.contactPerson} onChange={e => setForm({ ...form, contactPerson: e.target.value })} placeholder="Primary contact name" />
                 </div>
-                <div style={{ gridColumn: '1 / -1' }}>
-                  <label className="kai-label">Address</label>
-                  <input className="kai-input" value={form.address} onChange={e => setForm({ ...form, address: e.target.value })} placeholder="123 Main St, City" />
-                </div>
-                <div>
-                  <label className="kai-label">Website</label>
-                  <input className="kai-input" value={form.website} onChange={e => setForm({ ...form, website: e.target.value })} placeholder="https://example.com" />
+                <div className="col-span-full">
+                  <label className="block text-[11px] font-semibold text-[var(--text-muted)] uppercase tracking-wider mb-1.5">Address</label>
+                  <input className="w-full bg-[var(--bg-elevated)] border border-[var(--border-default)] rounded-lg px-3 py-2 text-[var(--text-primary)] placeholder:text-[var(--text-muted)] focus:border-[#7C3AED] focus:ring-2 focus:ring-[#7C3AED]/20 outline-none text-[13px]" value={form.address} onChange={e => setForm({ ...form, address: e.target.value })} placeholder="123 Main St, City" />
                 </div>
                 <div>
-                  <label className="kai-label">GST Number</label>
-                  <input className="kai-input" value={form.gstNumber} onChange={e => setForm({ ...form, gstNumber: e.target.value })} placeholder="e.g. 22AAAAA0000A1Z5" />
+                  <label className="block text-[11px] font-semibold text-[var(--text-muted)] uppercase tracking-wider mb-1.5">Website</label>
+                  <input className="w-full bg-[var(--bg-elevated)] border border-[var(--border-default)] rounded-lg px-3 py-2 text-[var(--text-primary)] placeholder:text-[var(--text-muted)] focus:border-[#7C3AED] focus:ring-2 focus:ring-[#7C3AED]/20 outline-none text-[13px]" value={form.website} onChange={e => setForm({ ...form, website: e.target.value })} placeholder="https://example.com" />
                 </div>
-                <div style={{ gridColumn: '1 / -1' }}>
-                  <label className="kai-label">Notes</label>
-                  <textarea className="kai-input" rows={3} value={form.notes} onChange={e => setForm({ ...form, notes: e.target.value })} placeholder="Additional notes..." style={{ resize: 'vertical' }} />
+                <div>
+                  <label className="block text-[11px] font-semibold text-[var(--text-muted)] uppercase tracking-wider mb-1.5">GST Number</label>
+                  <input className="w-full bg-[var(--bg-elevated)] border border-[var(--border-default)] rounded-lg px-3 py-2 text-[var(--text-primary)] placeholder:text-[var(--text-muted)] focus:border-[#7C3AED] focus:ring-2 focus:ring-[#7C3AED]/20 outline-none text-[13px]" value={form.gstNumber} onChange={e => setForm({ ...form, gstNumber: e.target.value })} placeholder="e.g. 22AAAAA0000A1Z5" />
+                </div>
+                <div className="col-span-full">
+                  <label className="block text-[11px] font-semibold text-[var(--text-muted)] uppercase tracking-wider mb-1.5">Notes</label>
+                  <textarea className="w-full bg-[var(--bg-elevated)] border border-[var(--border-default)] rounded-lg px-3 py-2 text-[var(--text-primary)] placeholder:text-[var(--text-muted)] focus:border-[#7C3AED] focus:ring-2 focus:ring-[#7C3AED]/20 outline-none text-[13px] resize-y" rows={3} value={form.notes} onChange={e => setForm({ ...form, notes: e.target.value })} placeholder="Additional notes..." />
                 </div>
               </div>
-              <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 8, marginTop: 24 }}>
-                <button type="button" className="kai-btn kai-btn-outline" onClick={() => setShowModal(false)}>Cancel</button>
-                <button type="submit" className="kai-btn kai-btn-primary" disabled={saving}>
+              <div className="flex justify-end gap-2 mt-6">
+                <button type="button" className="bg-transparent border border-[var(--border-default)] text-[var(--text-secondary)] rounded-lg px-4 py-2 text-[13px] font-semibold hover:bg-[var(--bg-elevated)] transition-colors" onClick={() => setShowModal(false)}>Cancel</button>
+                <button type="submit" data-testid="save-client" className="bg-[#7C3AED] text-white rounded-lg px-4 py-2 text-[13px] font-semibold hover:bg-[#7C3AED]/90 transition-colors" disabled={saving}>
                   {saving ? 'Saving...' : editingClient ? 'Update Client' : 'Create Client'}
                 </button>
               </div>

@@ -18,8 +18,7 @@ const SECRET_QUESTIONS = [
   "What was your first school?",
 ];
 
-const PRIMARY = '#111827';
-const PRIMARY_HOVER = '#1F2937';
+const PRIMARY = '#7C3AED';
 
 export default function Onboarding() {
   const [step, setStep] = useState(0);
@@ -49,7 +48,6 @@ export default function Onboarding() {
     govId: null as File | null,
   });
 
-  // Load saved progress on mount
   useEffect(() => {
     onboardingApi.getStatus?.()
       .then((res: any) => {
@@ -82,47 +80,26 @@ export default function Onboarding() {
     return true;
   };
 
-  // Save progress when advancing steps
   const saveProgress = async (nextStep: number) => {
     setSaving(true);
     try {
       await onboardingApi.saveProgress?.({
-        step: nextStep,
-        dateOfBirth: form.dateOfBirth || undefined,
-        phone: form.phone || undefined,
-        bio: form.bio || undefined,
-        department: form.department || undefined,
-        designation: form.designation || undefined,
-        skills: form.skills || undefined,
-        linkedinUrl: form.linkedinUrl || undefined,
-        secretQuestion: form.secretQuestion || undefined,
-        secretAnswer: form.secretAnswer || undefined,
+        step: nextStep, dateOfBirth: form.dateOfBirth || undefined, phone: form.phone || undefined,
+        bio: form.bio || undefined, department: form.department || undefined, designation: form.designation || undefined,
+        skills: form.skills || undefined, linkedinUrl: form.linkedinUrl || undefined,
+        secretQuestion: form.secretQuestion || undefined, secretAnswer: form.secretAnswer || undefined,
       });
-    } catch {
-      // Progress save is best-effort — don't block the wizard
-    } finally {
-      setSaving(false);
-    }
+    } catch {} finally { setSaving(false); }
   };
 
   const handleNext = async () => {
-    if (step < STEPS.length - 1) {
-      await saveProgress(step);
-      setStep(step + 1);
-      setError('');
-    }
+    if (step < STEPS.length - 1) { await saveProgress(step); setStep(step + 1); setError(''); }
   };
 
-  const handleBack = () => {
-    if (step > 0) {
-      setStep(step - 1);
-      setError('');
-    }
-  };
+  const handleBack = () => { if (step > 0) { setStep(step - 1); setError(''); } };
 
   const handleComplete = async () => {
-    setError('');
-    setLoading(true);
+    setError(''); setLoading(true);
     try {
       const fd = new FormData();
       if (form.dateOfBirth) fd.append('dateOfBirth', form.dateOfBirth);
@@ -137,58 +114,39 @@ export default function Onboarding() {
       if (form.resume) fd.append('resume', form.resume);
       if (form.govId) fd.append('govId', form.govId);
       if (form.profilePhoto) fd.append('profilePhoto', form.profilePhoto);
-
       const res = await onboardingApi.complete(fd);
       const updatedUser = res.data?.user || res.data;
-
       const currentUser = JSON.parse(localStorage.getItem('knowai-user') || '{}');
       const mergedUser = { ...currentUser, ...updatedUser, onboardingComplete: true };
       localStorage.setItem('knowai-user', JSON.stringify(mergedUser));
       dispatch({ type: 'AUTH_SUCCESS', payload: mergedUser });
-
       navigate('/dashboard');
     } catch (err: any) {
-      const msg = err.response?.data?.error || err.message || 'Failed to complete onboarding';
-      setError(msg);
-    } finally {
-      setLoading(false);
-    }
+      setError(err.response?.data?.error || err.message || 'Failed to complete onboarding');
+    } finally { setLoading(false); }
   };
 
+  const inputClass = 'w-full bg-[var(--bg-elevated)] border border-[var(--border-default)] rounded-lg px-3 py-2.5 text-[var(--text-primary)] placeholder:text-[var(--text-muted)] focus:border-[#7C3AED] focus:ring-2 focus:ring-[#7C3AED]/20 outline-none text-[14px]';
+  const labelClass = 'block text-[13px] font-semibold text-[var(--text-secondary)] mb-1.5';
+
   const renderFileButton = (label: string, file: File | null, inputRef: React.RefObject<HTMLInputElement | null>, fieldKey: string, accept: string) => (
-    <div style={{ marginBottom: 24 }}>
-      <label className="onboarding-label">{label}</label>
-      <input
-        ref={inputRef}
-        type="file"
-        accept={accept}
-        style={{ display: 'none' }}
-        onChange={(e) => set(fieldKey, e.target.files?.[0] || null)}
-      />
-      <div
-        onClick={() => inputRef.current?.click()}
-        className="onboarding-upload-zone"
-        style={{
-          background: file ? 'rgba(0, 122, 255, 0.05)' : 'rgba(245, 245, 247, 0.8)',
-        }}
-      >
+    <div className="mb-6" data-testid={`upload-${fieldKey}`}>
+      <label className={labelClass}>{label}</label>
+      <input ref={inputRef} type="file" accept={accept} className="hidden" onChange={(e) => set(fieldKey, e.target.files?.[0] || null)} />
+      <div onClick={() => inputRef.current?.click()}
+        className={`border-2 border-dashed rounded-xl p-6 text-center cursor-pointer transition-colors ${file ? 'border-[#7C3AED]/30 bg-[#7C3AED]/5' : 'border-[var(--border-default)] bg-[var(--bg-elevated)] hover:border-[var(--text-muted)]'}`}>
         {file ? (
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
-            <FileText size={18} color={PRIMARY} />
-            <span style={{ fontSize: 14, color: '#1D1D1F' }}>{file.name}</span>
-            <button
-              onClick={(e) => { e.stopPropagation(); set(fieldKey, null); }}
-              style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 2 }}
-            >
-              <X size={16} color="#86868B" />
+          <div className="flex items-center justify-center gap-2">
+            <FileText size={18} className="text-[#7C3AED]" />
+            <span className="text-[14px] text-[var(--text-primary)]">{file.name}</span>
+            <button onClick={(e) => { e.stopPropagation(); set(fieldKey, null); }} className="p-0.5 text-[var(--text-muted)] hover:text-[var(--text-primary)]">
+              <X size={16} />
             </button>
           </div>
         ) : (
           <>
-            <Upload size={24} color="#AEAEB2" />
-            <p style={{ margin: '8px 0 0', fontSize: 13, color: '#86868B' }}>
-              Click to upload or drag & drop
-            </p>
+            <Upload size={24} className="mx-auto text-[var(--text-muted)] mb-2" />
+            <p className="text-[13px] text-[var(--text-muted)]">Click to upload or drag & drop</p>
           </>
         )}
       </div>
@@ -196,36 +154,27 @@ export default function Onboarding() {
   );
 
   return (
-    <div className="onboarding-page">
+    <div className="min-h-screen bg-[var(--bg-primary)] flex flex-col items-center justify-center p-6">
       {/* Header */}
-      <div style={{ textAlign: 'center', marginBottom: 32 }}>
-        <div className="onboarding-logo">K</div>
-        <h1 className="onboarding-title">Welcome to Know AI</h1>
-        <p className="onboarding-subtitle">Complete your profile to get started</p>
+      <div className="text-center mb-8">
+        <div className="w-[64px] h-[64px] bg-[#7C3AED] rounded-2xl flex items-center justify-center mx-auto mb-4 text-[24px] font-extrabold text-white">K</div>
+        <h1 className="text-[28px] font-bold text-[var(--text-primary)] font-[Manrope]">Welcome to Know AI</h1>
+        <p className="text-[var(--text-secondary)] text-[15px]">Complete your profile to get started</p>
       </div>
 
       {/* Progress Stepper */}
-      <div className="onboarding-stepper">
+      <div className="flex items-center justify-center mb-6 gap-0">
         {STEPS.map((s, i) => {
           const Icon = s.icon;
           const isActive = i === step;
           const isDone = i < step;
           return (
-            <div key={i} style={{ display: 'flex', alignItems: 'center', flex: i < STEPS.length - 1 ? 1 : 'none' }}>
-              <div
-                className="onboarding-step-icon"
-                style={{
-                  background: isDone || isActive ? PRIMARY : 'rgba(0, 0, 0, 0.06)',
-                  color: isDone || isActive ? '#fff' : '#AEAEB2',
-                }}
-              >
+            <div key={i} className="flex items-center" style={{ flex: i < STEPS.length - 1 ? 1 : 'none' }}>
+              <div className={`w-9 h-9 rounded-full flex items-center justify-center shrink-0 transition-colors ${isDone || isActive ? 'bg-[#7C3AED] text-white' : 'bg-[var(--bg-elevated)] text-[var(--text-muted)]'}`}>
                 {isDone ? <Check size={16} /> : <Icon size={16} />}
               </div>
               {i < STEPS.length - 1 && (
-                <div
-                  className="onboarding-step-line"
-                  style={{ background: i < step ? PRIMARY : 'rgba(0, 0, 0, 0.06)' }}
-                />
+                <div className={`h-0.5 flex-1 mx-1 transition-colors ${i < step ? 'bg-[#7C3AED]' : 'bg-[var(--border-default)]'}`} />
               )}
             </div>
           );
@@ -233,149 +182,76 @@ export default function Onboarding() {
       </div>
 
       {/* Step Label */}
-      <p className="onboarding-step-label">
+      <p className="text-center text-[14px] font-semibold text-[var(--text-secondary)] mb-4">
         Step {step + 1}: {STEPS[step].label}
-        {saving && <span style={{ fontSize: 12, color: '#86868B', marginLeft: 8 }}>Saving...</span>}
+        {saving && <span className="text-[12px] text-[var(--text-muted)] ml-2">Saving...</span>}
       </p>
 
-      {/* Card — Glass surface */}
-      <div className="onboarding-card">
-        {error && (
-          <div className="onboarding-error">{error}</div>
-        )}
+      {/* Card */}
+      <div className="w-full max-w-[520px] bg-[var(--bg-card)] border border-[var(--border-default)] rounded-xl p-6 shadow-lg">
+        {error && <div className="bg-red-500/10 text-red-400 px-4 py-2.5 rounded-lg mb-4 text-[13px]">{error}</div>}
 
-        {/* Step 0: Personal Details */}
         {step === 0 && (
           <>
-            <div className="onboarding-field">
-              <label className="onboarding-label">Date of Birth *</label>
-              <input
-                type="date"
-                className="onboarding-input"
-                value={form.dateOfBirth}
-                onChange={(e) => set('dateOfBirth', e.target.value)}
-                max={new Date().toISOString().split('T')[0]}
-              />
+            <div className="mb-5">
+              <label className={labelClass}>Date of Birth *</label>
+              <input type="date" className={inputClass} value={form.dateOfBirth} onChange={(e) => set('dateOfBirth', e.target.value)} max={new Date().toISOString().split('T')[0]} data-testid="dob" />
             </div>
-            <div className="onboarding-field">
-              <label className="onboarding-label">Phone Number *</label>
-              <input
-                type="tel"
-                className="onboarding-input"
-                placeholder="+91 98765 43210"
-                value={form.phone}
-                onChange={(e) => set('phone', e.target.value)}
-              />
+            <div className="mb-5">
+              <label className={labelClass}>Phone Number *</label>
+              <input type="tel" className={inputClass} placeholder="+91 98765 43210" value={form.phone} onChange={(e) => set('phone', e.target.value)} data-testid="phone" />
             </div>
-            <div className="onboarding-field">
-              <label className="onboarding-label">Bio</label>
-              <textarea
-                className="onboarding-input"
-                style={{ minHeight: 80, resize: 'vertical' }}
-                placeholder="Tell us a bit about yourself..."
-                maxLength={200}
-                value={form.bio}
-                onChange={(e) => set('bio', e.target.value)}
-              />
-              <span style={{ fontSize: 12, color: '#AEAEB2', float: 'right', marginTop: 4 }}>
-                {form.bio.length}/200
-              </span>
+            <div className="mb-5">
+              <label className={labelClass}>Bio</label>
+              <textarea className={`${inputClass} min-h-[80px] resize-y`} placeholder="Tell us a bit about yourself..." maxLength={200} value={form.bio} onChange={(e) => set('bio', e.target.value)} data-testid="bio" />
+              <span className="text-[12px] text-[var(--text-muted)] float-right mt-1">{form.bio.length}/200</span>
             </div>
           </>
         )}
 
-        {/* Step 1: Professional Details */}
         {step === 1 && (
           <>
-            <div className="onboarding-field">
-              <label className="onboarding-label">Department</label>
-              <input
-                type="text"
-                className="onboarding-input"
-                placeholder="e.g. Engineering"
-                value={form.department}
-                onChange={(e) => set('department', e.target.value)}
-              />
-              {user?.department && (
-                <span style={{ fontSize: 12, color: '#86868B', marginTop: 4, display: 'block' }}>
-                  Pre-filled from admin settings
-                </span>
-              )}
+            <div className="mb-5">
+              <label className={labelClass}>Department</label>
+              <input type="text" className={inputClass} placeholder="e.g. Engineering" value={form.department} onChange={(e) => set('department', e.target.value)} />
+              {user?.department && <span className="text-[12px] text-[var(--text-muted)] mt-1 block">Pre-filled from admin settings</span>}
             </div>
-            <div className="onboarding-field">
-              <label className="onboarding-label">Designation</label>
-              <input
-                type="text"
-                className="onboarding-input"
-                placeholder="e.g. Senior Developer"
-                value={form.designation}
-                onChange={(e) => set('designation', e.target.value)}
-              />
+            <div className="mb-5">
+              <label className={labelClass}>Designation</label>
+              <input type="text" className={inputClass} placeholder="e.g. Senior Developer" value={form.designation} onChange={(e) => set('designation', e.target.value)} />
             </div>
-            <div className="onboarding-field">
-              <label className="onboarding-label">Skills</label>
-              <input
-                type="text"
-                className="onboarding-input"
-                placeholder="React, Node.js, Python (comma-separated)"
-                value={form.skills}
-                onChange={(e) => set('skills', e.target.value)}
-              />
+            <div className="mb-5">
+              <label className={labelClass}>Skills</label>
+              <input type="text" className={inputClass} placeholder="React, Node.js, Python (comma-separated)" value={form.skills} onChange={(e) => set('skills', e.target.value)} />
             </div>
-            <div className="onboarding-field">
-              <label className="onboarding-label">LinkedIn URL (optional)</label>
-              <input
-                type="url"
-                className="onboarding-input"
-                placeholder="https://linkedin.com/in/yourname"
-                value={form.linkedinUrl}
-                onChange={(e) => set('linkedinUrl', e.target.value)}
-              />
+            <div className="mb-5">
+              <label className={labelClass}>LinkedIn URL (optional)</label>
+              <input type="url" className={inputClass} placeholder="https://linkedin.com/in/yourname" value={form.linkedinUrl} onChange={(e) => set('linkedinUrl', e.target.value)} />
             </div>
           </>
         )}
 
-        {/* Step 2: Security */}
         {step === 2 && (
           <>
-            <div className="onboarding-field">
-              <label className="onboarding-label">Secret Question *</label>
-              <select
-                className="onboarding-input"
-                value={form.secretQuestion}
-                onChange={(e) => set('secretQuestion', e.target.value)}
-              >
-                {SECRET_QUESTIONS.map((q) => (
-                  <option key={q} value={q}>{q}</option>
-                ))}
+            <div className="mb-5">
+              <label className={labelClass}>Secret Question *</label>
+              <select className={inputClass} value={form.secretQuestion} onChange={(e) => set('secretQuestion', e.target.value)} data-testid="secret-question">
+                {SECRET_QUESTIONS.map((q) => <option key={q} value={q}>{q}</option>)}
               </select>
             </div>
-            <div className="onboarding-field">
-              <label className="onboarding-label">Secret Answer *</label>
-              <input
-                type="text"
-                className="onboarding-input"
-                placeholder="Your answer (case-sensitive)"
-                value={form.secretAnswer}
-                onChange={(e) => set('secretAnswer', e.target.value)}
-              />
+            <div className="mb-5">
+              <label className={labelClass}>Secret Answer *</label>
+              <input type="text" className={inputClass} placeholder="Your answer (case-sensitive)" value={form.secretAnswer} onChange={(e) => set('secretAnswer', e.target.value)} data-testid="secret-answer" />
             </div>
-            <div className="onboarding-field" style={{ display: 'flex', alignItems: 'flex-start', gap: 10 }}>
-              <input
-                type="checkbox"
-                id="agreeTerms"
-                checked={form.agreeTerms}
-                onChange={(e) => set('agreeTerms', e.target.checked)}
-                style={{ marginTop: 3, accentColor: PRIMARY }}
-              />
-              <label htmlFor="agreeTerms" style={{ fontSize: 13, color: '#1D1D1F', cursor: 'pointer', lineHeight: 1.5 }}>
+            <div className="mb-5 flex items-start gap-2.5">
+              <input type="checkbox" id="agreeTerms" checked={form.agreeTerms} onChange={(e) => set('agreeTerms', e.target.checked)} className="mt-0.5 accent-[#7C3AED]" data-testid="agree-terms" />
+              <label htmlFor="agreeTerms" className="text-[13px] text-[var(--text-primary)] cursor-pointer leading-relaxed">
                 I agree to the Terms of Service and Privacy Policy of Know AI.
               </label>
             </div>
           </>
         )}
 
-        {/* Step 3: Documents */}
         {step === 3 && (
           <>
             {renderFileButton('Profile Photo (JPEG/PNG, max 5MB)', form.profilePhoto, photoRef, 'profilePhoto', '.jpg,.jpeg,.png,.webp')}
@@ -385,35 +261,23 @@ export default function Onboarding() {
         )}
 
         {/* Navigation */}
-        <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 32, gap: 12 }}>
+        <div className="flex justify-between mt-8 gap-3">
           {step > 0 ? (
-            <button onClick={handleBack} className="onboarding-btn-secondary">
+            <button onClick={handleBack} className="bg-transparent border border-[var(--border-default)] text-[var(--text-secondary)] rounded-lg px-4 py-2 text-[13px] font-semibold hover:bg-[var(--bg-elevated)] transition-colors flex items-center gap-1" data-testid="back-btn">
               <ChevronLeft size={16} /> Back
             </button>
           ) : <div />}
 
           {step < STEPS.length - 1 ? (
-            <button
-              onClick={handleNext}
-              disabled={!canProceed() || saving}
-              className="onboarding-btn-primary"
-              style={{
-                background: canProceed() && !saving ? PRIMARY : 'rgba(0, 0, 0, 0.08)',
-                cursor: canProceed() && !saving ? 'pointer' : 'not-allowed',
-              }}
-            >
+            <button onClick={handleNext} disabled={!canProceed() || saving}
+              className={`rounded-lg px-5 py-2 text-[13px] font-semibold flex items-center gap-1 transition-colors ${canProceed() && !saving ? 'bg-[#7C3AED] text-white hover:bg-[#7C3AED]/90 cursor-pointer' : 'bg-[var(--bg-elevated)] text-[var(--text-muted)] cursor-not-allowed'}`}
+              data-testid="next-btn">
               {saving ? 'Saving...' : 'Next'} <ChevronRight size={16} />
             </button>
           ) : (
-            <button
-              onClick={handleComplete}
-              disabled={loading || !canProceed()}
-              className="onboarding-btn-primary"
-              style={{
-                background: !loading && canProceed() ? PRIMARY : 'rgba(0, 0, 0, 0.08)',
-                cursor: !loading && canProceed() ? 'pointer' : 'not-allowed',
-              }}
-            >
+            <button onClick={handleComplete} disabled={loading || !canProceed()}
+              className={`rounded-lg px-5 py-2 text-[13px] font-semibold flex items-center gap-1 transition-colors ${!loading && canProceed() ? 'bg-[#7C3AED] text-white hover:bg-[#7C3AED]/90 cursor-pointer' : 'bg-[var(--bg-elevated)] text-[var(--text-muted)] cursor-not-allowed'}`}
+              data-testid="complete-btn">
               {loading ? 'Completing...' : 'Complete Setup'}
               {!loading && <Check size={16} />}
             </button>
@@ -421,9 +285,7 @@ export default function Onboarding() {
         </div>
       </div>
 
-      <p style={{ marginTop: 24, fontSize: 12, color: '#AEAEB2' }}>
-        Know AI ERP — Your workspace is being prepared
-      </p>
+      <p className="mt-6 text-[12px] text-[var(--text-muted)]">Know AI ERP -- Your workspace is being prepared</p>
     </div>
   );
 }

@@ -6,8 +6,6 @@ import {
   AlertCircle, Calendar, X,
 } from 'lucide-react';
 
-// ─── Constants ───────────────────────────────────────────────────
-
 const ACTION_BADGES: Record<string, { bg: string; color: string; label: string }> = {
   CREATE: { bg: '#DCFCE7', color: '#166534', label: 'CREATE' },
   UPDATE: { bg: '#DBEAFE', color: '#1E40AF', label: 'UPDATE' },
@@ -26,7 +24,7 @@ const ENTITY_OPTIONS = [
 
 const PAGE_SIZE = 20;
 
-// ─── Helpers ─────────────────────────────────────────────────────
+const inputClass = "w-full bg-[var(--bg-elevated)] border border-[var(--border-default)] rounded-lg px-3 py-2 text-[var(--text-primary)] placeholder:text-[var(--text-muted)] focus:border-[#7C3AED] focus:ring-2 focus:ring-[#7C3AED]/20 outline-none text-[13px]";
 
 function relativeTime(dateStr: string): string {
   if (!dateStr) return '-';
@@ -53,8 +51,6 @@ function fullTimestamp(dateStr: string): string {
     hour: '2-digit', minute: '2-digit', second: '2-digit',
   });
 }
-
-// ─── Component ───────────────────────────────────────────────────
 
 export default function AuditLog() {
   const dispatch = useDispatch();
@@ -100,7 +96,6 @@ export default function AuditLog() {
     }
   }, [page, search, actionFilter, entityFilter, dateFrom, dateTo]);
 
-  // Fetch on page change
   useEffect(() => {
     fetchLogs(page);
   }, [page]);
@@ -118,7 +113,6 @@ export default function AuditLog() {
     setDateFrom('');
     setDateTo('');
     setPage(1);
-    // Fetch with no filters directly
     setLoading(true);
     setError('');
     try {
@@ -136,8 +130,6 @@ export default function AuditLog() {
   };
 
   const hasActiveFilters = search || actionFilter || entityFilter || dateFrom || dateTo;
-
-  // ─── Export CSV ──────────────────────────────────────────────────
 
   const handleExport = () => {
     const headers = ['Timestamp', 'User', 'Action', 'Entity', 'Description', 'IP Address'];
@@ -164,24 +156,16 @@ export default function AuditLog() {
     URL.revokeObjectURL(url);
   };
 
-  // ─── Badge renderer ──────────────────────────────────────────────
-
   const getActionBadge = (action: string) => {
     const badge = ACTION_BADGES[action?.toUpperCase()] || {
       bg: '#F3F4F6', color: '#374151', label: action || 'UNKNOWN',
     };
     return (
-      <span style={{
-        background: badge.bg, color: badge.color, padding: '3px 10px',
-        borderRadius: 6, fontSize: 11, fontWeight: 600, letterSpacing: 0.5,
-        textTransform: 'uppercase', display: 'inline-block',
-      }}>
+      <span className="inline-block px-2.5 py-0.5 rounded-md text-[11px] font-semibold tracking-wide uppercase" style={{ background: badge.bg, color: badge.color }}>
         {badge.label}
       </span>
     );
   };
-
-  // ─── Pagination helpers ──────────────────────────────────────────
 
   const getPageNumbers = (): (number | '...')[] => {
     const pages: (number | '...')[] = [];
@@ -199,243 +183,161 @@ export default function AuditLog() {
     return pages;
   };
 
-  // ─── Render ──────────────────────────────────────────────────────
-
   return (
     <div>
       {/* Header */}
-      <div className="page-header">
+      <div className="flex items-center justify-between mb-6">
         <div>
-          <h1>Audit Log</h1>
-          <p>Track all system activities and user actions</p>
+          <h1 className="text-[22px] font-bold text-[var(--text-primary)] m-0">Audit Log</h1>
+          <p className="text-[13px] text-[var(--text-secondary)] mt-1">Track all system activities and user actions</p>
         </div>
-        <div style={{ display: 'flex', gap: 10 }}>
-          <button onClick={handleExport} className="kai-btn" style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-            <Download size={16} /> Export CSV
-          </button>
-        </div>
+        <button data-testid="export-csv" onClick={handleExport} className="bg-transparent border border-[var(--border-default)] text-[var(--text-secondary)] rounded-lg px-4 py-2 text-[13px] font-medium hover:bg-[var(--bg-elevated)] transition-colors inline-flex items-center gap-1.5">
+          <Download size={16} /> Export CSV
+        </button>
       </div>
 
       {/* Search + Filters */}
-      <div className="kai-card" style={{ marginBottom: 20 }}>
-        <div className="kai-card-body">
-          <form onSubmit={applyFilters} style={{ display: 'flex', gap: 12, alignItems: 'flex-end', flexWrap: 'wrap' }}>
-            {/* Search */}
-            <div style={{ flex: 2, minWidth: 220 }}>
-              <label className="kai-label">Search</label>
-              <div style={{ position: 'relative' }}>
-                <Search size={16} style={{ position: 'absolute', left: 10, top: 10, color: '#9CA3AF' }} />
-                <input
-                  className="kai-input"
-                  placeholder="Search actions, users, entities, descriptions..."
-                  value={search}
-                  onChange={(e) => setSearch(e.target.value)}
-                  style={{ paddingLeft: 34 }}
-                />
-              </div>
+      <div className="bg-[var(--bg-card)] border border-[var(--border-default)] rounded-xl p-4 mb-5">
+        <form onSubmit={applyFilters} className="flex gap-3 items-end flex-wrap">
+          <div className="flex-[2] min-w-[220px]">
+            <label className="block text-[12px] font-semibold text-[var(--text-secondary)] mb-1">Search</label>
+            <div className="relative">
+              <Search size={16} className="absolute left-2.5 top-2.5 text-[var(--text-muted)]" />
+              <input data-testid="search-audit" className={`${inputClass} pl-8`} placeholder="Search actions, users, entities..." value={search} onChange={(e) => setSearch(e.target.value)} />
             </div>
-
-            {/* Action filter */}
-            <div style={{ minWidth: 140 }}>
-              <label className="kai-label">Action</label>
-              <select className="kai-input" value={actionFilter} onChange={(e) => setActionFilter(e.target.value)}>
-                <option value="">All Actions</option>
-                {ACTION_OPTIONS.map((a) => (
-                  <option key={a} value={a}>{a.charAt(0) + a.slice(1).toLowerCase()}</option>
-                ))}
-              </select>
-            </div>
-
-            {/* Entity filter */}
-            <div style={{ minWidth: 140 }}>
-              <label className="kai-label">Entity</label>
-              <select className="kai-input" value={entityFilter} onChange={(e) => setEntityFilter(e.target.value)}>
-                <option value="">All Entities</option>
-                {ENTITY_OPTIONS.map((e) => (
-                  <option key={e} value={e}>{e.charAt(0) + e.slice(1).toLowerCase()}</option>
-                ))}
-              </select>
-            </div>
-
-            {/* Date from */}
-            <div style={{ minWidth: 140 }}>
-              <label className="kai-label">From</label>
-              <input className="kai-input" type="date" value={dateFrom} onChange={(e) => setDateFrom(e.target.value)} />
-            </div>
-
-            {/* Date to */}
-            <div style={{ minWidth: 140 }}>
-              <label className="kai-label">To</label>
-              <input className="kai-input" type="date" value={dateTo} onChange={(e) => setDateTo(e.target.value)} />
-            </div>
-
-            {/* Buttons */}
-            <div style={{ display: 'flex', gap: 8 }}>
-              <button type="submit" className="kai-btn kai-btn-primary" style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                <Filter size={16} /> Filter
+          </div>
+          <div className="min-w-[140px]">
+            <label className="block text-[12px] font-semibold text-[var(--text-secondary)] mb-1">Action</label>
+            <select className={inputClass} value={actionFilter} onChange={(e) => setActionFilter(e.target.value)}>
+              <option value="">All Actions</option>
+              {ACTION_OPTIONS.map((a) => <option key={a} value={a}>{a.charAt(0) + a.slice(1).toLowerCase()}</option>)}
+            </select>
+          </div>
+          <div className="min-w-[140px]">
+            <label className="block text-[12px] font-semibold text-[var(--text-secondary)] mb-1">Entity</label>
+            <select className={inputClass} value={entityFilter} onChange={(e) => setEntityFilter(e.target.value)}>
+              <option value="">All Entities</option>
+              {ENTITY_OPTIONS.map((e) => <option key={e} value={e}>{e.charAt(0) + e.slice(1).toLowerCase()}</option>)}
+            </select>
+          </div>
+          <div className="min-w-[140px]">
+            <label className="block text-[12px] font-semibold text-[var(--text-secondary)] mb-1">From</label>
+            <input className={inputClass} type="date" value={dateFrom} onChange={(e) => setDateFrom(e.target.value)} />
+          </div>
+          <div className="min-w-[140px]">
+            <label className="block text-[12px] font-semibold text-[var(--text-secondary)] mb-1">To</label>
+            <input className={inputClass} type="date" value={dateTo} onChange={(e) => setDateTo(e.target.value)} />
+          </div>
+          <div className="flex gap-2">
+            <button type="submit" className="bg-[#7C3AED] text-white rounded-lg px-4 py-2 text-[13px] font-semibold hover:bg-[#7C3AED]/90 flex items-center gap-1.5">
+              <Filter size={16} /> Filter
+            </button>
+            {hasActiveFilters && (
+              <button type="button" onClick={clearFilters} className="bg-transparent border border-[var(--border-default)] text-[var(--text-secondary)] rounded-lg px-3 py-2 text-[13px] flex items-center gap-1">
+                <X size={14} /> Clear
               </button>
-              {hasActiveFilters && (
-                <button type="button" onClick={clearFilters} className="kai-btn" style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-                  <X size={14} /> Clear
-                </button>
-              )}
-            </div>
-          </form>
-        </div>
+            )}
+          </div>
+        </form>
       </div>
 
       {/* Error */}
       {error && (
-        <div style={{
-          padding: '12px 16px', borderRadius: 8, marginBottom: 20, fontSize: 13,
-          background: '#FEE2E2', color: '#991B1B', display: 'flex', alignItems: 'center', gap: 8,
-        }}>
+        <div className="px-4 py-3 rounded-lg mb-5 text-[13px] bg-red-50 text-red-800 flex items-center gap-2">
           <AlertCircle size={16} /> {error}
         </div>
       )}
 
       {/* Results summary */}
       {!loading && total > 0 && (
-        <div style={{ marginBottom: 12, fontSize: 13, color: '#5B6B76' }}>
+        <div className="mb-3 text-[13px] text-[var(--text-secondary)]">
           {total.toLocaleString()} {total === 1 ? 'entry' : 'entries'} found
           {hasActiveFilters ? ' matching your filters' : ''}
         </div>
       )}
 
       {/* Audit Table */}
-      <div className="kai-card">
-        <div className="kai-card-body" style={{ padding: 0 }}>
-          {loading ? (
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 60 }}>
-              <Loader2 size={28} style={{ animation: 'spin 1s linear infinite', color: '#111827' }} />
-            </div>
-          ) : logs.length === 0 ? (
-            <div style={{ textAlign: 'center', padding: 60, color: '#5B6B76' }}>
-              <Calendar size={40} style={{ marginBottom: 12, opacity: 0.4 }} />
-              <p style={{ fontSize: 15, fontWeight: 500 }}>No audit logs found</p>
-              <p style={{ fontSize: 13 }}>
-                {hasActiveFilters ? 'Try adjusting your filters' : 'Check back later'}
-              </p>
-            </div>
-          ) : (
-            <div style={{ overflowX: 'auto' }}>
-              <table className="kai-table" style={{ width: '100%', borderCollapse: 'collapse' }}>
-                <thead>
-                  <tr>
-                    <th style={thStyle}>Time</th>
-                    <th style={thStyle}>User</th>
-                    <th style={thStyle}>Action</th>
-                    <th style={thStyle}>Entity</th>
-                    <th style={thStyle}>Description</th>
+      <div className="bg-[var(--bg-card)] border border-[var(--border-default)] rounded-xl">
+        {loading ? (
+          <div className="flex items-center justify-center py-16">
+            <Loader2 size={28} className="animate-spin text-[#7C3AED]" />
+          </div>
+        ) : logs.length === 0 ? (
+          <div className="text-center py-16 text-[var(--text-secondary)]">
+            <Calendar size={40} className="mx-auto mb-3 opacity-40" />
+            <p className="text-[15px] font-medium">No audit logs found</p>
+            <p className="text-[13px]">{hasActiveFilters ? 'Try adjusting your filters' : 'Check back later'}</p>
+          </div>
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="w-full border-collapse">
+              <thead>
+                <tr>
+                  <th className="px-4 py-3 text-left text-[11px] font-semibold text-[var(--text-secondary)] uppercase tracking-wide bg-[var(--bg-elevated)] border-b-2 border-[var(--border-default)]">Time</th>
+                  <th className="px-4 py-3 text-left text-[11px] font-semibold text-[var(--text-secondary)] uppercase tracking-wide bg-[var(--bg-elevated)] border-b-2 border-[var(--border-default)]">User</th>
+                  <th className="px-4 py-3 text-left text-[11px] font-semibold text-[var(--text-secondary)] uppercase tracking-wide bg-[var(--bg-elevated)] border-b-2 border-[var(--border-default)]">Action</th>
+                  <th className="px-4 py-3 text-left text-[11px] font-semibold text-[var(--text-secondary)] uppercase tracking-wide bg-[var(--bg-elevated)] border-b-2 border-[var(--border-default)]">Entity</th>
+                  <th className="px-4 py-3 text-left text-[11px] font-semibold text-[var(--text-secondary)] uppercase tracking-wide bg-[var(--bg-elevated)] border-b-2 border-[var(--border-default)]">Description</th>
+                </tr>
+              </thead>
+              <tbody>
+                {logs.map((log, i) => (
+                  <tr key={log.id || log._id || i} className="border-b border-[var(--border-subtle)]">
+                    <td className="px-4 py-3 align-middle">
+                      <span title={fullTimestamp(log.createdAt || log.timestamp)} className="text-[13px] text-[var(--text-secondary)] whitespace-nowrap cursor-default">
+                        {relativeTime(log.createdAt || log.timestamp)}
+                      </span>
+                    </td>
+                    <td className="px-4 py-3 align-middle">
+                      <span className="font-medium text-[var(--text-primary)] text-[13px]">
+                        {log.userName || log.user?.name || '-'}
+                      </span>
+                    </td>
+                    <td className="px-4 py-3 align-middle">{getActionBadge(log.action)}</td>
+                    <td className="px-4 py-3 align-middle">
+                      <span className="text-[13px] text-[var(--text-secondary)]">
+                        {log.entity || '-'}
+                        {log.entityName && (
+                          <span className="block text-[12px] text-[var(--text-muted)] mt-0.5">{log.entityName}</span>
+                        )}
+                      </span>
+                    </td>
+                    <td className="px-4 py-3 align-middle max-w-[320px]">
+                      <span className="text-[13px] text-[var(--text-secondary)] block overflow-hidden text-ellipsis whitespace-nowrap" title={log.description || log.details || ''}>
+                        {log.description || log.details || '-'}
+                      </span>
+                    </td>
                   </tr>
-                </thead>
-                <tbody>
-                  {logs.map((log, i) => (
-                    <tr key={log.id || log._id || i} style={{ borderBottom: '1px solid #F0F2F4' }}>
-                      {/* Time — relative with full timestamp on hover */}
-                      <td style={tdStyle}>
-                        <span
-                          title={fullTimestamp(log.createdAt || log.timestamp)}
-                          style={{ fontSize: 13, color: '#4C5963', whiteSpace: 'nowrap', cursor: 'default' }}
-                        >
-                          {relativeTime(log.createdAt || log.timestamp)}
-                        </span>
-                      </td>
-
-                      {/* User */}
-                      <td style={tdStyle}>
-                        <span style={{ fontWeight: 500, color: '#10222F', fontSize: 13 }}>
-                          {log.userName || log.user?.name || '-'}
-                        </span>
-                      </td>
-
-                      {/* Action badge */}
-                      <td style={tdStyle}>{getActionBadge(log.action)}</td>
-
-                      {/* Entity */}
-                      <td style={tdStyle}>
-                        <span style={{ fontSize: 13, color: '#4C5963' }}>
-                          {log.entity || '-'}
-                          {log.entityName && (
-                            <span style={{ display: 'block', fontSize: 12, color: '#6B7280', marginTop: 1 }}>
-                              {log.entityName}
-                            </span>
-                          )}
-                        </span>
-                      </td>
-
-                      {/* Description */}
-                      <td style={{ ...tdStyle, maxWidth: 320 }}>
-                        <span style={{
-                          fontSize: 13, color: '#5B6B76', display: 'block',
-                          overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
-                        }}
-                        title={log.description || log.details || ''}
-                        >
-                          {log.description || log.details || '-'}
-                        </span>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          )}
-        </div>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
       </div>
 
       {/* Pagination */}
       {!loading && logs.length > 0 && totalPages > 1 && (
-        <div style={{
-          display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-          marginTop: 16, padding: '0 4px',
-        }}>
-          <span style={{ fontSize: 13, color: '#5B6B76' }}>
+        <div className="flex items-center justify-between mt-4 px-1">
+          <span className="text-[13px] text-[var(--text-secondary)]">
             Page {page} of {totalPages} ({total.toLocaleString()} entries)
           </span>
-          <div style={{ display: 'flex', gap: 4, alignItems: 'center' }}>
-            {/* Previous */}
-            <button
-              onClick={() => setPage((p) => Math.max(1, p - 1))}
-              disabled={page <= 1}
-              className="kai-btn"
-              style={{ padding: '6px 10px', display: 'flex', alignItems: 'center', gap: 4 }}
-            >
+          <div className="flex gap-1 items-center">
+            <button onClick={() => setPage((p) => Math.max(1, p - 1))} disabled={page <= 1}
+              className="bg-transparent border border-[var(--border-default)] text-[var(--text-secondary)] rounded-lg px-2.5 py-1.5 text-[13px] flex items-center gap-1 disabled:opacity-40">
               <ChevronLeft size={16} /> Prev
             </button>
-
-            {/* Page numbers */}
             {getPageNumbers().map((p, idx) =>
               p === '...' ? (
-                <span key={`ellipsis-${idx}`} style={{ padding: '6px 4px', fontSize: 13, color: '#9CA3AF' }}>
-                  ...
-                </span>
+                <span key={`ellipsis-${idx}`} className="px-1 text-[13px] text-[var(--text-muted)]">...</span>
               ) : (
-                <button
-                  key={p}
-                  onClick={() => setPage(p as number)}
-                  className="kai-btn"
-                  style={{
-                    padding: '6px 12px',
-                    fontSize: 13,
-                    fontWeight: p === page ? 600 : 400,
-                    background: p === page ? '#111827' : undefined,
-                    color: p === page ? '#fff' : undefined,
-                    borderColor: p === page ? '#111827' : undefined,
-                  }}
-                >
+                <button key={p} onClick={() => setPage(p as number)}
+                  className={`rounded-lg px-3 py-1.5 text-[13px] border ${p === page ? 'bg-[#7C3AED] text-white border-[#7C3AED] font-semibold' : 'bg-transparent border-[var(--border-default)] text-[var(--text-secondary)]'}`}>
                   {p}
                 </button>
               )
             )}
-
-            {/* Next */}
-            <button
-              onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
-              disabled={page >= totalPages}
-              className="kai-btn"
-              style={{ padding: '6px 10px', display: 'flex', alignItems: 'center', gap: 4 }}
-            >
+            <button onClick={() => setPage((p) => Math.min(totalPages, p + 1))} disabled={page >= totalPages}
+              className="bg-transparent border border-[var(--border-default)] text-[var(--text-secondary)] rounded-lg px-2.5 py-1.5 text-[13px] flex items-center gap-1 disabled:opacity-40">
               Next <ChevronRight size={16} />
             </button>
           </div>
@@ -444,15 +346,3 @@ export default function AuditLog() {
     </div>
   );
 }
-
-// ─── Styles ──────────────────────────────────────────────────────
-
-const thStyle: React.CSSProperties = {
-  padding: '12px 16px', textAlign: 'left', fontSize: 11, fontWeight: 600,
-  color: '#5B6B76', textTransform: 'uppercase', letterSpacing: 0.5,
-  background: '#F8F9FA', borderBottom: '2px solid #E8EBED',
-};
-
-const tdStyle: React.CSSProperties = {
-  padding: '12px 16px', fontSize: 14, verticalAlign: 'middle',
-};

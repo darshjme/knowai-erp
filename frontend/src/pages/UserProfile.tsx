@@ -52,7 +52,6 @@ export default function UserProfile() {
         dispatch({ type: 'UI_SET_PAGE_TITLE', payload: `${data.firstName} ${data.lastName}` });
       }
     } catch {
-      // Fallback to current user data
       if (isOwnProfile && currentUser) setProfile(currentUser);
     } finally {
       setLoading(false);
@@ -72,8 +71,8 @@ export default function UserProfile() {
     }
   };
 
-  if (loading) return <div style={{ display: 'flex', justifyContent: 'center', padding: 60 }}><div className="spinner-border text-primary" /></div>;
-  if (!profile) return <div className="kai-card"><div className="kai-card-body" style={{ textAlign: 'center', padding: 40 }}>User not found</div></div>;
+  if (loading) return <div className="flex justify-center p-16"><div className="animate-spin w-8 h-8 border-2 border-[#7C3AED] border-t-transparent rounded-full" /></div>;
+  if (!profile) return <div className="bg-[var(--bg-card)] border border-[var(--border-default)] rounded-xl p-10 text-center text-[var(--text-secondary)]">User not found</div>;
 
   const roleLabel = ROLE_LABELS[profile.role] || profile.role;
   const roleColor = ROLE_COLORS[profile.role] || '#6B7280';
@@ -82,53 +81,48 @@ export default function UserProfile() {
   const joinDate = profile.joinDate ? new Date(profile.joinDate).toLocaleDateString('en-US', { month: 'long', year: 'numeric' }) : profile.createdAt ? new Date(profile.createdAt).toLocaleDateString('en-US', { month: 'long', year: 'numeric' }) : '';
 
   return (
-    <div style={{ maxWidth: 900, margin: '0 auto' }}>
+    <div className="max-w-[900px] mx-auto" data-testid="user-profile">
       {/* Cover + Avatar */}
-      <div style={{ position: 'relative', borderRadius: 'var(--kai-radius-lg)', overflow: 'hidden', marginBottom: 24 }}>
-        <div style={{ height: 180, background: `linear-gradient(135deg, ${roleColor}22 0%, #11182720 50%, ${roleColor}15 100%)`, position: 'relative' }}>
-          <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(135deg, #05121B08 0%, #11182710 100%)' }} />
+      <div className="relative rounded-xl overflow-hidden mb-6">
+        <div className="h-[180px] relative" style={{ background: `linear-gradient(135deg, ${roleColor}22 0%, #11182720 50%, ${roleColor}15 100%)` }}>
+          <div className="absolute inset-0 bg-gradient-to-br from-[#05121B08] to-[#11182710]" />
         </div>
-        <div className="kai-card" style={{ margin: '-60px 24px 0', padding: 24, position: 'relative' }}>
-          <div style={{ display: 'flex', gap: 20, alignItems: 'flex-end', flexWrap: 'wrap' }}>
-            <div style={{
-              width: 100, height: 100, borderRadius: '50%', background: roleColor,
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-              fontSize: 36, fontWeight: 800, color: '#fff', border: '4px solid var(--kai-surface)',
-              marginTop: -40, flexShrink: 0,
-            }}>
-              {profile.avatar ? <img src={profile.avatar} alt="" style={{ width: '100%', height: '100%', borderRadius: '50%', objectFit: 'cover' }} /> : `${profile.firstName?.[0]}${profile.lastName?.[0]}`}
+        <div className="bg-[var(--bg-card)] border border-[var(--border-default)] rounded-xl mx-6 -mt-[60px] p-6 relative">
+          <div className="flex gap-5 items-end flex-wrap">
+            <div className="w-[100px] h-[100px] rounded-full flex items-center justify-center text-[36px] font-extrabold text-white border-4 border-[var(--bg-card)] -mt-10 shrink-0 overflow-hidden" style={{ background: roleColor }}>
+              {profile.avatar ? <img src={profile.avatar} alt="" className="w-full h-full rounded-full object-cover" /> : `${profile.firstName?.[0]}${profile.lastName?.[0]}`}
             </div>
-            <div style={{ flex: 1 }}>
-              <h2 style={{ margin: 0, fontSize: 26, fontWeight: 800, color: 'var(--kai-text)', letterSpacing: -0.5, display: 'flex', alignItems: 'center', gap: 8 }}>
+            <div className="flex-1">
+              <h2 className="m-0 text-[26px] font-extrabold text-[var(--text-primary)] tracking-tight flex items-center gap-2">
                 {profile.firstName} {profile.lastName}
                 <VerifiedBadge verified={profile?.verified} />
               </h2>
-              <p style={{ margin: '4px 0 0', fontSize: 15, color: 'var(--kai-text-secondary)' }}>
+              <p className="mt-1 text-[15px] text-[var(--text-secondary)]">
                 {profile.designation || roleLabel}
               </p>
-              <div style={{ display: 'flex', gap: 8, marginTop: 8, flexWrap: 'wrap' }}>
-                <span style={{ background: `${roleColor}18`, color: roleColor, padding: '3px 12px', borderRadius: 20, fontSize: 12, fontWeight: 700 }}>
+              <div className="flex gap-2 mt-2 flex-wrap">
+                <span className="px-3 py-0.5 rounded-full text-[12px] font-bold" style={{ background: `${roleColor}18`, color: roleColor }}>
                   {roleLabel}
                 </span>
                 {profile.department && (
-                  <span style={{ background: 'var(--kai-bg)', color: 'var(--kai-text-secondary)', padding: '3px 12px', borderRadius: 20, fontSize: 12, fontWeight: 600 }}>
+                  <span className="bg-[var(--bg-elevated)] text-[var(--text-secondary)] px-3 py-0.5 rounded-full text-[12px] font-semibold">
                     {profile.department}
                   </span>
                 )}
                 {profile.personalityType && (
-                  <span style={{ background: '#EDE9FE', color: '#7C3AED', padding: '3px 12px', borderRadius: 20, fontSize: 12, fontWeight: 700 }}>
-                    <Brain size={12} style={{ marginRight: 4, verticalAlign: -1 }} />
+                  <span className="bg-violet-100 text-[#7C3AED] px-3 py-0.5 rounded-full text-[12px] font-bold inline-flex items-center gap-1">
+                    <Brain size={12} />
                     {profile.personalityType}
                   </span>
                 )}
-                <span style={{ background: profile.status === 'ONLINE' ? '#DCFCE7' : '#F3F4F6', color: profile.status === 'ONLINE' ? '#166534' : '#6B7280', padding: '3px 12px', borderRadius: 20, fontSize: 12, fontWeight: 600 }}>
+                <span className={`px-3 py-0.5 rounded-full text-[12px] font-semibold ${profile.status === 'ONLINE' ? 'bg-green-50 text-green-800' : 'bg-gray-100 text-gray-500'}`}>
                   {profile.status === 'ONLINE' ? '● Online' : '○ Offline'}
                 </span>
               </div>
             </div>
             {!isOwnProfile && (
-              <div style={{ display: 'flex', gap: 8 }}>
-                <button className="kai-btn kai-btn-primary kai-btn-sm" onClick={handleStartChat} disabled={startingChat}>
+              <div className="flex gap-2">
+                <button data-testid="message-user" className="bg-[#7C3AED] text-white rounded-lg px-4 py-2 text-[13px] font-semibold hover:bg-[#7C3AED]/90 inline-flex items-center gap-1.5" onClick={handleStartChat} disabled={startingChat}>
                   <MessageCircle size={14} /> {startingChat ? 'Opening...' : 'Message'}
                 </button>
               </div>
@@ -137,120 +131,106 @@ export default function UserProfile() {
         </div>
       </div>
 
-      <div style={{ display: 'flex', gap: 20, flexWrap: 'wrap' }}>
+      <div className="flex gap-5 flex-wrap">
         {/* Left Column */}
-        <div style={{ flex: '0 0 280px', display: 'flex', flexDirection: 'column', gap: 16 }}>
+        <div className="flex-none w-[280px] flex flex-col gap-4">
           {/* Contact Info */}
-          <div className="kai-card">
-            <div className="kai-card-body" style={{ padding: 20 }}>
-              <h6 style={{ fontSize: 13, fontWeight: 700, color: 'var(--kai-text-muted)', textTransform: 'uppercase', letterSpacing: 0.8, marginBottom: 16 }}>Contact</h6>
-              {profile.companyEmail && (
-                <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 12, fontSize: 13 }}>
-                  <Mail size={16} style={{ color: 'var(--kai-primary)', flexShrink: 0 }} />
-                  <span style={{ color: 'var(--kai-text)' }}>{profile.companyEmail}</span>
-                </div>
-              )}
-              {profile.email && (
-                <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 12, fontSize: 13 }}>
-                  <Mail size={16} style={{ color: 'var(--kai-text-muted)', flexShrink: 0 }} />
-                  <span style={{ color: 'var(--kai-text-secondary)' }}>{profile.email}</span>
-                </div>
-              )}
-              {profile.phone && (
-                <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 12, fontSize: 13 }}>
-                  <Phone size={16} style={{ color: 'var(--kai-text-muted)', flexShrink: 0 }} />
-                  <span>{profile.phone}</span>
-                </div>
-              )}
-              {joinDate && (
-                <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 12, fontSize: 13 }}>
-                  <Calendar size={16} style={{ color: 'var(--kai-text-muted)', flexShrink: 0 }} />
-                  <span>Joined {joinDate}</span>
-                </div>
-              )}
-              {profile.linkedinUrl && (
-                <a href={profile.linkedinUrl} target="_blank" rel="noreferrer" style={{ display: 'flex', alignItems: 'center', gap: 10, fontSize: 13, color: '#0077B5' }}>
-                  <Linkedin size={16} style={{ flexShrink: 0 }} />
-                  LinkedIn Profile
-                </a>
-              )}
-            </div>
+          <div className="bg-[var(--bg-card)] border border-[var(--border-default)] rounded-xl p-5">
+            <h6 className="text-[13px] font-bold text-[var(--text-muted)] uppercase tracking-wide mb-4">Contact</h6>
+            {profile.companyEmail && (
+              <div className="flex items-center gap-2.5 mb-3 text-[13px]">
+                <Mail size={16} className="text-[#7C3AED] shrink-0" />
+                <span className="text-[var(--text-primary)]">{profile.companyEmail}</span>
+              </div>
+            )}
+            {profile.email && (
+              <div className="flex items-center gap-2.5 mb-3 text-[13px]">
+                <Mail size={16} className="text-[var(--text-muted)] shrink-0" />
+                <span className="text-[var(--text-secondary)]">{profile.email}</span>
+              </div>
+            )}
+            {profile.phone && (
+              <div className="flex items-center gap-2.5 mb-3 text-[13px]">
+                <Phone size={16} className="text-[var(--text-muted)] shrink-0" />
+                <span className="text-[var(--text-secondary)]">{profile.phone}</span>
+              </div>
+            )}
+            {joinDate && (
+              <div className="flex items-center gap-2.5 mb-3 text-[13px]">
+                <Calendar size={16} className="text-[var(--text-muted)] shrink-0" />
+                <span className="text-[var(--text-secondary)]">Joined {joinDate}</span>
+              </div>
+            )}
+            {profile.linkedinUrl && (
+              <a href={profile.linkedinUrl} target="_blank" rel="noreferrer" className="flex items-center gap-2.5 text-[13px] text-[#0077B5]">
+                <Linkedin size={16} className="shrink-0" />
+                LinkedIn Profile
+              </a>
+            )}
           </div>
 
           {/* Skills */}
           {skills.length > 0 && (
-            <div className="kai-card">
-              <div className="kai-card-body" style={{ padding: 20 }}>
-                <h6 style={{ fontSize: 13, fontWeight: 700, color: 'var(--kai-text-muted)', textTransform: 'uppercase', letterSpacing: 0.8, marginBottom: 12 }}>Skills</h6>
-                <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
-                  {skills.map((skill, i) => (
-                    <span key={i} style={{ background: 'var(--kai-bg)', color: 'var(--kai-text)', padding: '4px 12px', borderRadius: 20, fontSize: 12, fontWeight: 600, border: '1px solid var(--kai-border)' }}>
-                      {skill}
-                    </span>
-                  ))}
-                </div>
+            <div className="bg-[var(--bg-card)] border border-[var(--border-default)] rounded-xl p-5">
+              <h6 className="text-[13px] font-bold text-[var(--text-muted)] uppercase tracking-wide mb-3">Skills</h6>
+              <div className="flex flex-wrap gap-1.5">
+                {skills.map((skill, i) => (
+                  <span key={i} className="bg-[var(--bg-elevated)] text-[var(--text-primary)] px-3 py-1 rounded-full text-[12px] font-semibold border border-[var(--border-default)]">
+                    {skill}
+                  </span>
+                ))}
               </div>
             </div>
           )}
         </div>
 
         {/* Right Column */}
-        <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', gap: 16 }}>
+        <div className="flex-1 min-w-0 flex flex-col gap-4">
           {/* Bio */}
           {profile.bio && (
-            <div className="kai-card">
-              <div className="kai-card-body" style={{ padding: 20 }}>
-                <h6 style={{ fontSize: 13, fontWeight: 700, color: 'var(--kai-text-muted)', textTransform: 'uppercase', letterSpacing: 0.8, marginBottom: 12 }}>About</h6>
-                <p style={{ fontSize: 14, lineHeight: 1.7, color: 'var(--kai-text)', margin: 0, whiteSpace: 'pre-wrap' }}>{profile.bio}</p>
-              </div>
+            <div className="bg-[var(--bg-card)] border border-[var(--border-default)] rounded-xl p-5">
+              <h6 className="text-[13px] font-bold text-[var(--text-muted)] uppercase tracking-wide mb-3">About</h6>
+              <p className="text-[14px] leading-relaxed text-[var(--text-primary)] m-0 whitespace-pre-wrap">{profile.bio}</p>
             </div>
           )}
 
           {/* Personality Type */}
           {personality && (
-            <div className="kai-card" style={{ background: 'linear-gradient(135deg, #EDE9FE 0%, #F5F3FF 100%)', border: '1px solid #DDD6FE' }}>
-              <div className="kai-card-body" style={{ padding: 20 }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 12 }}>
-                  <div style={{ width: 48, height: 48, borderRadius: 12, background: '#7C3AED', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                    <Brain size={24} color="#fff" />
-                  </div>
-                  <div>
-                    <div style={{ fontSize: 22, fontWeight: 800, color: '#5B21B6', letterSpacing: 2 }}>{profile.personalityType}</div>
-                    <div style={{ fontSize: 14, fontWeight: 600, color: '#7C3AED' }}>{personality.title}</div>
-                  </div>
+            <div className="bg-gradient-to-br from-violet-100 to-violet-50 border border-violet-200 rounded-xl p-5">
+              <div className="flex items-center gap-3 mb-3">
+                <div className="w-12 h-12 rounded-xl bg-[#7C3AED] flex items-center justify-center">
+                  <Brain size={24} color="#fff" />
                 </div>
-                <p style={{ fontSize: 14, color: '#4C1D95', lineHeight: 1.6, margin: 0 }}>{personality.desc}</p>
+                <div>
+                  <div className="text-[22px] font-extrabold text-violet-800 tracking-widest">{profile.personalityType}</div>
+                  <div className="text-[14px] font-semibold text-[#7C3AED]">{personality.title}</div>
+                </div>
               </div>
+              <p className="text-[14px] text-violet-900 leading-relaxed m-0">{personality.desc}</p>
             </div>
           )}
 
           {/* Quick Stats */}
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(130px, 1fr))', gap: 12 }}>
+          <div className="grid grid-cols-[repeat(auto-fit,minmax(130px,1fr))] gap-3">
             {profile.taskCompletionRate != null && (
-              <div className="kai-card" style={{ textAlign: 'center' }}>
-                <div className="kai-card-body" style={{ padding: 16 }}>
-                  <Target size={20} style={{ color: 'var(--kai-primary)', marginBottom: 6 }} />
-                  <div style={{ fontSize: 22, fontWeight: 700 }}>{Math.round(profile.taskCompletionRate)}%</div>
-                  <div style={{ fontSize: 11, color: 'var(--kai-text-muted)' }}>Task Completion</div>
-                </div>
+              <div className="bg-[var(--bg-card)] border border-[var(--border-default)] rounded-xl text-center p-4">
+                <Target size={20} className="text-[#7C3AED] mx-auto mb-1.5" />
+                <div className="text-[22px] font-bold text-[var(--text-primary)]">{Math.round(profile.taskCompletionRate)}%</div>
+                <div className="text-[11px] text-[var(--text-muted)]">Task Completion</div>
               </div>
             )}
             {profile.attendanceRate != null && (
-              <div className="kai-card" style={{ textAlign: 'center' }}>
-                <div className="kai-card-body" style={{ padding: 16 }}>
-                  <Clock size={20} style={{ color: '#16A34A', marginBottom: 6 }} />
-                  <div style={{ fontSize: 22, fontWeight: 700 }}>{Math.round(profile.attendanceRate)}%</div>
-                  <div style={{ fontSize: 11, color: 'var(--kai-text-muted)' }}>Attendance</div>
-                </div>
+              <div className="bg-[var(--bg-card)] border border-[var(--border-default)] rounded-xl text-center p-4">
+                <Clock size={20} className="text-green-600 mx-auto mb-1.5" />
+                <div className="text-[22px] font-bold text-[var(--text-primary)]">{Math.round(profile.attendanceRate)}%</div>
+                <div className="text-[11px] text-[var(--text-muted)]">Attendance</div>
               </div>
             )}
             {profile.behaviorScore != null && (
-              <div className="kai-card" style={{ textAlign: 'center' }}>
-                <div className="kai-card-body" style={{ padding: 16 }}>
-                  <Star size={20} style={{ color: '#F59E0B', marginBottom: 6 }} />
-                  <div style={{ fontSize: 22, fontWeight: 700 }}>{Math.round(profile.behaviorScore)}</div>
-                  <div style={{ fontSize: 11, color: 'var(--kai-text-muted)' }}>Behavior Score</div>
-                </div>
+              <div className="bg-[var(--bg-card)] border border-[var(--border-default)] rounded-xl text-center p-4">
+                <Star size={20} className="text-amber-500 mx-auto mb-1.5" />
+                <div className="text-[22px] font-bold text-[var(--text-primary)]">{Math.round(profile.behaviorScore)}</div>
+                <div className="text-[11px] text-[var(--text-muted)]">Behavior Score</div>
               </div>
             )}
           </div>

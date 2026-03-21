@@ -49,6 +49,9 @@ function daysUntil(dateStr) {
   return Math.ceil((d - now) / (86400000));
 }
 
+const inputClass = "w-full bg-[var(--bg-elevated)] border border-[var(--border-default)] rounded-lg px-3 py-2 text-[var(--text-primary)] placeholder:text-[var(--text-muted)] focus:border-[#7C3AED] focus:ring-2 focus:ring-[#7C3AED]/20 outline-none text-[13px]";
+const labelClass = "block text-[13px] font-semibold text-[var(--text-secondary)] mb-1";
+
 export default function Subscriptions() {
   const dispatch = useDispatch();
   const { user } = useSelector(s => s.auth);
@@ -77,13 +80,11 @@ export default function Subscriptions() {
       if (categoryFilter !== 'All') params.category = categoryFilter;
       const res = await subscriptionsApi.list(params);
       const rd = res.data;
-      // After interceptor unwrap: rd = { subscriptions: [...], totals: {...} } or rd = [...]
       const list = Array.isArray(rd) ? rd : rd?.subscriptions || rd?.data || [];
       setSubscriptions(list);
       if (rd?.totals) {
         setTotals(rd.totals);
       } else {
-        // Calculate totals client-side as fallback
         const active = list.filter(s => s.status === 'ACTIVE' || s.status === 'TRIAL');
         const monthly = active.reduce((sum, s) => {
           if (s.billingCycle === 'YEARLY') return sum + s.cost / 12;
@@ -185,25 +186,23 @@ export default function Subscriptions() {
   const allCategories = ['All', ...new Set(subscriptions.map(s => s.category).filter(Boolean))];
 
   return (
-    <div className="kai-page">
+    <div>
       {/* Stats Row */}
-      <div className="row g-3 mb-4">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-6">
         {[
-          { label: 'Total Monthly Cost', value: formatCurrency(totals.monthly), icon: DollarSign, color: '#111827' },
+          { label: 'Total Monthly Cost', value: formatCurrency(totals.monthly), icon: DollarSign, color: '#7C3AED' },
           { label: 'Active Subscriptions', value: totals.activeCount, icon: Zap, color: '#10B981' },
           { label: 'Expiring in 30 Days', value: totals.expiringSoon, icon: AlertTriangle, color: '#F59E0B' },
           { label: 'Total Yearly Cost', value: formatCurrency(totals.yearly), icon: TrendingUp, color: '#8B5CF6' },
         ].map((s, i) => (
-          <div key={i} className="col-6 col-lg-3">
-            <div className="kai-card p-3" style={{ borderLeft: `3px solid ${s.color}` }}>
-              <div className="d-flex align-items-center gap-3">
-                <div style={{ width: 40, height: 40, borderRadius: 10, background: `${s.color}15`, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                  <s.icon size={20} color={s.color} />
-                </div>
-                <div>
-                  <div style={{ fontSize: 22, fontWeight: 700, color: 'var(--kai-text)' }}>{s.value}</div>
-                  <div style={{ fontSize: 12, color: 'var(--kai-text-secondary)' }}>{s.label}</div>
-                </div>
+          <div key={i} className="bg-[var(--bg-card)] border border-[var(--border-default)] rounded-xl p-3" style={{ borderLeft: `3px solid ${s.color}` }}>
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-[10px] flex items-center justify-center" style={{ background: `${s.color}15` }}>
+                <s.icon size={20} color={s.color} />
+              </div>
+              <div>
+                <div className="text-[22px] font-bold text-[var(--text-primary)]">{s.value}</div>
+                <div className="text-[12px] text-[var(--text-secondary)]">{s.label}</div>
               </div>
             </div>
           </div>
@@ -211,30 +210,27 @@ export default function Subscriptions() {
       </div>
 
       {/* Toolbar */}
-      <div className="kai-card p-3 mb-4">
-        <div className="d-flex flex-wrap align-items-center gap-3">
-          <div className="position-relative flex-grow-1" style={{ maxWidth: 320 }}>
-            <Search size={16} style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)', color: 'var(--kai-text-secondary)' }} />
+      <div className="bg-[var(--bg-card)] border border-[var(--border-default)] rounded-xl p-3 mb-4">
+        <div className="flex flex-wrap items-center gap-3">
+          <div className="relative flex-grow max-w-[320px]">
+            <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--text-secondary)]" />
             <input
-              className="form-control"
+              data-testid="search-subscriptions"
+              className={`${inputClass} pl-9`}
               placeholder="Search subscriptions..."
               value={search}
               onChange={e => setSearch(e.target.value)}
-              style={{ paddingLeft: 36, background: 'var(--kai-bg-secondary)', border: '1px solid var(--kai-border)', color: 'var(--kai-text)', borderRadius: 8 }}
             />
           </div>
-          <select className="form-select" value={statusFilter} onChange={e => setStatusFilter(e.target.value)}
-            style={{ width: 'auto', background: 'var(--kai-bg-secondary)', border: '1px solid var(--kai-border)', color: 'var(--kai-text)', borderRadius: 8, fontSize: 13 }}>
+          <select data-testid="status-filter" className={`${inputClass} w-auto`} value={statusFilter} onChange={e => setStatusFilter(e.target.value)}>
             <option value="All">All Status</option>
             {Object.entries(STATUS_CONFIG).map(([k, v]) => <option key={k} value={k}>{v.label}</option>)}
           </select>
-          <select className="form-select" value={categoryFilter} onChange={e => setCategoryFilter(e.target.value)}
-            style={{ width: 'auto', background: 'var(--kai-bg-secondary)', border: '1px solid var(--kai-border)', color: 'var(--kai-text)', borderRadius: 8, fontSize: 13 }}>
+          <select data-testid="category-filter" className={`${inputClass} w-auto`} value={categoryFilter} onChange={e => setCategoryFilter(e.target.value)}>
             {allCategories.map(c => <option key={c} value={c}>{c === 'All' ? 'All Categories' : c}</option>)}
           </select>
           {canCreate && (
-            <button className="btn btn-sm ms-auto" onClick={openCreate}
-              style={{ background: '#111827', color: '#fff', border: 'none', borderRadius: 8, fontSize: 13, padding: '6px 16px', display: 'flex', alignItems: 'center', gap: 6 }}>
+            <button data-testid="add-subscription" className="bg-[#7C3AED] text-white rounded-lg px-4 py-2 text-[13px] font-semibold hover:bg-[#7C3AED]/90 ml-auto flex items-center gap-1.5" onClick={openCreate}>
               <Plus size={14} /> Add Subscription
             </button>
           )}
@@ -243,21 +239,21 @@ export default function Subscriptions() {
 
       {/* Subscription Table */}
       {loading ? (
-        <div className="text-center py-5" style={{ color: 'var(--kai-text-secondary)' }}>Loading subscriptions...</div>
+        <div className="text-center py-10 text-[var(--text-secondary)]">Loading subscriptions...</div>
       ) : subscriptions.length === 0 ? (
-        <div className="kai-card p-5 text-center">
-          <CreditCard size={48} style={{ color: 'var(--kai-text-secondary)', opacity: 0.4 }} />
-          <p className="mt-3" style={{ color: 'var(--kai-text-secondary)' }}>No subscriptions found</p>
-          {canCreate && <button className="btn btn-sm mt-2" onClick={openCreate} style={{ background: '#111827', color: '#fff', border: 'none', borderRadius: 8, padding: '6px 16px' }}>Add First Subscription</button>}
+        <div className="bg-[var(--bg-card)] border border-[var(--border-default)] rounded-xl p-10 text-center">
+          <CreditCard size={48} className="text-[var(--text-secondary)] opacity-40 mx-auto" />
+          <p className="mt-3 text-[var(--text-secondary)]">No subscriptions found</p>
+          {canCreate && <button className="bg-[#7C3AED] text-white rounded-lg px-4 py-2 text-[13px] font-semibold hover:bg-[#7C3AED]/90 mt-2" onClick={openCreate}>Add First Subscription</button>}
         </div>
       ) : (
-        <div className="kai-card" style={{ overflow: 'hidden' }}>
-          <div style={{ overflowX: 'auto' }}>
-            <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+        <div className="bg-[var(--bg-card)] border border-[var(--border-default)] rounded-xl overflow-hidden">
+          <div className="overflow-x-auto">
+            <table className="w-full border-collapse">
               <thead>
-                <tr style={{ borderBottom: '1px solid var(--kai-border)' }}>
+                <tr className="border-b border-[var(--border-default)]">
                   {['Service', 'Plan', 'Cost', 'Billing', 'Renewal', 'Status', 'Category', ''].map((h, i) => (
-                    <th key={i} style={{ padding: '12px 16px', fontSize: 12, fontWeight: 600, color: 'var(--kai-text-secondary)', textAlign: 'left', whiteSpace: 'nowrap' }}>{h}</th>
+                    <th key={i} className="px-4 py-3 text-left text-[12px] font-semibold text-[var(--text-secondary)] whitespace-nowrap">{h}</th>
                   ))}
                 </tr>
               </thead>
@@ -270,71 +266,67 @@ export default function Subscriptions() {
                   const isExpiring = days !== null && days >= 0 && days <= 30 && sub.status === 'ACTIVE';
 
                   return (
-                    <tr key={sub.id} style={{ borderBottom: '1px solid var(--kai-border)', transition: 'background 0.1s' }}
-                      onMouseEnter={e => { e.currentTarget.style.background = 'var(--kai-bg-secondary)'; }}
-                      onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; }}>
-                      <td style={{ padding: '12px 16px' }}>
-                        <div className="d-flex align-items-center gap-3">
-                          <div style={{ width: 36, height: 36, borderRadius: 8, background: `${catCfg.color}15`, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                    <tr key={sub.id} className="border-b border-[var(--border-default)] hover:bg-[var(--bg-elevated)] transition-colors">
+                      <td className="px-4 py-3">
+                        <div className="flex items-center gap-3">
+                          <div className="w-9 h-9 rounded-lg flex items-center justify-center shrink-0" style={{ background: `${catCfg.color}15` }}>
                             <CatIcon size={18} color={catCfg.color} />
                           </div>
                           <div>
-                            <div style={{ fontWeight: 600, fontSize: 14, color: 'var(--kai-text)' }}>{sub.name}</div>
-                            {sub.provider && <div style={{ fontSize: 12, color: 'var(--kai-text-secondary)' }}>{sub.provider}</div>}
+                            <div className="font-semibold text-[14px] text-[var(--text-primary)]">{sub.name}</div>
+                            {sub.provider && <div className="text-[12px] text-[var(--text-secondary)]">{sub.provider}</div>}
                           </div>
                         </div>
                       </td>
-                      <td style={{ padding: '12px 16px', fontSize: 13, color: 'var(--kai-text)' }}>{sub.plan || '-'}</td>
-                      <td style={{ padding: '12px 16px' }}>
-                        <span style={{ fontWeight: 700, fontSize: 14, color: 'var(--kai-text)' }}>{formatCurrency(sub.cost, sub.currency)}</span>
-                        <span style={{ fontSize: 11, color: 'var(--kai-text-secondary)' }}>/{sub.billingCycle === 'YEARLY' ? 'yr' : sub.billingCycle === 'QUARTERLY' ? 'qtr' : 'mo'}</span>
+                      <td className="px-4 py-3 text-[13px] text-[var(--text-primary)]">{sub.plan || '-'}</td>
+                      <td className="px-4 py-3">
+                        <span className="font-bold text-[14px] text-[var(--text-primary)]">{formatCurrency(sub.cost, sub.currency)}</span>
+                        <span className="text-[11px] text-[var(--text-secondary)]">/{sub.billingCycle === 'YEARLY' ? 'yr' : sub.billingCycle === 'QUARTERLY' ? 'qtr' : 'mo'}</span>
                       </td>
-                      <td style={{ padding: '12px 16px', fontSize: 13, color: 'var(--kai-text-secondary)' }}>
+                      <td className="px-4 py-3 text-[13px] text-[var(--text-secondary)]">
                         {BILLING_LABELS[sub.billingCycle] || sub.billingCycle}
-                        {sub.autoRenew && <RefreshCw size={11} style={{ marginLeft: 4, opacity: 0.6 }} />}
+                        {sub.autoRenew && <RefreshCw size={11} className="inline ml-1 opacity-60" />}
                       </td>
-                      <td style={{ padding: '12px 16px' }}>
+                      <td className="px-4 py-3">
                         {sub.renewalDate ? (
                           <div>
-                            <div style={{ fontSize: 13, color: isExpiring ? '#F59E0B' : 'var(--kai-text)' }}>
+                            <div className={`text-[13px] ${isExpiring ? 'text-amber-500' : 'text-[var(--text-primary)]'}`}>
                               {new Date(sub.renewalDate).toLocaleDateString()}
                             </div>
                             {isExpiring && (
-                              <div style={{ fontSize: 11, color: '#F59E0B', fontWeight: 600, display: 'flex', alignItems: 'center', gap: 3 }}>
+                              <div className="text-[11px] text-amber-500 font-semibold flex items-center gap-1">
                                 <AlertTriangle size={10} /> {days} days left
                               </div>
                             )}
                           </div>
                         ) : (
-                          <span style={{ fontSize: 13, color: 'var(--kai-text-secondary)' }}>-</span>
+                          <span className="text-[13px] text-[var(--text-secondary)]">-</span>
                         )}
                       </td>
-                      <td style={{ padding: '12px 16px' }}>
-                        <span style={{ fontSize: 12, padding: '3px 10px', borderRadius: 6, fontWeight: 600, background: statusCfg.bg, color: statusCfg.color }}>
+                      <td className="px-4 py-3">
+                        <span className="text-[12px] px-2.5 py-0.5 rounded-md font-semibold" style={{ background: statusCfg.bg, color: statusCfg.color }}>
                           {statusCfg.label}
                         </span>
                       </td>
-                      <td style={{ padding: '12px 16px' }}>
-                        <span style={{ fontSize: 12, padding: '3px 10px', borderRadius: 6, background: `${catCfg.color}15`, color: catCfg.color, fontWeight: 500 }}>
+                      <td className="px-4 py-3">
+                        <span className="text-[12px] px-2.5 py-0.5 rounded-md font-medium" style={{ background: `${catCfg.color}15`, color: catCfg.color }}>
                           {sub.category || 'Other'}
                         </span>
                       </td>
-                      <td style={{ padding: '12px 16px' }}>
-                        <div className="d-flex gap-1">
+                      <td className="px-4 py-3">
+                        <div className="flex gap-1">
                           {sub.loginUrl && (
                             <a href={sub.loginUrl} target="_blank" rel="noopener noreferrer"
-                              style={{ padding: 4, borderRadius: 6, color: 'var(--kai-text-secondary)', display: 'inline-flex' }}>
+                              className="p-1 rounded-md text-[var(--text-secondary)] inline-flex hover:bg-[var(--bg-elevated)]">
                               <ExternalLink size={14} />
                             </a>
                           )}
                           {canCreate && (
                             <>
-                              <button className="btn btn-sm p-1" onClick={() => openEdit(sub)}
-                                style={{ background: 'none', border: 'none', color: 'var(--kai-text-secondary)', borderRadius: 6 }}>
+                              <button data-testid={`edit-sub-${sub.id}`} className="p-1 rounded-md text-[var(--text-secondary)] hover:bg-[var(--bg-elevated)] bg-transparent border-none cursor-pointer" onClick={() => openEdit(sub)}>
                                 <Edit3 size={14} />
                               </button>
-                              <button className="btn btn-sm p-1" onClick={() => handleDelete(sub.id)}
-                                style={{ background: 'none', border: 'none', color: '#DC2626', borderRadius: 6 }}>
+                              <button data-testid={`delete-sub-${sub.id}`} className="p-1 rounded-md text-red-600 hover:bg-red-50 bg-transparent border-none cursor-pointer" onClick={() => handleDelete(sub.id)}>
                                 <Trash2 size={14} />
                               </button>
                             </>
@@ -352,78 +344,68 @@ export default function Subscriptions() {
 
       {/* Create/Edit Modal */}
       {showModal && (
-        <div style={{ position: 'fixed', inset: 0, zIndex: 1060, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-          <div style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.5)' }} onClick={() => setShowModal(false)} />
-          <div style={{ position: 'relative', width: 580, maxWidth: '95vw', maxHeight: '90vh', overflowY: 'auto', background: 'var(--kai-bg)', borderRadius: 16, padding: 24, boxShadow: '0 16px 48px rgba(0,0,0,0.2)' }}>
-            <div className="d-flex align-items-center justify-content-between mb-4">
-              <h5 style={{ margin: 0, fontWeight: 700, color: 'var(--kai-text)' }}>{editingId ? 'Edit Subscription' : 'Add Subscription'}</h5>
-              <button className="btn btn-sm" onClick={() => setShowModal(false)} style={{ background: 'none', border: 'none', color: 'var(--kai-text-secondary)' }}><X size={18} /></button>
+        <div className="fixed inset-0 z-[1060] flex items-center justify-center">
+          <div className="absolute inset-0 bg-black/50" onClick={() => setShowModal(false)} />
+          <div className="relative w-[580px] max-w-[95vw] max-h-[90vh] overflow-y-auto bg-[var(--bg-card)] rounded-2xl p-6 shadow-2xl">
+            <div className="flex items-center justify-between mb-4">
+              <h5 className="m-0 font-bold text-[var(--text-primary)]">{editingId ? 'Edit Subscription' : 'Add Subscription'}</h5>
+              <button className="bg-transparent border-none text-[var(--text-secondary)] cursor-pointer p-1" onClick={() => setShowModal(false)}><X size={18} /></button>
             </div>
             <form onSubmit={handleSubmit}>
-              <div className="row mb-3">
-                <div className="col-6">
-                  <label className="form-label" style={{ fontSize: 13, fontWeight: 600, color: 'var(--kai-text-secondary)' }}>Name *</label>
-                  <input className="form-control" value={form.name} onChange={e => setForm(f => ({ ...f, name: e.target.value }))}
-                    placeholder="e.g. Figma Pro" style={{ background: 'var(--kai-bg-secondary)', border: '1px solid var(--kai-border)', color: 'var(--kai-text)', borderRadius: 8 }} />
+              <div className="grid grid-cols-2 gap-3 mb-3">
+                <div>
+                  <label className={labelClass}>Name *</label>
+                  <input className={inputClass} value={form.name} onChange={e => setForm(f => ({ ...f, name: e.target.value }))} placeholder="e.g. Figma Pro" />
                 </div>
-                <div className="col-6">
-                  <label className="form-label" style={{ fontSize: 13, fontWeight: 600, color: 'var(--kai-text-secondary)' }}>Provider</label>
-                  <input className="form-control" value={form.provider} onChange={e => setForm(f => ({ ...f, provider: e.target.value }))}
-                    placeholder="e.g. Figma Inc." style={{ background: 'var(--kai-bg-secondary)', border: '1px solid var(--kai-border)', color: 'var(--kai-text)', borderRadius: 8 }} />
+                <div>
+                  <label className={labelClass}>Provider</label>
+                  <input className={inputClass} value={form.provider} onChange={e => setForm(f => ({ ...f, provider: e.target.value }))} placeholder="e.g. Figma Inc." />
                 </div>
               </div>
-              <div className="row mb-3">
-                <div className="col-4">
-                  <label className="form-label" style={{ fontSize: 13, fontWeight: 600, color: 'var(--kai-text-secondary)' }}>Plan</label>
-                  <input className="form-control" value={form.plan} onChange={e => setForm(f => ({ ...f, plan: e.target.value }))}
-                    placeholder="e.g. Pro, Enterprise" style={{ background: 'var(--kai-bg-secondary)', border: '1px solid var(--kai-border)', color: 'var(--kai-text)', borderRadius: 8 }} />
+              <div className="grid grid-cols-3 gap-3 mb-3">
+                <div>
+                  <label className={labelClass}>Plan</label>
+                  <input className={inputClass} value={form.plan} onChange={e => setForm(f => ({ ...f, plan: e.target.value }))} placeholder="e.g. Pro, Enterprise" />
                 </div>
-                <div className="col-4">
-                  <label className="form-label" style={{ fontSize: 13, fontWeight: 600, color: 'var(--kai-text-secondary)' }}>Cost *</label>
-                  <input type="number" step="0.01" className="form-control" value={form.cost} onChange={e => setForm(f => ({ ...f, cost: e.target.value }))}
-                    placeholder="0" style={{ background: 'var(--kai-bg-secondary)', border: '1px solid var(--kai-border)', color: 'var(--kai-text)', borderRadius: 8 }} />
+                <div>
+                  <label className={labelClass}>Cost *</label>
+                  <input type="number" step="0.01" className={inputClass} value={form.cost} onChange={e => setForm(f => ({ ...f, cost: e.target.value }))} placeholder="0" />
                 </div>
-                <div className="col-4">
-                  <label className="form-label" style={{ fontSize: 13, fontWeight: 600, color: 'var(--kai-text-secondary)' }}>Billing Cycle</label>
-                  <select className="form-select" value={form.billingCycle} onChange={e => setForm(f => ({ ...f, billingCycle: e.target.value }))}
-                    style={{ background: 'var(--kai-bg-secondary)', border: '1px solid var(--kai-border)', color: 'var(--kai-text)', borderRadius: 8 }}>
+                <div>
+                  <label className={labelClass}>Billing Cycle</label>
+                  <select className={inputClass} value={form.billingCycle} onChange={e => setForm(f => ({ ...f, billingCycle: e.target.value }))}>
                     <option value="MONTHLY">Monthly</option>
                     <option value="QUARTERLY">Quarterly</option>
                     <option value="YEARLY">Yearly</option>
                   </select>
                 </div>
               </div>
-              <div className="row mb-3">
-                <div className="col-6">
-                  <label className="form-label" style={{ fontSize: 13, fontWeight: 600, color: 'var(--kai-text-secondary)' }}>Start Date *</label>
-                  <input type="date" className="form-control" value={form.startDate} onChange={e => setForm(f => ({ ...f, startDate: e.target.value }))}
-                    style={{ background: 'var(--kai-bg-secondary)', border: '1px solid var(--kai-border)', color: 'var(--kai-text)', borderRadius: 8 }} />
+              <div className="grid grid-cols-2 gap-3 mb-3">
+                <div>
+                  <label className={labelClass}>Start Date *</label>
+                  <input type="date" className={inputClass} value={form.startDate} onChange={e => setForm(f => ({ ...f, startDate: e.target.value }))} />
                 </div>
-                <div className="col-6">
-                  <label className="form-label" style={{ fontSize: 13, fontWeight: 600, color: 'var(--kai-text-secondary)' }}>Renewal Date</label>
-                  <input type="date" className="form-control" value={form.renewalDate} onChange={e => setForm(f => ({ ...f, renewalDate: e.target.value }))}
-                    style={{ background: 'var(--kai-bg-secondary)', border: '1px solid var(--kai-border)', color: 'var(--kai-text)', borderRadius: 8 }} />
+                <div>
+                  <label className={labelClass}>Renewal Date</label>
+                  <input type="date" className={inputClass} value={form.renewalDate} onChange={e => setForm(f => ({ ...f, renewalDate: e.target.value }))} />
                 </div>
               </div>
-              <div className="row mb-3">
-                <div className="col-4">
-                  <label className="form-label" style={{ fontSize: 13, fontWeight: 600, color: 'var(--kai-text-secondary)' }}>Category</label>
-                  <select className="form-select" value={form.category} onChange={e => setForm(f => ({ ...f, category: e.target.value }))}
-                    style={{ background: 'var(--kai-bg-secondary)', border: '1px solid var(--kai-border)', color: 'var(--kai-text)', borderRadius: 8 }}>
+              <div className="grid grid-cols-3 gap-3 mb-3">
+                <div>
+                  <label className={labelClass}>Category</label>
+                  <select className={inputClass} value={form.category} onChange={e => setForm(f => ({ ...f, category: e.target.value }))}>
                     {Object.keys(CATEGORY_CONFIG).map(c => <option key={c} value={c}>{c}</option>)}
                   </select>
                 </div>
-                <div className="col-4">
-                  <label className="form-label" style={{ fontSize: 13, fontWeight: 600, color: 'var(--kai-text-secondary)' }}>Status</label>
-                  <select className="form-select" value={form.status} onChange={e => setForm(f => ({ ...f, status: e.target.value }))}
-                    style={{ background: 'var(--kai-bg-secondary)', border: '1px solid var(--kai-border)', color: 'var(--kai-text)', borderRadius: 8 }}>
+                <div>
+                  <label className={labelClass}>Status</label>
+                  <select className={inputClass} value={form.status} onChange={e => setForm(f => ({ ...f, status: e.target.value }))}>
                     {Object.entries(STATUS_CONFIG).map(([k, v]) => <option key={k} value={k}>{v.label}</option>)}
                   </select>
                 </div>
-                <div className="col-4">
-                  <label className="form-label" style={{ fontSize: 13, fontWeight: 600, color: 'var(--kai-text-secondary)' }}>Currency</label>
-                  <select className="form-select" value={form.currency} onChange={e => setForm(f => ({ ...f, currency: e.target.value }))}
-                    style={{ background: 'var(--kai-bg-secondary)', border: '1px solid var(--kai-border)', color: 'var(--kai-text)', borderRadius: 8 }}>
+                <div>
+                  <label className={labelClass}>Currency</label>
+                  <select className={inputClass} value={form.currency} onChange={e => setForm(f => ({ ...f, currency: e.target.value }))}>
                     <option value="INR">INR</option>
                     <option value="USD">USD</option>
                     <option value="EUR">EUR</option>
@@ -431,36 +413,31 @@ export default function Subscriptions() {
                 </div>
               </div>
               <div className="mb-3">
-                <label className="form-label" style={{ fontSize: 13, fontWeight: 600, color: 'var(--kai-text-secondary)' }}>Login URL</label>
-                <input className="form-control" value={form.loginUrl} onChange={e => setForm(f => ({ ...f, loginUrl: e.target.value }))}
-                  placeholder="https://..." style={{ background: 'var(--kai-bg-secondary)', border: '1px solid var(--kai-border)', color: 'var(--kai-text)', borderRadius: 8 }} />
+                <label className={labelClass}>Login URL</label>
+                <input className={inputClass} value={form.loginUrl} onChange={e => setForm(f => ({ ...f, loginUrl: e.target.value }))} placeholder="https://..." />
               </div>
               <div className="mb-3">
-                <label className="form-label" style={{ fontSize: 13, fontWeight: 600, color: 'var(--kai-text-secondary)' }}>Linked Credential</label>
-                <select className="form-select" value={form.credentialId} onChange={e => setForm(f => ({ ...f, credentialId: e.target.value }))}
-                  style={{ background: 'var(--kai-bg-secondary)', border: '1px solid var(--kai-border)', color: 'var(--kai-text)', borderRadius: 8 }}>
+                <label className={labelClass}>Linked Credential</label>
+                <select className={inputClass} value={form.credentialId} onChange={e => setForm(f => ({ ...f, credentialId: e.target.value }))}>
                   <option value="">None</option>
                   {credentials.map(c => <option key={c.id} value={c.id}>{c.title}</option>)}
                 </select>
               </div>
               <div className="mb-3">
-                <label className="form-label" style={{ fontSize: 13, fontWeight: 600, color: 'var(--kai-text-secondary)' }}>Notes</label>
-                <textarea className="form-control" rows={2} value={form.notes} onChange={e => setForm(f => ({ ...f, notes: e.target.value }))}
-                  placeholder="Additional notes..." style={{ background: 'var(--kai-bg-secondary)', border: '1px solid var(--kai-border)', color: 'var(--kai-text)', borderRadius: 8 }} />
+                <label className={labelClass}>Notes</label>
+                <textarea className={`${inputClass} resize-y`} rows={2} value={form.notes} onChange={e => setForm(f => ({ ...f, notes: e.target.value }))} placeholder="Additional notes..." />
               </div>
               <div className="mb-3">
-                <label className="d-flex align-items-center gap-2" style={{ fontSize: 13, cursor: 'pointer', color: 'var(--kai-text)' }}>
-                  <input type="checkbox" checked={form.autoRenew} onChange={e => setForm(f => ({ ...f, autoRenew: e.target.checked }))} style={{ accentColor: '#111827' }} />
+                <label className="flex items-center gap-2 text-[13px] cursor-pointer text-[var(--text-primary)]">
+                  <input type="checkbox" checked={form.autoRenew} onChange={e => setForm(f => ({ ...f, autoRenew: e.target.checked }))} className="accent-[#7C3AED]" />
                   Auto-renew enabled
                 </label>
               </div>
-              <div className="d-flex gap-2 justify-content-end">
-                <button type="button" className="btn btn-sm" onClick={() => setShowModal(false)}
-                  style={{ background: 'var(--kai-bg-secondary)', color: 'var(--kai-text)', border: '1px solid var(--kai-border)', borderRadius: 8, padding: '6px 16px' }}>
+              <div className="flex gap-2 justify-end">
+                <button type="button" className="bg-transparent border border-[var(--border-default)] text-[var(--text-secondary)] rounded-lg px-4 py-2 text-[13px] font-medium" onClick={() => setShowModal(false)}>
                   Cancel
                 </button>
-                <button type="submit" disabled={saving} className="btn btn-sm"
-                  style={{ background: '#111827', color: '#fff', border: 'none', borderRadius: 8, padding: '6px 20px', opacity: saving ? 0.7 : 1 }}>
+                <button type="submit" disabled={saving} className="bg-[#7C3AED] text-white rounded-lg px-5 py-2 text-[13px] font-semibold hover:bg-[#7C3AED]/90 disabled:opacity-70">
                   {saving ? 'Saving...' : editingId ? 'Update' : 'Create'}
                 </button>
               </div>

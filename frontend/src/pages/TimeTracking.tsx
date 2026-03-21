@@ -7,6 +7,8 @@ import {
   Timer, BarChart3, Check
 } from 'lucide-react';
 
+const inputClass = "w-full bg-[var(--bg-elevated)] border border-[var(--border-default)] rounded-lg px-3 py-2 text-[var(--text-primary)] placeholder:text-[var(--text-muted)] focus:border-[#7C3AED] focus:ring-2 focus:ring-[#7C3AED]/20 outline-none text-[13px]";
+
 const formatDuration = (seconds) => {
   if (!seconds && seconds !== 0) return '0:00:00';
   const h = Math.floor(seconds / 3600);
@@ -31,7 +33,6 @@ export default function TimeTracking() {
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
 
-  // Timer state
   const [timerRunning, setTimerRunning] = useState(false);
   const [timerSeconds, setTimerSeconds] = useState(0);
   const [timerDescription, setTimerDescription] = useState('');
@@ -39,15 +40,12 @@ export default function TimeTracking() {
   const timerRef = useRef(null);
   const timerStartRef = useRef(null);
 
-  // Log Entry modal
   const [showLogModal, setShowLogModal] = useState(false);
   const [logForm, setLogForm] = useState({
     task: '', project: '', startTime: '', endTime: '', description: '', billable: false,
   });
   const [savingLog, setSavingLog] = useState(false);
   const [logFormError, setLogFormError] = useState('');
-
-  // Weekly summary
   const [weeklySummary, setWeeklySummary] = useState([]);
 
   useEffect(() => {
@@ -109,12 +107,9 @@ export default function TimeTracking() {
   const stopTimer = async () => {
     setTimerRunning(false);
     if (timerRef.current) clearInterval(timerRef.current);
-
-    if (timerSeconds < 5) return; // ignore very short timers
-
+    if (timerSeconds < 5) return;
     const endTime = new Date();
     const startTime = new Date(endTime.getTime() - timerSeconds * 1000);
-
     try {
       await timeTrackingApi.create({
         description: timerDescription || 'Timer entry',
@@ -133,7 +128,6 @@ export default function TimeTracking() {
     }
   };
 
-  // Compute real-time duration for log form
   const logFormDuration = (() => {
     if (!logForm.startTime || !logForm.endTime) return null;
     const start = new Date(`1970-01-01T${logForm.startTime}`);
@@ -141,44 +135,31 @@ export default function TimeTracking() {
     const diffMs = end - start;
     if (diffMs <= 0) return null;
     const mins = Math.round(diffMs / 60000);
-    if (mins > 1440) return null; // > 24 hours
+    if (mins > 1440) return null;
     return mins;
   })();
 
   const handleLogEntry = async (e) => {
     e.preventDefault();
     setLogFormError('');
-
-    // Validate endTime > startTime (same calendar day, no cross-midnight)
     if (logForm.startTime && logForm.endTime) {
       const start = new Date(`1970-01-01T${logForm.startTime}`);
       const end = new Date(`1970-01-01T${logForm.endTime}`);
-      if (end <= start) {
-        setLogFormError('End time must be after start time');
-        return;
-      }
+      if (end <= start) { setLogFormError('End time must be after start time'); return; }
       const diffMinutes = Math.round((end - start) / 60000);
-      if (diffMinutes > 1440) {
-        setLogFormError('Entry cannot exceed 24 hours');
-        return;
-      }
+      if (diffMinutes > 1440) { setLogFormError('Entry cannot exceed 24 hours'); return; }
     }
-
     setSavingLog(true);
     try {
       const duration = logForm.startTime && logForm.endTime
         ? Math.round((new Date(`1970-01-01T${logForm.endTime}`) - new Date(`1970-01-01T${logForm.startTime}`)) / 60000)
         : 0;
-
       const today = new Date().toISOString().split('T')[0];
       await timeTrackingApi.create({
-        task: logForm.task,
-        project: logForm.project,
+        task: logForm.task, project: logForm.project,
         startTime: logForm.startTime ? `${today}T${logForm.startTime}` : undefined,
         endTime: logForm.endTime ? `${today}T${logForm.endTime}` : undefined,
-        duration,
-        description: logForm.description,
-        billable: logForm.billable,
+        duration, description: logForm.description, billable: logForm.billable,
       });
       setShowLogModal(false);
       setLogForm({ task: '', project: '', startTime: '', endTime: '', description: '', billable: false });
@@ -215,124 +196,101 @@ export default function TimeTracking() {
 
   return (
     <div>
-      <div className="page-header">
+      <div className="flex items-center justify-between mb-6">
         <div>
-          <h1>Time Tracking</h1>
-          <p>Track your work hours and manage time entries</p>
+          <h1 className="text-[22px] font-bold text-[var(--text-primary)] m-0">Time Tracking</h1>
+          <p className="text-[13px] text-[var(--text-secondary)] mt-1">Track your work hours and manage time entries</p>
         </div>
-        <button onClick={() => setShowLogModal(true)} className="kai-btn kai-btn-primary" style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+        <button data-testid="log-entry-btn" onClick={() => setShowLogModal(true)} className="bg-[#7C3AED] text-white rounded-lg px-4 py-2 text-[13px] font-semibold hover:bg-[#7C3AED]/90 flex items-center gap-1.5">
           <Plus size={16} /> Log Entry
         </button>
       </div>
 
       {(success || error) && (
-        <div style={{
-          padding: '12px 16px', borderRadius: 8, marginBottom: 16, fontSize: 13, fontWeight: 500,
-          background: success ? '#d4edda' : '#f8d7da', color: success ? '#155724' : '#721c24',
-          display: 'flex', alignItems: 'center', gap: 8,
-        }}>
+        <div className={`px-4 py-3 rounded-lg mb-4 text-[13px] font-medium flex items-center gap-2 ${success ? 'bg-green-50 text-green-800' : 'bg-red-50 text-red-800'}`}>
           {success || error}
         </div>
       )}
 
       {/* Timer */}
-      <div className="kai-card" style={{ marginBottom: 24 }}>
-        <div className="kai-card-body">
-          <div style={{ display: 'flex', alignItems: 'center', gap: 16, flexWrap: 'wrap' }}>
-            <div style={{
-              fontSize: 36, fontWeight: 700, fontFamily: 'monospace', color: timerRunning ? '#3B82F6' : '#10222F',
-              minWidth: 160, letterSpacing: 1,
-            }}>
-              {formatDuration(timerSeconds)}
-            </div>
-            <div style={{ flex: 1, display: 'flex', gap: 10, minWidth: 200 }}>
-              <input className="kai-input" placeholder="What are you working on?"
-                value={timerDescription} onChange={e => setTimerDescription(e.target.value)}
-                style={{ flex: 1 }} disabled={timerRunning} />
-              <input className="kai-input" placeholder="Project"
-                value={timerProject} onChange={e => setTimerProject(e.target.value)}
-                style={{ width: 150 }} disabled={timerRunning} />
-            </div>
-            {timerRunning ? (
-              <button onClick={stopTimer} className="kai-btn"
-                style={{ background: '#EF4444', color: '#fff', border: 'none', width: 48, height: 48, borderRadius: 12, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                <Square size={20} fill="#fff" />
-              </button>
-            ) : (
-              <button onClick={startTimer} className="kai-btn kai-btn-primary"
-                style={{ width: 48, height: 48, borderRadius: 12, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                <Play size={20} fill="#fff" />
-              </button>
-            )}
+      <div className="bg-[var(--bg-card)] border border-[var(--border-default)] rounded-xl p-5 mb-6">
+        <div className="flex items-center gap-4 flex-wrap">
+          <div className={`text-[36px] font-bold font-mono min-w-[160px] tracking-wider ${timerRunning ? 'text-[#7C3AED]' : 'text-[var(--text-primary)]'}`}>
+            {formatDuration(timerSeconds)}
           </div>
+          <div className="flex-1 flex gap-2.5 min-w-[200px]">
+            <input data-testid="timer-description" className={`${inputClass} flex-1`} placeholder="What are you working on?"
+              value={timerDescription} onChange={e => setTimerDescription(e.target.value)} disabled={timerRunning} />
+            <input className={`${inputClass} w-[150px]`} placeholder="Project"
+              value={timerProject} onChange={e => setTimerProject(e.target.value)} disabled={timerRunning} />
+          </div>
+          {timerRunning ? (
+            <button data-testid="stop-timer" onClick={stopTimer}
+              className="w-12 h-12 rounded-xl bg-red-500 text-white flex items-center justify-center border-none cursor-pointer hover:bg-red-600 transition-colors">
+              <Square size={20} fill="#fff" />
+            </button>
+          ) : (
+            <button data-testid="start-timer" onClick={startTimer}
+              className="w-12 h-12 rounded-xl bg-[#7C3AED] text-white flex items-center justify-center border-none cursor-pointer hover:bg-[#7C3AED]/90 transition-colors">
+              <Play size={20} fill="#fff" />
+            </button>
+          )}
         </div>
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1fr) minmax(0, 380px)', gap: 20 }}>
+      <div className="grid grid-cols-[minmax(0,1fr)_minmax(0,380px)] gap-5">
         {/* Today's Entries */}
         <div>
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
-            <h3 style={{ fontSize: 16, fontWeight: 600, color: '#10222F', margin: 0 }}>
-              Today's Entries
-            </h3>
-            <span style={{ fontSize: 13, color: '#5B6B76' }}>
-              Total: <strong style={{ color: '#10222F' }}>{formatDurationHM(totalTodayMinutes)}</strong>
+          <div className="flex items-center justify-between mb-3">
+            <h3 className="text-[16px] font-semibold text-[var(--text-primary)] m-0">Today's Entries</h3>
+            <span className="text-[13px] text-[var(--text-secondary)]">
+              Total: <strong className="text-[var(--text-primary)]">{formatDurationHM(totalTodayMinutes)}</strong>
             </span>
           </div>
 
           {loading ? (
-            <div className="kai-card">
-              <div className="kai-card-body" style={{ display: 'flex', justifyContent: 'center', padding: 40 }}>
-                <Loader2 size={24} style={{ animation: 'spin 1s linear infinite', color: '#111827' }} />
-              </div>
+            <div className="bg-[var(--bg-card)] border border-[var(--border-default)] rounded-xl flex justify-center py-10">
+              <Loader2 size={24} className="animate-spin text-[#7C3AED]" />
             </div>
           ) : entries.length === 0 ? (
-            <div className="kai-card">
-              <div className="kai-card-body" style={{ textAlign: 'center', padding: 40, color: '#5B6B76' }}>
-                <Timer size={36} style={{ marginBottom: 10, opacity: 0.3 }} />
-                <p style={{ fontSize: 14, fontWeight: 500 }}>No entries today</p>
-                <p style={{ fontSize: 13 }}>Start the timer or log an entry manually</p>
-              </div>
+            <div className="bg-[var(--bg-card)] border border-[var(--border-default)] rounded-xl text-center py-10 text-[var(--text-secondary)]">
+              <Timer size={36} className="mx-auto mb-2.5 opacity-30" />
+              <p className="text-[14px] font-medium">No entries today</p>
+              <p className="text-[13px]">Start the timer or log an entry manually</p>
             </div>
           ) : (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+            <div className="flex flex-col gap-2">
               {entries.map(entry => {
                 const dur = getEntryDuration(entry);
                 return (
-                  <div key={entry._id || entry.id} className="kai-card">
-                    <div className="kai-card-body" style={{ padding: '14px 18px' }}>
-                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                        <div style={{ flex: 1 }}>
-                          <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
-                            <span style={{ fontWeight: 600, fontSize: 14, color: '#10222F' }}>
-                              {typeof entry.task === 'object' ? entry.task?.title : entry.task || entry.description || 'Untitled entry'}
-                            </span>
-                            {entry.billable && (
-                              <span className="kai-badge" style={{ background: '#D1FAE5', color: '#065F46', fontSize: 10, padding: '2px 6px', borderRadius: 4 }}>
-                                Billable
-                              </span>
-                            )}
-                          </div>
-                          <div style={{ display: 'flex', alignItems: 'center', gap: 12, fontSize: 12, color: '#5B6B76' }}>
-                            {entry.project && <span style={{ color: '#3B82F6', fontWeight: 500 }}>{typeof entry.project === 'object' ? entry.project?.name : entry.project}</span>}
-                            {entry.description && <span>{entry.description}</span>}
-                            {entry.startTime && (
-                              <span>
-                                {new Date(entry.startTime).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })}
-                                {entry.endTime && ` - ${new Date(entry.endTime).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })}`}
-                              </span>
-                            )}
-                          </div>
-                        </div>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                          <span style={{ fontWeight: 700, fontSize: 15, fontFamily: 'monospace', color: '#10222F' }}>
-                            {formatDurationHM(dur)}
+                  <div key={entry._id || entry.id} className="bg-[var(--bg-card)] border border-[var(--border-default)] rounded-xl px-4 py-3.5">
+                    <div className="flex items-center justify-between">
+                      <div className="flex-1">
+                        <div className="flex items-center gap-2 mb-1">
+                          <span className="font-semibold text-[14px] text-[var(--text-primary)]">
+                            {typeof entry.task === 'object' ? entry.task?.title : entry.task || entry.description || 'Untitled entry'}
                           </span>
-                          <button onClick={() => handleDeleteEntry(entry)}
-                            style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#9CA3AF', padding: 4 }}>
-                            <Trash2 size={15} />
-                          </button>
+                          {entry.billable && (
+                            <span className="bg-green-100 text-green-800 text-[10px] px-1.5 py-0.5 rounded font-medium">Billable</span>
+                          )}
                         </div>
+                        <div className="flex items-center gap-3 text-[12px] text-[var(--text-secondary)]">
+                          {entry.project && <span className="text-[#7C3AED] font-medium">{typeof entry.project === 'object' ? entry.project?.name : entry.project}</span>}
+                          {entry.description && <span>{entry.description}</span>}
+                          {entry.startTime && (
+                            <span>
+                              {new Date(entry.startTime).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })}
+                              {entry.endTime && ` - ${new Date(entry.endTime).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })}`}
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-3">
+                        <span className="font-bold text-[15px] font-mono text-[var(--text-primary)]">{formatDurationHM(dur)}</span>
+                        <button data-testid={`delete-entry-${entry._id || entry.id}`} onClick={() => handleDeleteEntry(entry)}
+                          className="bg-transparent border-none cursor-pointer text-[var(--text-muted)] p-1 hover:text-red-500 transition-colors">
+                          <Trash2 size={15} />
+                        </button>
                       </div>
                     </div>
                   </div>
@@ -344,41 +302,35 @@ export default function TimeTracking() {
 
         {/* Weekly Summary */}
         <div>
-          <h3 style={{ fontSize: 16, fontWeight: 600, color: '#10222F', marginBottom: 12 }}>Weekly Summary</h3>
-          <div className="kai-card">
-            <div className="kai-card-body">
-              <div style={{ display: 'flex', alignItems: 'flex-end', gap: 10, height: 200, padding: '0 4px' }}>
-                {weeklySummary.map((day, i) => {
-                  const height = maxWeekMinutes > 0 ? (day.minutes / maxWeekMinutes) * 160 : 0;
-                  const isToday = new Date().getDay() === (['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'].indexOf(day.day) + 1) % 7;
-                  return (
-                    <div key={i} style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6 }}>
-                      <span style={{ fontSize: 10, color: '#5B6B76', fontWeight: 500 }}>
-                        {day.minutes > 0 ? formatDurationHM(day.minutes) : ''}
-                      </span>
-                      <div style={{
-                        width: '100%', maxWidth: 36, height: Math.max(height, 4), borderRadius: '6px 6px 0 0',
-                        background: isToday
-                          ? 'linear-gradient(180deg, #3B82F6 0%, #1E40AF 100%)'
-                          : day.minutes > 0 ? '#CBD5E0' : '#F0F2F4',
-                        transition: 'height 0.3s',
-                      }} />
-                      <span style={{
-                        fontSize: 11, fontWeight: isToday ? 700 : 400,
-                        color: isToday ? '#3B82F6' : '#5B6B76',
-                      }}>
-                        {day.day}
-                      </span>
-                    </div>
-                  );
-                })}
-              </div>
-              <div style={{ borderTop: '1px solid #E8EBED', marginTop: 16, paddingTop: 12, textAlign: 'center' }}>
-                <span style={{ fontSize: 12, color: '#5B6B76' }}>Total this week: </span>
-                <span style={{ fontSize: 14, fontWeight: 700, color: '#10222F' }}>
-                  {formatDurationHM(weeklySummary.reduce((s, d) => s + d.minutes, 0))}
-                </span>
-              </div>
+          <h3 className="text-[16px] font-semibold text-[var(--text-primary)] mb-3">Weekly Summary</h3>
+          <div className="bg-[var(--bg-card)] border border-[var(--border-default)] rounded-xl p-5">
+            <div className="flex items-end gap-2.5 h-[200px] px-1">
+              {weeklySummary.map((day, i) => {
+                const height = maxWeekMinutes > 0 ? (day.minutes / maxWeekMinutes) * 160 : 0;
+                const isToday = new Date().getDay() === (['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'].indexOf(day.day) + 1) % 7;
+                return (
+                  <div key={i} className="flex-1 flex flex-col items-center gap-1.5">
+                    <span className="text-[10px] text-[var(--text-secondary)] font-medium">
+                      {day.minutes > 0 ? formatDurationHM(day.minutes) : ''}
+                    </span>
+                    <div className="w-full max-w-[36px] rounded-t-md transition-all duration-300" style={{
+                      height: Math.max(height, 4),
+                      background: isToday
+                        ? 'linear-gradient(180deg, #7C3AED 0%, #5B21B6 100%)'
+                        : day.minutes > 0 ? 'var(--border-default)' : 'var(--bg-elevated)',
+                    }} />
+                    <span className={`text-[11px] ${isToday ? 'font-bold text-[#7C3AED]' : 'text-[var(--text-secondary)]'}`}>
+                      {day.day}
+                    </span>
+                  </div>
+                );
+              })}
+            </div>
+            <div className="border-t border-[var(--border-default)] mt-4 pt-3 text-center">
+              <span className="text-[12px] text-[var(--text-secondary)]">Total this week: </span>
+              <span className="text-[14px] font-bold text-[var(--text-primary)]">
+                {formatDurationHM(weeklySummary.reduce((s, d) => s + d.minutes, 0))}
+              </span>
             </div>
           </div>
         </div>
@@ -386,80 +338,60 @@ export default function TimeTracking() {
 
       {/* Log Entry Modal */}
       {showLogModal && (
-        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.4)', zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center' }}
-          onClick={() => setShowLogModal(false)}>
-          <div className="kai-card" style={{ width: 480 }} onClick={e => e.stopPropagation()}>
-            <div className="kai-card-body">
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
-                <h3 style={{ fontSize: 18, fontWeight: 600, color: '#10222F', margin: 0 }}>Log Time Entry</h3>
-                <button onClick={() => setShowLogModal(false)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#5B6B76' }}>
+        <div className="fixed inset-0 bg-black/40 z-[1000] flex items-center justify-center" onClick={() => setShowLogModal(false)}>
+          <div className="bg-[var(--bg-card)] border border-[var(--border-default)] rounded-xl w-[480px] max-w-[95vw] shadow-2xl" onClick={e => e.stopPropagation()}>
+            <div className="p-5">
+              <div className="flex justify-between items-center mb-5">
+                <h3 className="text-[18px] font-semibold text-[var(--text-primary)] m-0">Log Time Entry</h3>
+                <button onClick={() => setShowLogModal(false)} className="bg-transparent border-none cursor-pointer text-[var(--text-secondary)] p-1">
                   <X size={20} />
                 </button>
               </div>
               <form onSubmit={handleLogEntry}>
                 {logFormError && (
-                  <div style={{
-                    padding: '10px 14px', borderRadius: 8, marginBottom: 16, fontSize: 13, fontWeight: 500,
-                    background: '#f8d7da', color: '#721c24', display: 'flex', alignItems: 'center', gap: 8,
-                  }}>
+                  <div className="px-3.5 py-2.5 rounded-lg mb-4 text-[13px] font-medium bg-red-50 text-red-800 flex items-center gap-2">
                     <AlertCircle size={16} /> {logFormError}
                   </div>
                 )}
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, marginBottom: 16 }}>
+                <div className="grid grid-cols-2 gap-4 mb-4">
                   <div>
-                    <label className="kai-label">Task</label>
-                    <input className="kai-input" value={logForm.task} onChange={e => setLogForm(f => ({ ...f, task: e.target.value }))}
-                      placeholder="Task name" required />
+                    <label className="block text-[12px] font-semibold text-[var(--text-secondary)] mb-1">Task</label>
+                    <input className={inputClass} value={logForm.task} onChange={e => setLogForm(f => ({ ...f, task: e.target.value }))} placeholder="Task name" required />
                   </div>
                   <div>
-                    <label className="kai-label">Project</label>
-                    <input className="kai-input" value={logForm.project} onChange={e => setLogForm(f => ({ ...f, project: e.target.value }))}
-                      placeholder="Project name" />
+                    <label className="block text-[12px] font-semibold text-[var(--text-secondary)] mb-1">Project</label>
+                    <input className={inputClass} value={logForm.project} onChange={e => setLogForm(f => ({ ...f, project: e.target.value }))} placeholder="Project name" />
                   </div>
                   <div>
-                    <label className="kai-label">Start Time</label>
-                    <input className="kai-input" type="time" value={logForm.startTime}
-                      onChange={e => { setLogForm(f => ({ ...f, startTime: e.target.value })); setLogFormError(''); }} required />
+                    <label className="block text-[12px] font-semibold text-[var(--text-secondary)] mb-1">Start Time</label>
+                    <input className={inputClass} type="time" value={logForm.startTime} onChange={e => { setLogForm(f => ({ ...f, startTime: e.target.value })); setLogFormError(''); }} required />
                   </div>
                   <div>
-                    <label className="kai-label">End Time</label>
-                    <input className="kai-input" type="time" value={logForm.endTime}
-                      onChange={e => { setLogForm(f => ({ ...f, endTime: e.target.value })); setLogFormError(''); }} required />
+                    <label className="block text-[12px] font-semibold text-[var(--text-secondary)] mb-1">End Time</label>
+                    <input className={inputClass} type="time" value={logForm.endTime} onChange={e => { setLogForm(f => ({ ...f, endTime: e.target.value })); setLogFormError(''); }} required />
                   </div>
                 </div>
                 {logFormDuration !== null && (
-                  <div style={{
-                    padding: '8px 14px', borderRadius: 8, marginBottom: 16, fontSize: 13, fontWeight: 600,
-                    background: 'var(--kai-accent-light)', color: '#3B82F6', display: 'flex', alignItems: 'center', gap: 8,
-                  }}>
+                  <div className="px-3.5 py-2 rounded-lg mb-4 text-[13px] font-semibold bg-[#7C3AED]/10 text-[#7C3AED] flex items-center gap-2">
                     <Clock size={16} /> Duration: {formatDurationHM(logFormDuration)}
                   </div>
                 )}
-                <div style={{ marginBottom: 16 }}>
-                  <label className="kai-label">Description</label>
-                  <textarea className="kai-input" value={logForm.description}
-                    onChange={e => setLogForm(f => ({ ...f, description: e.target.value }))}
-                    placeholder="What did you work on?" rows={3} style={{ resize: 'vertical' }} />
+                <div className="mb-4">
+                  <label className="block text-[12px] font-semibold text-[var(--text-secondary)] mb-1">Description</label>
+                  <textarea className={`${inputClass} resize-y`} value={logForm.description} onChange={e => setLogForm(f => ({ ...f, description: e.target.value }))} placeholder="What did you work on?" rows={3} />
                 </div>
-                <div style={{ marginBottom: 20 }}>
-                  <label style={{ display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer', fontSize: 14, color: '#4C5963' }}>
-                    <div style={{
-                      width: 40, height: 22, borderRadius: 11, cursor: 'pointer', position: 'relative',
-                      background: logForm.billable ? '#111827' : '#CBD5E0', transition: 'background 0.2s',
-                    }}
+                <div className="mb-5">
+                  <label className="flex items-center gap-2 cursor-pointer text-[14px] text-[var(--text-secondary)]">
+                    <div className="w-10 h-[22px] rounded-full cursor-pointer relative transition-colors" style={{ background: logForm.billable ? '#7C3AED' : 'var(--border-default)' }}
                       onClick={() => setLogForm(f => ({ ...f, billable: !f.billable }))}>
-                      <span style={{
-                        position: 'absolute', top: 2, left: logForm.billable ? 20 : 2,
-                        width: 18, height: 18, borderRadius: '50%', background: '#fff',
-                        transition: 'left 0.2s', boxShadow: '0 1px 3px rgba(0,0,0,0.15)',
-                      }} />
+                      <span className="absolute top-[2px] w-[18px] h-[18px] rounded-full bg-white transition-all shadow-sm" style={{ left: logForm.billable ? 20 : 2 }} />
                     </div>
                     Billable
                   </label>
                 </div>
-                <div style={{ display: 'flex', gap: 10, justifyContent: 'flex-end' }}>
-                  <button type="button" onClick={() => setShowLogModal(false)} className="kai-btn">Cancel</button>
-                  <button type="submit" className="kai-btn kai-btn-primary" disabled={savingLog}>
+                <div className="flex gap-2.5 justify-end">
+                  <button type="button" onClick={() => setShowLogModal(false)} className="bg-transparent border border-[var(--border-default)] text-[var(--text-secondary)] rounded-lg px-4 py-2 text-[13px] font-medium">Cancel</button>
+                  <button type="submit" className="bg-[#7C3AED] text-white rounded-lg px-4 py-2 text-[13px] font-semibold hover:bg-[#7C3AED]/90 disabled:opacity-70" disabled={savingLog}>
                     {savingLog ? 'Saving...' : 'Log Entry'}
                   </button>
                 </div>
