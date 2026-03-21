@@ -101,6 +101,7 @@ export default function EmailClient() {
     try {
       setSending(true);
       await emailApi.send({
+        action: 'sendCustom',
         to: compose.to,
         cc: compose.cc || undefined,
         bcc: compose.bcc || undefined,
