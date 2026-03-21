@@ -405,7 +405,8 @@ export const POST = createHandler({ rateLimit: "write" }, async (req: NextReques
     });
 
     const toStr = Array.isArray(to) ? to.join(", ") : to;
-    const result = await sendEmail(toStr, subject, html);
+    const userFrom = `${user.firstName} ${user.lastName} <${user.email}>`;
+    const result = await sendEmail(toStr, subject, html, userFrom);
 
     await prisma.sentEmail.create({
       data: {
