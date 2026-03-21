@@ -43,6 +43,7 @@ export default function EmailClient() {
   const [showCcBcc, setShowCcBcc] = useState(false);
   const [sending, setSending] = useState(false);
   const fileRef = useRef(null);
+  const bodyRef = useRef(null);
 
   useEffect(() => {
     dispatch({ type: 'UI_SET_PAGE_TITLE', payload: 'Email' });
@@ -104,11 +105,12 @@ export default function EmailClient() {
         cc: compose.cc || undefined,
         bcc: compose.bcc || undefined,
         subject: compose.subject,
-        body: compose.body,
+        body: bodyRef.current?.innerHTML || '',
       });
       toast.success('Email sent successfully');
       setShowCompose(false);
       setCompose({ to: '', cc: '', bcc: '', subject: '', body: '', attachments: [] });
+      if (bodyRef.current) bodyRef.current.innerHTML = '';
       if (activeFolder === 'sent') fetchEmails();
     } catch {
       toast.error('Failed to send email');
@@ -509,10 +511,9 @@ export default function EmailClient() {
 
               {/* Body */}
               <div
+                ref={bodyRef}
                 contentEditable
                 suppressContentEditableWarning
-                onInput={e => setCompose(p => ({ ...p, body: e.currentTarget.innerHTML }))}
-                dangerouslySetInnerHTML={{ __html: compose.body }}
                 style={{
                   flex: 1,
                   padding: 20,
