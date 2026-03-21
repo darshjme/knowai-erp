@@ -44,7 +44,8 @@ function notificationsReducer(state = notifsInitial, action) {
 const uiInitial = {
   sidebarCollapsed: false,
   sidebarMobileOpen: false,
-  theme: localStorage.getItem('knowai-theme') || 'light',
+  rightPanelCollapsed: localStorage.getItem('knowai-right-panel-collapsed') === 'true',
+  theme: localStorage.getItem('knowai-theme') || 'dark',
   pageTitle: 'Dashboard',
 };
 
@@ -54,7 +55,22 @@ function uiReducer(state = uiInitial, action) {
     case 'UI_SET_SIDEBAR_COLLAPSED': return { ...state, sidebarCollapsed: !!action.payload };
     case 'UI_TOGGLE_MOBILE_SIDEBAR': return { ...state, sidebarMobileOpen: !state.sidebarMobileOpen };
     case 'UI_CLOSE_MOBILE_SIDEBAR': return { ...state, sidebarMobileOpen: false };
-    case 'UI_SET_THEME': localStorage.setItem('knowai-theme', action.payload); return { ...state, theme: action.payload };
+    case 'UI_TOGGLE_RIGHT_PANEL': {
+      const next = !state.rightPanelCollapsed;
+      localStorage.setItem('knowai-right-panel-collapsed', String(next));
+      return { ...state, rightPanelCollapsed: next };
+    }
+    case 'UI_SET_THEME': {
+      localStorage.setItem('knowai-theme', action.payload);
+      // Toggle 'light' class on <html> for Tailwind dark mode
+      if (action.payload === 'light') {
+        document.documentElement.classList.add('light');
+      } else {
+        document.documentElement.classList.remove('light');
+      }
+      document.documentElement.setAttribute('data-theme', action.payload);
+      return { ...state, theme: action.payload };
+    }
     case 'UI_SET_PAGE_TITLE': return { ...state, pageTitle: action.payload };
     default: return state;
   }

@@ -1,52 +1,30 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import { useNavigate, useLocation, Link } from 'react-router-dom';
-import { Search, Bell, Moon, Sun, Menu, LogOut, ChevronRight, Home, Megaphone } from 'lucide-react';
+import { Menu, MenuButton, MenuItems, MenuItem } from '@headlessui/react';
+import { Search, Bell, Moon, Sun, Menu as MenuIcon, LogOut, ChevronRight, Home, PanelRight, Command } from 'lucide-react';
 import VerifiedBadge from '../ui/VerifiedBadge';
 import { authApi, notificationsApi } from '../../services/api';
-import { Dropdown } from 'react-bootstrap';
+import type { RootState } from '../../store/store';
 
-const ROUTE_LABELS = {
-  dashboard: 'Dashboard',
-  'hr-dashboard': 'HR Dashboard',
-  projects: 'Projects',
-  tasks: 'Tasks',
-  team: 'Team',
-  payroll: 'Payroll',
-  leaves: 'Leaves',
-  expenses: 'Expenses',
-  hiring: 'Hiring',
-  documents: 'Documents',
-  complaints: 'Complaints',
-  clients: 'Clients',
-  leads: 'Leads',
-  invoices: 'Invoices',
-  chat: 'Chat',
-  email: 'Email',
-  calendar: 'Calendar',
-  files: 'Files',
-  docs: 'Docs',
-  analytics: 'Analytics',
-  reports: 'Reports',
-  settings: 'Settings',
-  audit: 'Audit Log',
-  notifications: 'Notifications',
-  'time-tracking': 'Time Tracking',
-  goals: 'Goals',
-  'video-reviews': 'Content Reviews',
-  'content-workspace': 'Content Workspace',
-  requests: 'Requests',
-  'change-requests': 'Change Requests',
-  careers: 'Careers',
-  passwords: 'Password Manager',
-  subscriptions: 'Subscriptions',
-  admin: 'Admin Panel',
-  'personality-test': 'Personality Test',
+const ROUTE_LABELS: Record<string, string> = {
+  dashboard: 'Dashboard', 'hr-dashboard': 'HR Dashboard', projects: 'Projects',
+  tasks: 'Tasks', team: 'Team', payroll: 'Payroll', leaves: 'Leaves',
+  expenses: 'Expenses', hiring: 'Hiring', documents: 'Documents',
+  complaints: 'Complaints', clients: 'Clients', leads: 'Leads',
+  invoices: 'Invoices', chat: 'Chat', email: 'Email', calendar: 'Calendar',
+  files: 'Files', docs: 'Docs', analytics: 'Analytics', reports: 'Reports',
+  settings: 'Settings', audit: 'Audit Log', notifications: 'Notifications',
+  'time-tracking': 'Time Tracking', goals: 'Goals', 'video-reviews': 'Content Reviews',
+  'content-workspace': 'Content Workspace', requests: 'Requests',
+  'change-requests': 'Change Requests', careers: 'Careers',
+  passwords: 'Password Manager', subscriptions: 'Subscriptions',
+  admin: 'Admin Panel', 'personality-test': 'Personality Test',
 };
 
 function playNotificationSound() {
   try {
-    const ctx = new (window.AudioContext || window.webkitAudioContext)();
+    const ctx = new (window.AudioContext || (window as any).webkitAudioContext)();
     const osc = ctx.createOscillator();
     const gain = ctx.createGain();
     osc.connect(gain);
@@ -59,7 +37,7 @@ function playNotificationSound() {
   } catch {}
 }
 
-function timeAgo(d) {
+function timeAgo(d: string | undefined) {
   if (!d) return '';
   const diff = (Date.now() - new Date(d).getTime()) / 1000;
   if (diff < 60) return 'just now';
@@ -70,40 +48,32 @@ function timeAgo(d) {
 
 function Breadcrumbs() {
   const location = useLocation();
-  const { pageTitle } = useSelector(s => s.ui);
+  const { pageTitle } = useSelector((s: RootState) => s.ui);
   const parts = location.pathname.split('/').filter(Boolean);
 
-  if (parts.length === 0 || (parts.length === 1 && parts[0] === 'dashboard')) {
-    return null;
-  }
+  if (parts.length === 0 || (parts.length === 1 && parts[0] === 'dashboard')) return null;
 
-  // Check if last segment is a UUID/ID (detail page)
-  const isUUID = (s) => /^[0-9a-f-]{8,}$/i.test(s) || /^\d+$/.test(s);
+  const isUUID = (s: string) => /^[0-9a-f-]{8,}$/i.test(s) || /^\d+$/.test(s);
 
   return (
-    <nav style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 13, color: 'var(--kai-text-muted)', flexWrap: 'wrap' }}>
-      <Link to="/dashboard" style={{ color: 'var(--kai-text-muted)', display: 'flex', alignItems: 'center' }}>
+    <nav className="flex items-center gap-1.5 text-[13px] text-[var(--text-muted)] flex-wrap">
+      <Link to="/dashboard" className="text-[var(--text-muted)] flex items-center hover:text-[var(--text-secondary)]">
         <Home size={14} />
       </Link>
       {parts.map((part, i) => {
         const path = '/' + parts.slice(0, i + 1).join('/');
         const isLast = i === parts.length - 1;
-
-        // If this segment is an ID, show the page title instead (e.g. project name)
-        let label;
-        if (isUUID(part)) {
-          label = pageTitle || 'Detail';
-        } else {
-          label = ROUTE_LABELS[part] || part.replace(/-/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
-        }
+        const label = isUUID(part)
+          ? (pageTitle || 'Detail')
+          : (ROUTE_LABELS[part] || part.replace(/-/g, ' ').replace(/\b\w/g, c => c.toUpperCase()));
 
         return (
-          <span key={path} style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-            <ChevronRight size={12} style={{ color: 'var(--kai-text-muted)', opacity: 0.5 }} />
+          <span key={path} className="flex items-center gap-1.5">
+            <ChevronRight size={12} className="opacity-50" />
             {isLast ? (
-              <span style={{ color: 'var(--kai-text)', fontWeight: 600 }}>{label}</span>
+              <span className="text-[var(--text-primary)] font-semibold">{label}</span>
             ) : (
-              <Link to={path} style={{ color: 'var(--kai-text-muted)' }}>{label}</Link>
+              <Link to={path} className="text-[var(--text-muted)] hover:text-[var(--text-secondary)]">{label}</Link>
             )}
           </span>
         );
@@ -115,27 +85,23 @@ function Breadcrumbs() {
 export default function Header() {
   const dispatch = useDispatch();
   const navigate = useNavigate();
-  const { user } = useSelector(s => s.auth);
-  const { theme, pageTitle } = useSelector(s => s.ui);
-  const { unreadCount } = useSelector(s => s.notifications);
-  const [recentNotifs, setRecentNotifs] = useState([]);
+  const { user } = useSelector((s: RootState) => s.auth);
+  const { theme, pageTitle } = useSelector((s: RootState) => s.ui);
+  const { unreadCount } = useSelector((s: RootState) => s.notifications);
+  const [recentNotifs, setRecentNotifs] = useState<any[]>([]);
   const [showNotifDrop, setShowNotifDrop] = useState(false);
   const prevCount = useRef(unreadCount);
-  const notifRef = useRef(null);
+  const notifRef = useRef<HTMLDivElement>(null);
 
-  // Poll notifications every 30 seconds
   const fetchNotifs = useCallback(async () => {
     try {
       const res = await notificationsApi.list({ unread: true, limit: 5 });
       const rd = res.data;
       const list = Array.isArray(rd) ? rd : rd?.data || rd?.notifications || [];
       setRecentNotifs(list.slice(0, 5));
-      const count = rd?.unreadCount ?? list.filter(n => !n.read).length;
+      const count = rd?.unreadCount ?? list.filter((n: any) => !n.read).length;
       dispatch({ type: 'SET_NOTIFICATION_COUNT', payload: count });
-      // Play sound if count increased
-      if (count > prevCount.current && prevCount.current >= 0) {
-        playNotificationSound();
-      }
+      if (count > prevCount.current && prevCount.current >= 0) playNotificationSound();
       prevCount.current = count;
     } catch {}
   }, [dispatch]);
@@ -146,14 +112,15 @@ export default function Header() {
     return () => clearInterval(interval);
   }, [fetchNotifs]);
 
-  // Close dropdown on outside click
   useEffect(() => {
-    const handler = (e) => { if (notifRef.current && !notifRef.current.contains(e.target)) setShowNotifDrop(false); };
+    const handler = (e: MouseEvent) => {
+      if (notifRef.current && !notifRef.current.contains(e.target as Node)) setShowNotifDrop(false);
+    };
     document.addEventListener('mousedown', handler);
     return () => document.removeEventListener('mousedown', handler);
   }, []);
 
-  const handleMarkRead = async (id) => {
+  const handleMarkRead = async (id: string) => {
     try {
       await notificationsApi.markRead(id);
       setRecentNotifs(prev => prev.map(n => n.id === id ? { ...n, read: true } : n));
@@ -163,11 +130,11 @@ export default function Header() {
 
   const toggleTheme = () => {
     const next = theme === 'light' ? 'dark' : 'light';
-    document.documentElement.setAttribute('data-theme', next);
     dispatch({ type: 'UI_SET_THEME', payload: next });
   };
 
   const toggleMobile = () => dispatch({ type: 'UI_TOGGLE_MOBILE_SIDEBAR' });
+  const toggleRightPanel = () => dispatch({ type: 'UI_TOGGLE_RIGHT_PANEL' });
 
   const handleLogout = async () => {
     try { await authApi.logout(); } catch {}
@@ -178,86 +145,170 @@ export default function Header() {
   };
 
   return (
-    <header className="app-header">
-      <button className="d-lg-none kai-btn kai-btn-outline kai-btn-sm" onClick={toggleMobile}>
-        <Menu size={18} />
+    <header
+      data-testid="header"
+      className="flex items-center h-14 px-5 bg-[var(--bg-card)] border-b border-[var(--border-default)] shrink-0 gap-3"
+    >
+      {/* Mobile menu button */}
+      <button
+        onClick={toggleMobile}
+        className="lg:hidden flex items-center justify-center w-8 h-8 rounded-md text-[var(--text-secondary)] hover:bg-[var(--bg-elevated)] transition-colors"
+        data-testid="mobile-menu"
+      >
+        <MenuIcon size={18} />
       </button>
 
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-          <span style={{ fontWeight: 800, fontSize: 15, color: 'var(--kai-text)', letterSpacing: -0.3 }}>KnowAI</span>
-          <span style={{ width: 1, height: 18, background: 'var(--kai-border)' }} />
-          <h5 style={{ margin: 0, fontWeight: 700, fontSize: 17, color: 'var(--kai-text)' }}>{pageTitle}</h5>
-        </div>
+      {/* Page title + breadcrumbs */}
+      <div className="flex flex-col gap-0.5 min-w-0">
+        <h1 className="text-[17px] font-bold text-[var(--text-primary)] m-0 truncate font-heading">
+          {pageTitle}
+        </h1>
         <Breadcrumbs />
       </div>
 
-      <div className="kai-search hide-mobile" style={{ marginLeft: 'auto', width: 260 }}>
-        <Search size={16} />
-        <input type="text" placeholder="Search anything..." style={{ height: 36 }} />
-      </div>
+      {/* Spacer */}
+      <div className="flex-1" />
 
-      <button className="kai-btn kai-btn-outline kai-btn-sm" onClick={toggleTheme} title="Toggle theme">
-        {theme === 'light' ? <Moon size={16} /> : <Sun size={16} />}
+      {/* Command palette trigger */}
+      <button
+        onClick={() => document.dispatchEvent(new CustomEvent('open-command-palette'))}
+        className="hidden sm:flex items-center gap-2 h-8 px-3 bg-[var(--bg-elevated)] border border-[var(--border-default)] rounded-lg text-[13px] text-[var(--text-muted)] hover:border-[var(--text-muted)] transition-colors cursor-pointer"
+        data-testid="cmd-k-trigger"
+      >
+        <Search size={14} />
+        <span className="hidden md:inline">Search...</span>
+        <kbd className="text-[10px] bg-[var(--bg-primary)] px-1.5 py-0.5 rounded border border-[var(--border-default)] font-mono">
+          ⌘K
+        </kbd>
       </button>
 
-      <div ref={notifRef} style={{ position: 'relative' }}>
-        <button className="kai-btn kai-btn-outline kai-btn-sm" onClick={() => setShowNotifDrop(!showNotifDrop)} style={{ position: 'relative' }}>
-          <Bell size={16} />
+      {/* Theme toggle */}
+      <button
+        onClick={toggleTheme}
+        className="flex items-center justify-center w-8 h-8 rounded-md text-[var(--text-secondary)] hover:bg-[var(--bg-elevated)] hover:text-[var(--text-primary)] transition-colors"
+        title="Toggle theme"
+        data-testid="theme-toggle"
+      >
+        {theme === 'dark' ? <Sun size={18} /> : <Moon size={18} />}
+      </button>
+
+      {/* Right panel toggle (mobile/tablet) */}
+      <button
+        onClick={toggleRightPanel}
+        className="xl:hidden flex items-center justify-center w-8 h-8 rounded-md text-[var(--text-secondary)] hover:bg-[var(--bg-elevated)] transition-colors"
+        title="Toggle right panel"
+        data-testid="panel-toggle"
+      >
+        <PanelRight size={18} />
+      </button>
+
+      {/* Notification bell */}
+      <div ref={notifRef} className="relative">
+        <button
+          onClick={() => setShowNotifDrop(!showNotifDrop)}
+          className="flex items-center justify-center w-8 h-8 rounded-md text-[var(--text-secondary)] hover:bg-[var(--bg-elevated)] hover:text-[var(--text-primary)] transition-colors relative"
+          data-testid="notification-bell"
+        >
+          <Bell size={18} />
           {unreadCount > 0 && (
-            <span style={{ position: 'absolute', top: -4, right: -4, background: 'var(--kai-danger)', color: '#fff', fontSize: 9, fontWeight: 700, borderRadius: '50%', width: 18, height: 18, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <span className="absolute -top-1 -right-1 bg-[#EF4444] text-white text-[9px] font-bold rounded-full w-[18px] h-[18px] flex items-center justify-center">
               {unreadCount > 9 ? '9+' : unreadCount}
             </span>
           )}
         </button>
+
+        {/* Notification dropdown */}
         {showNotifDrop && (
-          <div style={{ position: 'absolute', top: '100%', right: 0, marginTop: 8, width: 340, background: 'var(--kai-bg)', border: '1px solid var(--kai-border)', borderRadius: 10, boxShadow: 'var(--kai-shadow-lg)', zIndex: 1050, overflow: 'hidden' }}>
-            <div style={{ padding: '12px 16px', borderBottom: '1px solid var(--kai-border)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-              <span style={{ fontWeight: 700, fontSize: 14 }}>Notifications</span>
-              {unreadCount > 0 && <span style={{ fontSize: 11, color: 'var(--kai-accent)', cursor: 'pointer', fontWeight: 600 }}
-                onClick={() => { navigate('/notifications'); setShowNotifDrop(false); }}>View All</span>}
+          <div className="absolute top-full right-0 mt-2 w-[340px] bg-[var(--bg-card)] border border-[var(--border-default)] rounded-xl shadow-modal z-[1050] overflow-hidden">
+            <div className="px-4 py-3 border-b border-[var(--border-default)] flex items-center justify-between">
+              <span className="font-bold text-sm text-[var(--text-primary)]">Notifications</span>
+              {unreadCount > 0 && (
+                <span
+                  className="text-[11px] text-[#7C3AED] cursor-pointer font-semibold hover:underline"
+                  onClick={() => { navigate('/notifications'); setShowNotifDrop(false); }}
+                >
+                  View All
+                </span>
+              )}
             </div>
-            <div style={{ maxHeight: 320, overflowY: 'auto' }}>
+            <div className="max-h-80 overflow-y-auto">
               {recentNotifs.length === 0 ? (
-                <div style={{ padding: 24, textAlign: 'center', color: 'var(--kai-text-muted)', fontSize: 13 }}>No new notifications</div>
-              ) : recentNotifs.map(n => (
-                <div key={n.id} onClick={() => { if (n.linkUrl) navigate(n.linkUrl); if (!n.read) handleMarkRead(n.id); setShowNotifDrop(false); }}
-                  style={{ padding: '10px 16px', cursor: 'pointer', borderBottom: '1px solid var(--kai-border)', background: n.read ? 'transparent' : 'var(--kai-primary-light)', borderLeft: n.read ? 'none' : '3px solid var(--kai-primary)', transition: 'background .15s' }}
-                  onMouseEnter={e => { e.currentTarget.style.background = 'var(--kai-bg-hover, rgba(0,0,0,.03))'; }}
-                  onMouseLeave={e => { e.currentTarget.style.background = n.read ? 'transparent' : 'var(--kai-primary-light)'; }}>
-                  <div style={{ fontWeight: n.read ? 400 : 600, fontSize: 13, marginBottom: 2 }}>{n.title}</div>
-                  <div style={{ fontSize: 12, color: 'var(--kai-text-muted)', lineHeight: 1.3 }}>{typeof n.message === 'string' ? n.message.substring(0, 80) : ''}{n.message?.length > 80 ? '...' : ''}</div>
-                  <div style={{ fontSize: 10, color: 'var(--kai-text-muted)', marginTop: 4 }}>{timeAgo(n.createdAt)}</div>
+                <div className="p-6 text-center text-[var(--text-muted)] text-[13px]">
+                  All caught up!
+                </div>
+              ) : recentNotifs.map((n: any) => (
+                <div
+                  key={n.id}
+                  onClick={() => { if (n.linkUrl) navigate(n.linkUrl); if (!n.read) handleMarkRead(n.id); setShowNotifDrop(false); }}
+                  className={`px-4 py-2.5 cursor-pointer border-b border-[var(--border-default)] transition-colors hover:bg-[var(--bg-elevated)] ${!n.read ? 'bg-[#7C3AED]/5 border-l-[3px] border-l-[#7C3AED]' : ''}`}
+                >
+                  <div className={`text-[13px] mb-0.5 ${n.read ? 'font-normal' : 'font-semibold'} text-[var(--text-primary)]`}>
+                    {n.title}
+                  </div>
+                  <div className="text-[12px] text-[var(--text-muted)] leading-tight truncate">
+                    {typeof n.message === 'string' ? n.message.substring(0, 80) : ''}
+                    {n.message?.length > 80 ? '...' : ''}
+                  </div>
+                  <div className="text-[10px] text-[var(--text-muted)] mt-1">{timeAgo(n.createdAt)}</div>
                 </div>
               ))}
             </div>
-            <div style={{ padding: '8px 16px', borderTop: '1px solid var(--kai-border)', textAlign: 'center' }}>
-              <span style={{ fontSize: 12, color: 'var(--kai-accent)', cursor: 'pointer', fontWeight: 600 }}
-                onClick={() => { navigate('/notifications'); setShowNotifDrop(false); }}>See all notifications</span>
+            <div className="px-4 py-2 border-t border-[var(--border-default)] text-center">
+              <span
+                className="text-[12px] text-[#7C3AED] cursor-pointer font-semibold hover:underline"
+                onClick={() => { navigate('/notifications'); setShowNotifDrop(false); }}
+              >
+                See all notifications
+              </span>
             </div>
           </div>
         )}
       </div>
 
-      <Dropdown align="end">
-        <Dropdown.Toggle as="div" style={{ cursor: 'pointer' }}>
-          <div className="kai-avatar" style={{ background: '#111827' }}>
-            {user?.firstName?.[0] || 'U'}
+      {/* User avatar dropdown */}
+      <Menu as="div" className="relative">
+        <MenuButton
+          className="w-8 h-8 rounded-full bg-[#7C3AED] flex items-center justify-center text-white text-sm font-semibold cursor-pointer hover:ring-2 hover:ring-[#7C3AED]/40 transition-all"
+          data-testid="user-avatar"
+        >
+          {user?.firstName?.[0] || 'U'}
+        </MenuButton>
+        <MenuItems className="absolute right-0 mt-2 w-[220px] bg-[var(--bg-card)] border border-[var(--border-default)] rounded-xl shadow-modal z-[1050] overflow-hidden focus:outline-none">
+          <div className="px-4 py-3 border-b border-[var(--border-default)]">
+            <div className="font-semibold text-sm text-[var(--text-primary)] flex items-center gap-1.5">
+              {user?.firstName} {user?.lastName}
+              <VerifiedBadge verified={user?.verified} size={14} />
+            </div>
+            <div className="text-[12px] text-[var(--text-muted)] truncate">{user?.email}</div>
+            <span className="inline-block mt-1.5 text-[10px] font-semibold px-2 py-0.5 rounded bg-[#7C3AED]/15 text-[#7C3AED]">
+              {user?.role}
+            </span>
           </div>
-        </Dropdown.Toggle>
-        <Dropdown.Menu style={{ minWidth: 200, borderRadius: 'var(--kai-radius-lg)', border: '1px solid var(--kai-border)', boxShadow: 'var(--kai-shadow-lg)' }}>
-          <div style={{ padding: '12px 16px', borderBottom: '1px solid var(--kai-border)' }}>
-            <div style={{ fontWeight: 600, fontSize: 14, display: 'flex', alignItems: 'center', gap: 6 }}>{user?.firstName} {user?.lastName} <VerifiedBadge verified={user?.verified} size={14} /></div>
-            <div style={{ fontSize: 12, color: 'var(--kai-text-muted)' }}>{user?.email}</div>
-            <div className="kai-badge primary" style={{ marginTop: 6, fontSize: 10 }}>{user?.role}</div>
+          <div className="py-1">
+            <MenuItem>
+              {({ active }) => (
+                <button
+                  onClick={() => navigate('/settings')}
+                  className={`w-full text-left px-4 py-2 text-[13px] text-[var(--text-secondary)] ${active ? 'bg-[var(--bg-elevated)] text-[var(--text-primary)]' : ''}`}
+                >
+                  Settings
+                </button>
+              )}
+            </MenuItem>
+            <div className="border-t border-[var(--border-default)] my-1" />
+            <MenuItem>
+              {({ active }) => (
+                <button
+                  onClick={handleLogout}
+                  className={`w-full text-left px-4 py-2 text-[13px] text-[#EF4444] flex items-center gap-2 ${active ? 'bg-[var(--bg-elevated)]' : ''}`}
+                >
+                  <LogOut size={14} /> Logout
+                </button>
+              )}
+            </MenuItem>
           </div>
-          <Dropdown.Item onClick={() => navigate('/settings')}>Settings</Dropdown.Item>
-          <Dropdown.Divider />
-          <Dropdown.Item onClick={handleLogout} className="text-danger">
-            <LogOut size={14} style={{ marginRight: 8 }} /> Logout
-          </Dropdown.Item>
-        </Dropdown.Menu>
-      </Dropdown>
+        </MenuItems>
+      </Menu>
     </header>
   );
 }
