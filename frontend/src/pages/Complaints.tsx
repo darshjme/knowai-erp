@@ -6,10 +6,10 @@ import { complaintsApi } from '../services/api';
 
 const CATEGORIES = ['Workplace Harassment', 'Discrimination', 'Safety Concern', 'Policy Violation', 'Payroll Issue', 'Manager Misconduct', 'IT Issue', 'Facilities', 'Other'];
 const STATUS_STYLES = {
-  Open: { bg: '#fff3cd', color: '#856404' },
-  'Under Review': { bg: '#d1ecf1', color: '#0c5460' },
-  Escalated: { bg: '#f8d7da', color: '#721c24' },
-  Resolved: { bg: '#d4edda', color: '#155724' },
+  Open: { bg: '#EA580C20', color: '#EA580C' },
+  'Under Review': { bg: '#2563EB20', color: '#2563EB' },
+  Escalated: { bg: '#CB393920', color: '#CB3939' },
+  Resolved: { bg: '#16A34A20', color: '#16A34A' },
 };
 
 const formatDate = (d) => d ? new Date(d).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' }) : '-';
@@ -118,69 +118,65 @@ export default function Complaints() {
 
   return (
     <div>
-      <div className="page-header">
+      <div className="flex items-center justify-between mb-6 flex-wrap gap-4">
         <div>
-          <h1>Complaint Management</h1>
-          <p>Track and resolve employee complaints</p>
+          <h1 className="text-[24px] font-bold text-[var(--text-primary)] tracking-tight font-[Manrope]">Complaint Management</h1>
+          <p className="text-[13px] text-[var(--text-secondary)] mt-1">Track and resolve employee complaints</p>
         </div>
-        <div className="page-actions">
-          <button className="kai-btn kai-btn-primary" onClick={() => setShowFileModal(true)}>
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        <div className="flex items-center gap-2">
+          <button data-testid="file-complaint-btn" className="bg-[#7C3AED] text-white rounded-lg px-4 py-2 text-[13px] font-semibold hover:bg-[#7C3AED]/90 transition-colors flex items-center gap-2" onClick={() => setShowFileModal(true)}>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
             File Complaint
           </button>
         </div>
       </div>
 
       {/* Stats */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 16, marginBottom: 24 }}>
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
         {[
           { label: 'Open', value: stats.open, color: '#EA580C' },
           { label: 'Under Review', value: stats.underReview, color: '#2563EB' },
           { label: 'Escalated', value: stats.escalated, color: '#CB3939' },
           { label: 'Resolved', value: stats.resolved, color: '#16A34A' },
         ].map((s, i) => (
-          <div className="stat-card" key={i}>
-            <div className="stat-value" style={{ color: s.color }}>{s.value}</div>
-            <div className="stat-label">{s.label}</div>
+          <div className="bg-[var(--bg-card)] border border-[var(--border-default)] rounded-xl p-5" key={i}>
+            <div className="text-[22px] font-bold" style={{ color: s.color }}>{s.value}</div>
+            <div className="text-[13px] text-[var(--text-secondary)] mt-1">{s.label}</div>
           </div>
         ))}
       </div>
 
       {/* Filter */}
-      <div style={{ marginBottom: 16, display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+      <div className="mb-4 flex gap-2 flex-wrap">
         {['All', 'Open', 'Under Review', 'Escalated', 'Resolved'].map(s => (
           <button key={s}
-            className={`kai-btn kai-btn-sm ${statusFilter === s ? 'kai-btn-primary' : 'kai-btn-outline'}`}
+            data-testid={`filter-${s.toLowerCase().replace(' ', '-')}`}
+            className={`rounded-lg px-3 py-1.5 text-[13px] font-semibold transition-colors ${statusFilter === s ? 'bg-[#7C3AED] text-white' : 'bg-transparent border border-[var(--border-default)] text-[var(--text-secondary)] hover:bg-[var(--bg-elevated)]'}`}
             onClick={() => setStatusFilter(s)}>{s}</button>
         ))}
       </div>
 
-      <div style={{ display: 'flex', gap: 24, flexWrap: 'wrap' }}>
+      <div className="flex gap-6 flex-wrap">
         {/* Complaints Table */}
-        <div className="kai-card" style={{ flex: '1 1 500px', minWidth: 0 }}>
-          <div className="kai-card-header">
-            <h6>Complaints</h6>
-            <span className="kai-badge secondary">{filtered.length} tickets</span>
+        <div className="bg-[var(--bg-card)] border border-[var(--border-default)] rounded-xl flex-[1_1_500px] min-w-0">
+          <div className="flex items-center justify-between p-4 border-b border-[var(--border-subtle)]">
+            <h6 className="text-[14px] font-semibold text-[var(--text-primary)] m-0">Complaints</h6>
+            <span className="text-[10px] px-2 py-0.5 rounded-full font-medium bg-[var(--bg-elevated)] text-[var(--text-secondary)]">{filtered.length} tickets</span>
           </div>
-          <div style={{ overflowX: 'auto' }}>
+          <div className="overflow-x-auto">
             {loading ? (
-              <div style={{ padding: 60, textAlign: 'center', color: 'var(--kai-text-muted)' }}>Loading complaints...</div>
+              <div className="py-16 text-center text-[var(--text-muted)]">Loading complaints...</div>
             ) : filtered.length === 0 ? (
-              <div style={{ padding: 60, textAlign: 'center', color: 'var(--kai-text-muted)' }}>
+              <div className="py-16 text-center text-[var(--text-muted)]">
                 {complaints.length === 0 ? 'No complaints filed yet.' : 'No complaints match the selected filter.'}
               </div>
             ) : (
-              <table className="kai-table">
+              <table className="w-full text-[13px]">
                 <thead>
-                  <tr>
-                    <th>Ticket #</th>
-                    <th>Subject</th>
-                    <th>Category</th>
-                    <th>Filed By</th>
-                    <th>Status</th>
-                    <th>Assigned To</th>
-                    <th>Date</th>
-                    <th>Actions</th>
+                  <tr className="border-b-2 border-[var(--border-default)]">
+                    {['Ticket #', 'Subject', 'Category', 'Filed By', 'Status', 'Assigned To', 'Date', 'Actions'].map(h => (
+                      <th key={h} className="px-3 py-2.5 text-left text-[11px] font-bold text-[var(--text-muted)] uppercase tracking-wider">{h}</th>
+                    ))}
                   </tr>
                 </thead>
                 <tbody>
@@ -189,33 +185,33 @@ export default function Complaints() {
                     const isActive = selectedComplaint && (selectedComplaint._id || selectedComplaint.id) === (c._id || c.id);
                     return (
                       <tr key={c._id || c.id}
-                        style={{ background: isActive ? 'var(--kai-primary-light)' : undefined, cursor: 'pointer' }}
+                        className={`border-b border-[var(--border-subtle)] cursor-pointer hover:bg-[var(--bg-elevated)] transition-colors ${isActive ? 'bg-[#7C3AED]/5' : ''}`}
                         onClick={() => setSelectedComplaint(c)}>
-                        <td>
-                          <span className="font-mono" style={{ fontSize: 12, fontWeight: 600, color: 'var(--kai-primary)' }}>
+                        <td className="px-3 py-2.5">
+                          <span className="font-mono text-[12px] font-semibold text-[#7C3AED]">
                             {c.ticketNumber || `TKT-${(c._id || c.id || '').slice(-6).toUpperCase()}`}
                           </span>
                         </td>
-                        <td style={{ fontWeight: 600, maxWidth: 180 }}>
+                        <td className="px-3 py-2.5 font-semibold max-w-[180px]">
                           <div className="truncate" title={c.subject}>{c.subject || '-'}</div>
                         </td>
-                        <td>
-                          <span className="kai-badge secondary">{c.category || '-'}</span>
+                        <td className="px-3 py-2.5">
+                          <span className="text-[10px] px-2 py-0.5 rounded-full font-medium bg-[var(--bg-elevated)] text-[var(--text-secondary)]">{c.category || '-'}</span>
                         </td>
-                        <td style={{ fontSize: 13 }}>{c.filedBy || 'Anonymous'}</td>
-                        <td>
-                          <span className="kai-badge" style={{ background: st.bg, color: st.color }}>{c.status}</span>
+                        <td className="px-3 py-2.5">{c.filedBy || 'Anonymous'}</td>
+                        <td className="px-3 py-2.5">
+                          <span className="text-[10px] px-2 py-0.5 rounded-full font-medium" style={{ background: st.bg, color: st.color }}>{c.status}</span>
                         </td>
-                        <td style={{ fontSize: 13, color: 'var(--kai-text-muted)' }}>{c.assignedTo || '-'}</td>
-                        <td style={{ fontSize: 12 }}>{formatDate(c.filedAt || c.createdAt)}</td>
-                        <td>
-                          <div className="flex-gap-8" onClick={e => e.stopPropagation()}>
+                        <td className="px-3 py-2.5 text-[var(--text-muted)]">{c.assignedTo || '-'}</td>
+                        <td className="px-3 py-2.5 text-[12px]">{formatDate(c.filedAt || c.createdAt)}</td>
+                        <td className="px-3 py-2.5">
+                          <div className="flex gap-2" onClick={e => e.stopPropagation()}>
                             {c.status !== 'Resolved' && c.status !== 'Escalated' && (
-                              <button className="kai-btn kai-btn-danger kai-btn-sm" style={{ fontSize: 11 }}
+                              <button className="bg-[#CB3939] text-white rounded-lg px-2 py-1 text-[11px] font-semibold hover:bg-[#CB3939]/90 transition-colors"
                                 onClick={() => handleEscalate(c)}>Escalate</button>
                             )}
                             {c.status !== 'Resolved' && (
-                              <button className="kai-btn kai-btn-success kai-btn-sm" style={{ fontSize: 11 }}
+                              <button className="bg-[#16A34A] text-white rounded-lg px-2 py-1 text-[11px] font-semibold hover:bg-[#16A34A]/90 transition-colors"
                                 onClick={() => openResolveModal(c)}>Resolve</button>
                             )}
                           </div>
@@ -231,27 +227,26 @@ export default function Complaints() {
 
         {/* Timeline Panel */}
         {selectedComplaint && (
-          <div className="kai-card" style={{ width: 360, flex: '0 0 360px', minWidth: 280, alignSelf: 'flex-start', position: 'sticky', top: 88 }}>
-            <div className="kai-card-header">
-              <h6>Complaint Timeline</h6>
-              <button className="kai-btn kai-btn-outline kai-btn-sm" onClick={() => setSelectedComplaint(null)}>&times;</button>
+          <div className="bg-[var(--bg-card)] border border-[var(--border-default)] rounded-xl w-[360px] flex-[0_0_360px] min-w-[280px] self-start sticky top-[88px]">
+            <div className="flex items-center justify-between p-4 border-b border-[var(--border-subtle)]">
+              <h6 className="text-[14px] font-semibold text-[var(--text-primary)] m-0">Complaint Timeline</h6>
+              <button className="bg-transparent border border-[var(--border-default)] text-[var(--text-secondary)] rounded-lg px-2 py-1 hover:bg-[var(--bg-elevated)] transition-colors" onClick={() => setSelectedComplaint(null)}>&times;</button>
             </div>
-            <div className="kai-card-body">
+            <div className="p-4">
               {/* Complaint details */}
-              <div style={{ marginBottom: 16, paddingBottom: 16, borderBottom: '1px solid var(--kai-border-light)' }}>
-                <div style={{ fontWeight: 700, fontSize: 14, marginBottom: 4 }}>{selectedComplaint.subject}</div>
-                <span className="kai-badge" style={{
+              <div className="mb-4 pb-4 border-b border-[var(--border-subtle)]">
+                <div className="font-bold text-[14px] text-[var(--text-primary)] mb-1">{selectedComplaint.subject}</div>
+                <span className="text-[10px] px-2 py-0.5 rounded-full font-medium mb-2 inline-block" style={{
                   background: (STATUS_STYLES[selectedComplaint.status] || STATUS_STYLES.Open).bg,
                   color: (STATUS_STYLES[selectedComplaint.status] || STATUS_STYLES.Open).color,
-                  marginBottom: 8,
                 }}>{selectedComplaint.status}</span>
-                <div style={{ fontSize: 12, color: 'var(--kai-text-muted)', marginTop: 8 }}>
+                <div className="text-[12px] text-[var(--text-muted)] mt-2">
                   <div><strong>Category:</strong> {selectedComplaint.category}</div>
                   <div><strong>Filed by:</strong> {selectedComplaint.filedBy || 'Anonymous'}</div>
                   <div><strong>Assigned to:</strong> {selectedComplaint.assignedTo || 'Unassigned'}</div>
                 </div>
                 {selectedComplaint.description && (
-                  <div style={{ fontSize: 13, color: 'var(--kai-text-secondary)', marginTop: 8, padding: 10, background: 'var(--kai-bg)', borderRadius: 6 }}>
+                  <div className="text-[13px] text-[var(--text-secondary)] mt-2 p-2.5 bg-[var(--bg-elevated)] rounded-md">
                     {selectedComplaint.description}
                   </div>
                 )}
@@ -259,37 +254,30 @@ export default function Complaints() {
 
               {/* Timeline */}
               <div>
-                <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--kai-text-muted)', textTransform: 'uppercase', letterSpacing: 0.8, marginBottom: 12 }}>Activity Timeline</div>
+                <div className="text-[11px] font-bold text-[var(--text-muted)] uppercase tracking-wider mb-3">Activity Timeline</div>
                 {(selectedComplaint.timeline && selectedComplaint.timeline.length > 0) ? (
-                  <div style={{ position: 'relative' }}>
+                  <div className="relative">
                     {selectedComplaint.timeline.map((event, i) => (
-                      <div key={i} style={{ display: 'flex', gap: 12, marginBottom: 16, position: 'relative' }}>
-                        {/* Timeline dot and line */}
-                        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', flexShrink: 0 }}>
-                          <div style={{
-                            width: 10, height: 10, borderRadius: '50%',
-                            background: i === 0 ? 'var(--kai-primary)' : 'var(--kai-border)',
-                            border: i === 0 ? '2px solid var(--kai-primary-light)' : 'none',
-                            flexShrink: 0,
-                          }} />
+                      <div key={i} className="flex gap-3 mb-4 relative">
+                        <div className="flex flex-col items-center flex-shrink-0">
+                          <div className={`w-2.5 h-2.5 rounded-full flex-shrink-0 ${i === 0 ? 'bg-[#7C3AED] ring-2 ring-[#7C3AED]/30' : 'bg-[var(--border-default)]'}`} />
                           {i < selectedComplaint.timeline.length - 1 && (
-                            <div style={{ width: 1, flex: 1, background: 'var(--kai-border-light)', marginTop: 4 }} />
+                            <div className="w-px flex-1 bg-[var(--border-subtle)] mt-1" />
                           )}
                         </div>
-                        {/* Event content */}
-                        <div style={{ flex: 1, paddingBottom: 4 }}>
-                          <div style={{ fontWeight: 600, fontSize: 12, color: 'var(--kai-text)' }}>{event.action}</div>
-                          <div style={{ fontSize: 11, color: 'var(--kai-text-muted)', marginTop: 2 }}>
+                        <div className="flex-1 pb-1">
+                          <div className="font-semibold text-[12px] text-[var(--text-primary)]">{event.action}</div>
+                          <div className="text-[11px] text-[var(--text-muted)] mt-0.5">
                             {event.by && <span>by {event.by} &middot; </span>}
                             {formatDateTime(event.date)}
                           </div>
-                          {event.note && <div style={{ fontSize: 12, color: 'var(--kai-text-secondary)', marginTop: 4 }}>{event.note}</div>}
+                          {event.note && <div className="text-[12px] text-[var(--text-secondary)] mt-1">{event.note}</div>}
                         </div>
                       </div>
                     ))}
                   </div>
                 ) : (
-                  <div style={{ padding: 20, textAlign: 'center', color: 'var(--kai-text-muted)', fontSize: 12 }}>
+                  <div className="py-5 text-center text-[var(--text-muted)] text-[12px]">
                     No timeline events yet.
                   </div>
                 )}
@@ -297,12 +285,12 @@ export default function Complaints() {
 
               {/* Action buttons */}
               {selectedComplaint.status !== 'Resolved' && (
-                <div style={{ display: 'flex', gap: 8, marginTop: 16, paddingTop: 16, borderTop: '1px solid var(--kai-border-light)' }}>
+                <div className="flex gap-2 mt-4 pt-4 border-t border-[var(--border-subtle)]">
                   {selectedComplaint.status !== 'Escalated' && (
-                    <button className="kai-btn kai-btn-danger kai-btn-sm" style={{ flex: 1 }}
+                    <button className="flex-1 bg-[#CB3939] text-white rounded-lg px-3 py-1.5 text-[13px] font-semibold hover:bg-[#CB3939]/90 transition-colors"
                       onClick={() => handleEscalate(selectedComplaint)}>Escalate</button>
                   )}
-                  <button className="kai-btn kai-btn-success kai-btn-sm" style={{ flex: 1 }}
+                  <button className="flex-1 bg-[#16A34A] text-white rounded-lg px-3 py-1.5 text-[13px] font-semibold hover:bg-[#16A34A]/90 transition-colors"
                     onClick={() => openResolveModal(selectedComplaint)}>Resolve</button>
                 </div>
               )}
@@ -313,62 +301,61 @@ export default function Complaints() {
 
       {/* File Complaint Modal */}
       {showFileModal && (
-        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', zIndex: 2000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20 }}
+        <div className="fixed inset-0 bg-black/50 z-[2000] flex items-center justify-center p-5"
           onClick={e => e.target === e.currentTarget && setShowFileModal(false)}>
-          <div className="kai-card" style={{ width: '100%', maxWidth: 520, maxHeight: '90vh', overflow: 'auto' }}>
-            <div className="kai-card-header">
-              <h5>File Complaint</h5>
-              <button className="kai-btn kai-btn-outline kai-btn-sm" onClick={() => setShowFileModal(false)}>&times;</button>
+          <div className="bg-[var(--bg-card)] border border-[var(--border-default)] rounded-xl w-full max-w-[520px] max-h-[90vh] overflow-auto">
+            <div className="flex items-center justify-between p-4 border-b border-[var(--border-subtle)]">
+              <h5 className="text-[16px] font-bold text-[var(--text-primary)] m-0">File Complaint</h5>
+              <button className="bg-transparent border border-[var(--border-default)] text-[var(--text-secondary)] rounded-lg px-2 py-1 hover:bg-[var(--bg-elevated)] transition-colors" onClick={() => setShowFileModal(false)}>&times;</button>
             </div>
             <form onSubmit={handleFile}>
-              <div className="kai-card-body" style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+              <div className="p-4 flex flex-col gap-4">
                 <div>
-                  <label className="kai-label">Subject *</label>
-                  <input className="kai-input" required placeholder="Brief subject of the complaint" value={form.subject}
+                  <label className="block text-[11px] font-semibold text-[var(--text-muted)] uppercase tracking-wider mb-1.5">Subject *</label>
+                  <input data-testid="complaint-subject" className="w-full bg-[var(--bg-elevated)] border border-[var(--border-default)] rounded-lg px-3 py-2 text-[var(--text-primary)] placeholder:text-[var(--text-muted)] focus:border-[#7C3AED] focus:ring-2 focus:ring-[#7C3AED]/20 outline-none text-[13px]" required placeholder="Brief subject of the complaint" value={form.subject}
                     onChange={e => setForm(p => ({ ...p, subject: e.target.value }))} />
                 </div>
                 <div>
-                  <label className="kai-label">Category *</label>
-                  <select className="kai-input" value={form.category}
+                  <label className="block text-[11px] font-semibold text-[var(--text-muted)] uppercase tracking-wider mb-1.5">Category *</label>
+                  <select className="w-full bg-[var(--bg-elevated)] border border-[var(--border-default)] rounded-lg px-3 py-2 text-[var(--text-primary)] focus:border-[#7C3AED] focus:ring-2 focus:ring-[#7C3AED]/20 outline-none text-[13px]" value={form.category}
                     onChange={e => setForm(p => ({ ...p, category: e.target.value }))}>
                     {CATEGORIES.map(c => <option key={c} value={c}>{c}</option>)}
                   </select>
                 </div>
                 <div>
-                  <label className="kai-label">Description *</label>
-                  <textarea className="kai-input" required rows={4} placeholder="Describe the issue in detail..." value={form.description}
-                    onChange={e => setForm(p => ({ ...p, description: e.target.value }))}
-                    style={{ resize: 'vertical', minHeight: 100 }} />
+                  <label className="block text-[11px] font-semibold text-[var(--text-muted)] uppercase tracking-wider mb-1.5">Description *</label>
+                  <textarea className="w-full bg-[var(--bg-elevated)] border border-[var(--border-default)] rounded-lg px-3 py-2 text-[var(--text-primary)] placeholder:text-[var(--text-muted)] focus:border-[#7C3AED] focus:ring-2 focus:ring-[#7C3AED]/20 outline-none text-[13px] resize-y min-h-[100px]" required rows={4} placeholder="Describe the issue in detail..." value={form.description}
+                    onChange={e => setForm(p => ({ ...p, description: e.target.value }))} />
                 </div>
 
                 {/* Anonymous toggle */}
-                <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: 12, background: 'var(--kai-bg)', borderRadius: 8 }}>
+                <div className="flex items-center gap-2.5 p-3 bg-[var(--bg-elevated)] rounded-lg">
                   <input type="checkbox" id="anon-check" checked={form.anonymous}
                     onChange={e => setForm(p => ({ ...p, anonymous: e.target.checked }))}
-                    style={{ width: 18, height: 18, accentColor: 'var(--kai-primary)' }} />
-                  <label htmlFor="anon-check" style={{ fontSize: 13, cursor: 'pointer' }}>
-                    <span style={{ fontWeight: 600 }}>File anonymously</span>
-                    <div style={{ fontSize: 11, color: 'var(--kai-text-muted)' }}>Your identity will be kept confidential</div>
+                    className="w-[18px] h-[18px] accent-[#7C3AED]" />
+                  <label htmlFor="anon-check" className="text-[13px] cursor-pointer text-[var(--text-primary)]">
+                    <span className="font-semibold">File anonymously</span>
+                    <div className="text-[11px] text-[var(--text-muted)]">Your identity will be kept confidential</div>
                   </label>
                 </div>
 
                 {!form.anonymous && (
                   <div>
-                    <label className="kai-label">Your Name *</label>
-                    <input className="kai-input" required={!form.anonymous} placeholder="John Doe" value={form.filedBy}
+                    <label className="block text-[11px] font-semibold text-[var(--text-muted)] uppercase tracking-wider mb-1.5">Your Name *</label>
+                    <input className="w-full bg-[var(--bg-elevated)] border border-[var(--border-default)] rounded-lg px-3 py-2 text-[var(--text-primary)] placeholder:text-[var(--text-muted)] focus:border-[#7C3AED] focus:ring-2 focus:ring-[#7C3AED]/20 outline-none text-[13px]" required={!form.anonymous} placeholder="John Doe" value={form.filedBy}
                       onChange={e => setForm(p => ({ ...p, filedBy: e.target.value }))} />
                   </div>
                 )}
 
                 <div>
-                  <label className="kai-label">Assign To (optional)</label>
-                  <input className="kai-input" placeholder="HR Manager name or leave blank" value={form.assignedTo}
+                  <label className="block text-[11px] font-semibold text-[var(--text-muted)] uppercase tracking-wider mb-1.5">Assign To (optional)</label>
+                  <input className="w-full bg-[var(--bg-elevated)] border border-[var(--border-default)] rounded-lg px-3 py-2 text-[var(--text-primary)] placeholder:text-[var(--text-muted)] focus:border-[#7C3AED] focus:ring-2 focus:ring-[#7C3AED]/20 outline-none text-[13px]" placeholder="HR Manager name or leave blank" value={form.assignedTo}
                     onChange={e => setForm(p => ({ ...p, assignedTo: e.target.value }))} />
                 </div>
               </div>
-              <div className="kai-card-footer" style={{ display: 'flex', justifyContent: 'flex-end', gap: 8 }}>
-                <button type="button" className="kai-btn kai-btn-outline" onClick={() => setShowFileModal(false)}>Cancel</button>
-                <button type="submit" className="kai-btn kai-btn-primary">File Complaint</button>
+              <div className="flex justify-end gap-2 p-4 border-t border-[var(--border-subtle)]">
+                <button type="button" className="bg-transparent border border-[var(--border-default)] text-[var(--text-secondary)] rounded-lg px-4 py-2 text-[13px] font-semibold hover:bg-[var(--bg-elevated)] transition-colors" onClick={() => setShowFileModal(false)}>Cancel</button>
+                <button type="submit" data-testid="submit-complaint" className="bg-[#7C3AED] text-white rounded-lg px-4 py-2 text-[13px] font-semibold hover:bg-[#7C3AED]/90 transition-colors">File Complaint</button>
               </div>
             </form>
           </div>
@@ -377,31 +364,30 @@ export default function Complaints() {
 
       {/* Resolve Modal */}
       {showResolveModal && selectedComplaint && (
-        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', zIndex: 2000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20 }}
+        <div className="fixed inset-0 bg-black/50 z-[2000] flex items-center justify-center p-5"
           onClick={e => e.target === e.currentTarget && setShowResolveModal(false)}>
-          <div className="kai-card" style={{ width: '100%', maxWidth: 440, maxHeight: '90vh', overflow: 'auto' }}>
-            <div className="kai-card-header">
-              <h5>Resolve Complaint</h5>
-              <button className="kai-btn kai-btn-outline kai-btn-sm" onClick={() => setShowResolveModal(false)}>&times;</button>
+          <div className="bg-[var(--bg-card)] border border-[var(--border-default)] rounded-xl w-full max-w-[440px] max-h-[90vh] overflow-auto">
+            <div className="flex items-center justify-between p-4 border-b border-[var(--border-subtle)]">
+              <h5 className="text-[16px] font-bold text-[var(--text-primary)] m-0">Resolve Complaint</h5>
+              <button className="bg-transparent border border-[var(--border-default)] text-[var(--text-secondary)] rounded-lg px-2 py-1 hover:bg-[var(--bg-elevated)] transition-colors" onClick={() => setShowResolveModal(false)}>&times;</button>
             </div>
             <form onSubmit={handleResolve}>
-              <div className="kai-card-body" style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-                <div style={{ padding: 12, background: 'var(--kai-bg)', borderRadius: 8 }}>
-                  <div style={{ fontWeight: 600, marginBottom: 4 }}>{selectedComplaint.subject}</div>
-                  <div style={{ fontSize: 12, color: 'var(--kai-text-muted)' }}>
+              <div className="p-4 flex flex-col gap-4">
+                <div className="p-3 bg-[var(--bg-elevated)] rounded-lg">
+                  <div className="font-semibold text-[var(--text-primary)] mb-1">{selectedComplaint.subject}</div>
+                  <div className="text-[12px] text-[var(--text-muted)]">
                     {selectedComplaint.ticketNumber || ''} &middot; {selectedComplaint.category}
                   </div>
                 </div>
                 <div>
-                  <label className="kai-label">Resolution Notes *</label>
-                  <textarea className="kai-input" required rows={4} placeholder="Describe how the complaint was resolved..." value={resolution}
-                    onChange={e => setResolution(e.target.value)}
-                    style={{ resize: 'vertical', minHeight: 100 }} />
+                  <label className="block text-[11px] font-semibold text-[var(--text-muted)] uppercase tracking-wider mb-1.5">Resolution Notes *</label>
+                  <textarea className="w-full bg-[var(--bg-elevated)] border border-[var(--border-default)] rounded-lg px-3 py-2 text-[var(--text-primary)] placeholder:text-[var(--text-muted)] focus:border-[#7C3AED] focus:ring-2 focus:ring-[#7C3AED]/20 outline-none text-[13px] resize-y min-h-[100px]" required rows={4} placeholder="Describe how the complaint was resolved..." value={resolution}
+                    onChange={e => setResolution(e.target.value)} />
                 </div>
               </div>
-              <div className="kai-card-footer" style={{ display: 'flex', justifyContent: 'flex-end', gap: 8 }}>
-                <button type="button" className="kai-btn kai-btn-outline" onClick={() => setShowResolveModal(false)}>Cancel</button>
-                <button type="submit" className="kai-btn kai-btn-success">Mark Resolved</button>
+              <div className="flex justify-end gap-2 p-4 border-t border-[var(--border-subtle)]">
+                <button type="button" className="bg-transparent border border-[var(--border-default)] text-[var(--text-secondary)] rounded-lg px-4 py-2 text-[13px] font-semibold hover:bg-[var(--bg-elevated)] transition-colors" onClick={() => setShowResolveModal(false)}>Cancel</button>
+                <button type="submit" data-testid="confirm-resolve" className="bg-[#16A34A] text-white rounded-lg px-4 py-2 text-[13px] font-semibold hover:bg-[#16A34A]/90 transition-colors">Mark Resolved</button>
               </div>
             </form>
           </div>

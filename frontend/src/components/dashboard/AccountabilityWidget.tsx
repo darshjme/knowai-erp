@@ -5,9 +5,9 @@ import { AlertTriangle, ArrowRight, Bell, Shield, Clock, User } from 'lucide-rea
 import { toast } from 'react-toastify';
 
 const SEVERITY_STYLES = {
-  critical: { bg: '#FEE2E2', border: '#FCA5A5', color: '#991B1B', icon: '🔴' },
-  warning: { bg: '#FEF3C7', border: '#FCD34D', color: '#92400E', icon: '🟡' },
-  info: { bg: '#DBEAFE', border: '#93C5FD', color: '#1E40AF', icon: '🔵' },
+  critical: { bg: 'bg-red-50', border: 'border-red-300', color: 'text-red-800', icon: '🔴' },
+  warning: { bg: 'bg-amber-50', border: 'border-amber-300', color: 'text-amber-800', icon: '🟡' },
+  info: { bg: 'bg-blue-50', border: 'border-blue-300', color: 'text-blue-800', icon: '🔵' },
 };
 
 export default function AccountabilityWidget() {
@@ -50,32 +50,28 @@ export default function AccountabilityWidget() {
   if (loading || alerts.length === 0) return null;
 
   return (
-    <div className="kai-card" style={{ border: '1px solid #FCA5A5' }}>
-      <div className="kai-card-header" style={{ background: '#FEF2F2' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-          <Shield size={18} style={{ color: '#DC2626' }} />
-          <h6 style={{ margin: 0, color: '#991B1B' }}>Accountability Alerts</h6>
+    <div className="bg-[var(--bg-card)] border border-red-300 rounded-xl" data-testid="accountability-widget">
+      <div className="px-4 py-3 bg-red-50 dark:bg-red-900/20 rounded-t-xl border-b border-[var(--border-default)]">
+        <div className="flex items-center gap-2">
+          <Shield size={18} className="text-red-600" />
+          <h6 className="m-0 text-red-800 dark:text-red-300 font-semibold text-sm">Accountability Alerts</h6>
           {summary?.criticalCount > 0 && (
-            <span className="kai-badge danger" style={{ fontSize: 10 }}>{summary.criticalCount} critical</span>
+            <span className="text-[10px] bg-red-100 text-red-700 px-2 py-0.5 rounded-md font-semibold">{summary.criticalCount} critical</span>
           )}
         </div>
       </div>
-      <div className="kai-card-body" style={{ padding: 0 }}>
+      <div>
         {alerts.slice(0, 5).map((alert) => {
           const style = SEVERITY_STYLES[alert.severity];
           return (
-            <div key={alert.id} style={{
-              padding: '12px 16px',
-              borderBottom: '1px solid var(--kai-border-light)',
-              display: 'flex', gap: 12, alignItems: 'flex-start',
-            }}>
-              <span style={{ fontSize: 16, flexShrink: 0, marginTop: 2 }}>{style.icon}</span>
-              <div style={{ flex: 1, minWidth: 0 }}>
-                <div style={{ fontSize: 13, lineHeight: 1.5, color: 'var(--kai-text)' }}>
+            <div key={alert.id} className="px-4 py-3 border-b border-[var(--border-subtle)] flex gap-3 items-start">
+              <span className="text-base shrink-0 mt-0.5">{style.icon}</span>
+              <div className="flex-1 min-w-0">
+                <div className="text-[13px] leading-relaxed text-[var(--text-primary)]">
                   {alert.type === 'blocking' ? (
                     <>
-                      <strong style={{ color: '#DC2626' }}>You are blocking</strong>{' '}
-                      <span style={{ cursor: 'pointer', color: 'var(--kai-primary)', fontWeight: 600 }}
+                      <strong className="text-red-600">You are blocking</strong>{' '}
+                      <span className="cursor-pointer text-[#7C3AED] font-semibold"
                         onClick={() => navigate(`/profile/${alert.blocked.id}`)}>
                         {alert.blocked.name}
                       </span>
@@ -83,11 +79,11 @@ export default function AccountabilityWidget() {
                       <strong>"{alert.blockerTask.title}"</strong>
                       {' so they can work on '}
                       <strong>"{alert.blockedTask.title}"</strong>
-                      {alert.blockerTask.project && <span style={{ color: 'var(--kai-text-muted)' }}> ({alert.blockerTask.project})</span>}
+                      {alert.blockerTask.project && <span className="text-[var(--text-muted)]"> ({alert.blockerTask.project})</span>}
                     </>
                   ) : (
                     <>
-                      <span style={{ cursor: 'pointer', color: 'var(--kai-primary)', fontWeight: 600 }}
+                      <span className="cursor-pointer text-[#7C3AED] font-semibold"
                         onClick={() => navigate(`/profile/${alert.blocker.id}`)}>
                         {alert.blocker.name}
                       </span>
@@ -99,26 +95,26 @@ export default function AccountabilityWidget() {
                   )}
                 </div>
                 {alert.daysOverdue > 0 && (
-                  <div style={{ fontSize: 11, color: '#DC2626', fontWeight: 600, marginTop: 4, display: 'flex', alignItems: 'center', gap: 4 }}>
+                  <div className="text-[11px] text-red-600 font-semibold mt-1 flex items-center gap-1">
                     <Clock size={12} /> {alert.daysOverdue} days overdue
                   </div>
                 )}
               </div>
               {alert.type === 'blocked' && (
                 <button
-                  className="kai-btn kai-btn-outline kai-btn-sm"
+                  data-testid={`nudge-${alert.id}`}
+                  className="bg-transparent border border-[var(--border-default)] text-[var(--text-secondary)] rounded-lg px-3 py-1.5 text-[12px] font-medium hover:bg-[var(--bg-elevated)] transition-colors inline-flex items-center gap-1 shrink-0"
                   onClick={() => handleNudge(alert)}
                   title={`Send reminder to ${alert.blocker.name}`}
-                  style={{ flexShrink: 0 }}
                 >
                   <Bell size={13} /> Nudge
                 </button>
               )}
               {alert.type === 'blocking' && (
                 <button
-                  className="kai-btn kai-btn-primary kai-btn-sm"
+                  data-testid={`do-it-${alert.id}`}
+                  className="bg-[#7C3AED] text-white rounded-lg px-3 py-1.5 text-[12px] font-semibold hover:bg-[#7C3AED]/90 transition-colors inline-flex items-center gap-1 shrink-0"
                   onClick={() => navigate('/tasks')}
-                  style={{ flexShrink: 0 }}
                 >
                   <ArrowRight size={13} /> Do it
                 </button>
@@ -128,8 +124,11 @@ export default function AccountabilityWidget() {
         })}
       </div>
       {alerts.length > 5 && (
-        <div className="kai-card-footer" style={{ textAlign: 'center' }}>
-          <button className="kai-btn kai-btn-outline kai-btn-sm" onClick={() => navigate('/tasks?view=blocked')}>
+        <div className="px-4 py-3 text-center border-t border-[var(--border-default)]">
+          <button
+            className="bg-transparent border border-[var(--border-default)] text-[var(--text-secondary)] rounded-lg px-4 py-1.5 text-[12px] font-medium hover:bg-[var(--bg-elevated)] transition-colors"
+            onClick={() => navigate('/tasks?view=blocked')}
+          >
             View all {alerts.length} alerts
           </button>
         </div>
