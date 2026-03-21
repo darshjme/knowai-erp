@@ -3,6 +3,8 @@ import VerifiedBadge from '../components/ui/VerifiedBadge';
 import { useState, useEffect, useMemo } from 'react';
 import { useDispatch } from 'react-redux';
 import { toast } from 'react-toastify';
+import { motion } from 'framer-motion';
+import { Plus, Search, Users, Star, BookOpen, Heart, LayoutGrid, List, X, Mail, Phone } from 'lucide-react';
 import { teamApi } from '../services/api';
 
 const ROLES = ['All', 'Manager', 'Engineer', 'Designer', 'HR', 'Finance', 'Marketing', 'Intern'];
@@ -20,6 +22,18 @@ const avatarBg = (name) => {
 };
 
 const initials = (name) => (name || 'U').split(' ').map(w => w[0]).join('').toUpperCase().slice(0, 2);
+
+const statusBadge = (status) => {
+  if (status === 'active' || status === 'online') return 'bg-[#10B981]/15 text-[#10B981]';
+  if (status === 'on_leave' || status === 'leave') return 'bg-[#F59E0B]/15 text-[#F59E0B]';
+  return 'bg-bg-elevated text-text-muted';
+};
+
+const statusLabel = (status) => {
+  if (status === 'active' || status === 'online') return 'Active';
+  if (status === 'on_leave' || status === 'leave') return 'On Leave';
+  return 'Inactive';
+};
 
 export default function Team() {
   const dispatch = useDispatch();
@@ -93,67 +107,98 @@ export default function Team() {
     }
   };
 
+  const statItems = [
+    { label: 'Total Members', value: stats.total, color: '#3B82F6', Icon: Users },
+    { label: 'Managers', value: stats.managers, color: '#8B3FE9', Icon: Star },
+    { label: 'Engineers', value: stats.engineers, color: '#16A34A', Icon: BookOpen },
+    { label: 'HR Team', value: stats.hr, color: '#EA580C', Icon: Heart },
+  ];
+
   return (
-    <div>
-      <div className="page-header">
-        <div>
-          <h1>Team Directory</h1>
-          <p>Manage your team members and roles</p>
+    <div data-testid="team-page">
+      {/* Page Header */}
+      <div className="flex items-center justify-between mb-6" data-testid="team-header">
+        <div className="flex items-center gap-3">
+          <h1 className="text-page-title font-heading text-text-primary tracking-[-0.4px]">Team</h1>
+          <span className="text-caption font-medium bg-accent-purple/15 text-accent-purple px-2 py-0.5 rounded-full">
+            {members.length}
+          </span>
         </div>
-        <div className="page-actions">
-          <div className="view-toggle">
-            <button className={`toggle-btn ${viewMode === 'grid' ? 'active' : ''}`} onClick={() => setViewMode('grid')} title="Grid View">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+        <div className="flex items-center gap-2">
+          {/* View Toggle */}
+          <div className="flex items-center bg-bg-elevated rounded-lg p-0.5 border border-border-default">
+            <button
+              className={`p-1.5 rounded-md transition-colors ${viewMode === 'grid' ? 'bg-bg-card text-text-primary shadow-sm' : 'text-text-muted hover:text-text-secondary'}`}
+              onClick={() => setViewMode('grid')}
+              title="Grid View"
+            >
+              <LayoutGrid size={16} />
             </button>
-            <button className={`toggle-btn ${viewMode === 'table' ? 'active' : ''}`} onClick={() => setViewMode('table')} title="Table View">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
+            <button
+              className={`p-1.5 rounded-md transition-colors ${viewMode === 'table' ? 'bg-bg-card text-text-primary shadow-sm' : 'text-text-muted hover:text-text-secondary'}`}
+              onClick={() => setViewMode('table')}
+              title="Table View"
+            >
+              <List size={16} />
             </button>
           </div>
           <ExportButtons data={filtered} pageType="team" title="Team Directory" filename="team" />
-          <button className="kai-btn kai-btn-primary" onClick={() => setShowModal(true)}>
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          <button
+            className="flex items-center gap-1.5 bg-[#7C3AED] text-white text-btn px-3.5 py-2 rounded-lg hover:bg-[#6D28D9] transition-colors"
+            onClick={() => setShowModal(true)}
+            data-testid="add-member-btn"
+          >
+            <Plus size={16} />
             Add Member
           </button>
         </div>
       </div>
 
       {/* Stats Row */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 16, marginBottom: 24 }}>
-        {[
-          { label: 'Total Members', value: stats.total, color: '#3B82F6', icon: 'M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2M9 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75' },
-          { label: 'Managers', value: stats.managers, color: '#8B3FE9', icon: 'M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z' },
-          { label: 'Engineers', value: stats.engineers, color: '#16A34A', icon: 'M4 19.5A2.5 2.5 0 0 1 6.5 17H20M4 19.5V4.5A2.5 2.5 0 0 1 6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5z' },
-          { label: 'HR Team', value: stats.hr, color: '#EA580C', icon: 'M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z' },
-        ].map((s, i) => (
-          <div className="stat-card" key={i}>
-            <div className="flex-between" style={{ marginBottom: 12 }}>
-              <div className="stat-icon" style={{ background: `${s.color}15` }}>
-                <svg viewBox="0 0 24 24" fill="none" stroke={s.color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <path d={s.icon} />
-                </svg>
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6" data-testid="team-stats">
+        {statItems.map((s, i) => (
+          <div key={i} className="bg-bg-card border border-border-default rounded-xl p-4">
+            <div className="flex items-center justify-between mb-3">
+              <div
+                className="w-9 h-9 rounded-lg flex items-center justify-center"
+                style={{ background: `${s.color}15` }}
+              >
+                <s.Icon size={18} style={{ color: s.color }} />
               </div>
             </div>
-            <div className="stat-value">{s.value}</div>
-            <div className="stat-label">{s.label}</div>
+            <div className="text-stat-lg text-text-primary font-body" style={{ fontVariantNumeric: 'tabular-nums' }}>{s.value}</div>
+            <div className="text-caption text-text-muted mt-0.5">{s.label}</div>
           </div>
         ))}
       </div>
 
       {/* Filters */}
-      <div className="kai-card" style={{ marginBottom: 24 }}>
-        <div className="kai-card-body" style={{ display: 'flex', gap: 12, flexWrap: 'wrap', alignItems: 'center' }}>
-          <div className="kai-search" style={{ flex: '1 1 250px', minWidth: 200 }}>
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+      <div className="bg-bg-card border border-border-default rounded-xl p-3 mb-6" data-testid="team-filters">
+        <div className="flex flex-wrap items-center gap-3">
+          <div className="flex-1 min-w-[200px] relative">
+            <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-text-muted" />
             <input
+              className="w-full bg-bg-elevated border border-border-default rounded-lg pl-9 pr-3 py-2 text-body text-text-primary placeholder:text-text-muted outline-none focus:border-accent-purple transition-colors"
               placeholder="Search team members..."
               value={search}
               onChange={e => setSearch(e.target.value)}
+              data-testid="team-search"
             />
           </div>
-          <select className="kai-input" style={{ width: 'auto', minWidth: 140 }} value={roleFilter} onChange={e => setRoleFilter(e.target.value)}>
+          <select
+            className="bg-bg-elevated border border-border-default rounded-lg px-3 py-2 text-body text-text-primary outline-none focus:border-accent-purple transition-colors appearance-auto min-w-[140px]"
+            value={roleFilter}
+            onChange={e => setRoleFilter(e.target.value)}
+            data-testid="role-filter"
+          >
             {ROLES.map(r => <option key={r} value={r}>{r === 'All' ? 'All Roles' : r}</option>)}
           </select>
-          <select className="kai-input" style={{ width: 'auto', minWidth: 160 }} value={deptFilter} onChange={e => setDeptFilter(e.target.value)}>
+          <select
+            className="bg-bg-elevated border border-border-default rounded-lg px-3 py-2 text-body text-text-primary outline-none focus:border-accent-purple transition-colors appearance-auto min-w-[160px]"
+            value={deptFilter}
+            onChange={e => setDeptFilter(e.target.value)}
+            data-testid="dept-filter"
+          >
             {DEPARTMENTS.map(d => <option key={d} value={d}>{d === 'All' ? 'All Departments' : d}</option>)}
           </select>
         </div>
@@ -161,49 +206,66 @@ export default function Team() {
 
       {/* Team Grid / Table */}
       {loading ? (
-        <div style={{ textAlign: 'center', padding: 60, color: 'var(--kai-text-muted)' }}>Loading team members...</div>
+        <div className="text-center py-16 text-text-muted text-body" data-testid="team-loading">Loading team members...</div>
       ) : filtered.length === 0 ? (
-        <div className="kai-card">
-          <div className="kai-card-body" style={{ textAlign: 'center', padding: 60, color: 'var(--kai-text-muted)' }}>
+        <div className="bg-bg-card border border-border-default rounded-xl">
+          <div className="text-center py-16 text-text-muted text-body" data-testid="team-empty">
             {members.length === 0 ? 'No team members yet. Add your first member!' : 'No members match your filters.'}
           </div>
         </div>
       ) : viewMode === 'table' ? (
-        <div className="kai-card">
-          <div style={{ overflowX: 'auto', WebkitOverflowScrolling: 'touch' }}>
-            <table className="kai-table">
+        <div className="bg-bg-card border border-border-default rounded-xl overflow-hidden" data-testid="team-table">
+          <div className="overflow-x-auto">
+            <table className="w-full text-left">
               <thead>
-                <tr>
-                  <th>Name</th>
-                  <th>Role</th>
-                  <th>Department</th>
-                  <th>Email</th>
-                  <th>Phone</th>
-                  <th>Status</th>
-                  <th>Actions</th>
+                <tr className="border-b border-border-default">
+                  <th className="text-caption text-text-muted uppercase tracking-wider px-4 py-3">Name</th>
+                  <th className="text-caption text-text-muted uppercase tracking-wider px-4 py-3">Role</th>
+                  <th className="text-caption text-text-muted uppercase tracking-wider px-4 py-3">Department</th>
+                  <th className="text-caption text-text-muted uppercase tracking-wider px-4 py-3">Email</th>
+                  <th className="text-caption text-text-muted uppercase tracking-wider px-4 py-3">Phone</th>
+                  <th className="text-caption text-text-muted uppercase tracking-wider px-4 py-3">Status</th>
+                  <th className="text-caption text-text-muted uppercase tracking-wider px-4 py-3">Actions</th>
                 </tr>
               </thead>
               <tbody>
                 {filtered.map(member => (
-                  <tr key={member._id || member.id}>
-                    <td>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                        <div className="kai-avatar" style={{ background: avatarBg(member.name), width: 32, height: 32, fontSize: 12 }}>
-                          {member.avatar ? <img src={member.avatar} alt={member.name} /> : initials(member.name)}
+                  <tr key={member._id || member.id} className="border-b border-border-subtle hover:bg-bg-elevated transition-colors">
+                    <td className="px-4 py-3">
+                      <div className="flex items-center gap-2.5">
+                        <div
+                          className="w-8 h-8 rounded-full flex items-center justify-center text-white text-[11px] font-semibold shrink-0"
+                          style={{ background: avatarBg(member.name) }}
+                        >
+                          {member.avatar ? <img src={member.avatar} alt={member.name} className="w-full h-full rounded-full object-cover" /> : initials(member.name)}
                         </div>
-                        <span style={{ fontWeight: 600 }}>{member.name}</span>
+                        <span className="text-body font-semibold text-text-primary truncate max-w-[160px]" title={member.name}>{member.name}</span>
                         <VerifiedBadge verified={member.verified} size={14} />
                       </div>
                     </td>
-                    <td><span className="kai-badge" style={{ background: `${ROLE_COLORS[member.role] || '#3B82F6'}15`, color: ROLE_COLORS[member.role] || '#3B82F6' }}>{member.role || 'Member'}</span></td>
-                    <td>{member.department || '-'}</td>
-                    <td>{member.email || '-'}</td>
-                    <td>{member.phone || '-'}</td>
-                    <td>
-                      <div style={{ width: 8, height: 8, borderRadius: '50%', background: member.status === 'active' || member.status === 'online' ? '#16A34A' : '#9ca3af', display: 'inline-block' }} />
+                    <td className="px-4 py-3">
+                      <span
+                        className="text-[10px] font-medium px-2 py-0.5 rounded-full inline-block"
+                        style={{ background: `${ROLE_COLORS[member.role] || '#3B82F6'}15`, color: ROLE_COLORS[member.role] || '#3B82F6' }}
+                      >
+                        {member.role || 'Member'}
+                      </span>
                     </td>
-                    <td>
-                      <button className="kai-btn kai-btn-outline kai-btn-sm" onClick={() => handleDelete(member._id || member.id)}>Remove</button>
+                    <td className="px-4 py-3 text-body text-text-secondary truncate max-w-[140px]" title={member.department}>{member.department || '-'}</td>
+                    <td className="px-4 py-3 text-body text-text-secondary truncate max-w-[180px]" title={member.email}>{member.email || '-'}</td>
+                    <td className="px-4 py-3 text-body text-text-secondary">{member.phone || '-'}</td>
+                    <td className="px-4 py-3">
+                      <span className={`text-[10px] font-medium px-2 py-0.5 rounded-full inline-block ${statusBadge(member.status)}`}>
+                        {statusLabel(member.status)}
+                      </span>
+                    </td>
+                    <td className="px-4 py-3">
+                      <button
+                        className="text-caption text-accent-red hover:text-red-400 transition-colors px-2 py-1 rounded-md hover:bg-accent-red/10"
+                        onClick={() => handleDelete(member._id || member.id)}
+                      >
+                        Remove
+                      </button>
                     </td>
                   </tr>
                 ))}
@@ -212,100 +274,157 @@ export default function Team() {
           </div>
         </div>
       ) : (
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: 16 }}>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3" data-testid="team-grid">
           {filtered.map(member => (
-            <div className="kai-card" key={member._id || member.id} style={{ position: 'relative' }}>
-              <div className="kai-card-body" style={{ textAlign: 'center', paddingTop: 28 }}>
-                {/* Status dot */}
-                <div style={{
-                  position: 'absolute', top: 16, right: 16,
-                  width: 10, height: 10, borderRadius: '50%',
-                  background: member.status === 'active' || member.status === 'online' ? '#16A34A' : '#9ca3af',
-                  boxShadow: member.status === 'active' || member.status === 'online' ? '0 0 0 3px rgba(22,163,74,0.2)' : 'none',
-                }} title={member.status === 'active' || member.status === 'online' ? 'Online' : 'Offline'} />
+            <motion.div
+              key={member._id || member.id}
+              className="bg-bg-card border border-border-default rounded-xl p-5 text-center relative cursor-default"
+              whileHover={{ y: -2, borderColor: 'rgba(124, 58, 237, 0.4)' }}
+              transition={{ duration: 0.15 }}
+              data-testid="team-member-card"
+            >
+              {/* Avatar */}
+              <div
+                className="w-12 h-12 rounded-full flex items-center justify-center text-white text-[14px] font-semibold mx-auto"
+                style={{ background: member.avatar ? 'transparent' : avatarBg(member.name) }}
+              >
+                {member.avatar ? <img src={member.avatar} alt={member.name} className="w-full h-full rounded-full object-cover" /> : initials(member.name)}
+              </div>
 
-                {/* Avatar */}
-                <div className="kai-avatar kai-avatar-xl" style={{
-                  background: member.avatar ? 'transparent' : avatarBg(member.name),
-                  margin: '0 auto 12px',
-                }}>
-                  {member.avatar ? <img src={member.avatar} alt={member.name} /> : initials(member.name)}
-                </div>
-
-                <h6 style={{ margin: '0 0 6px', fontSize: 15, fontWeight: 600, color: 'var(--kai-text)', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}>{member.name} <VerifiedBadge verified={member.verified} size={14} /></h6>
-                <span className="kai-badge primary" style={{ marginBottom: 10, background: `${ROLE_COLORS[member.role] || '#3B82F6'}15`, color: ROLE_COLORS[member.role] || '#3B82F6' }}>
-                  {member.role || 'Member'}
+              {/* Name */}
+              <div className="flex items-center justify-center gap-1.5 mt-2.5">
+                <span className="text-[14px] font-medium text-text-primary truncate max-w-[180px]" title={member.name}>
+                  {member.name}
                 </span>
+                <VerifiedBadge verified={member.verified} size={14} />
+              </div>
 
-                <div style={{ fontSize: 12, color: 'var(--kai-text-muted)', marginTop: 8 }}>
-                  {member.department || 'No department'}
-                </div>
-                <div style={{ borderTop: '1px solid var(--kai-border-light)', margin: '14px -20px 0', padding: '12px 20px 0' }}>
-                  <div style={{ fontSize: 12, color: 'var(--kai-text-secondary)', marginBottom: 4, display: 'flex', alignItems: 'center', gap: 6 }}>
-                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
-                    <span className="truncate">{member.email || '-'}</span>
-                  </div>
-                  <div style={{ fontSize: 12, color: 'var(--kai-text-secondary)', display: 'flex', alignItems: 'center', gap: 6 }}>
-                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
-                    <span>{member.phone || '-'}</span>
-                  </div>
-                </div>
+              {/* Role */}
+              <div className="text-[11px] text-text-muted mt-0.5 truncate" title={member.role || 'Member'}>
+                {member.role || 'Member'} {member.department ? `· ${member.department}` : ''}
+              </div>
 
-                <div style={{ marginTop: 12, display: 'flex', gap: 8, justifyContent: 'center' }}>
-                  <button className="kai-btn kai-btn-outline kai-btn-sm" onClick={() => handleDelete(member._id || member.id)}>Remove</button>
+              {/* Status Badge */}
+              <div className="mt-2">
+                <span className={`inline-block text-[10px] font-medium px-2 py-0.5 rounded-full ${statusBadge(member.status)}`}>
+                  {statusLabel(member.status)}
+                </span>
+              </div>
+
+              {/* Contact Info */}
+              <div className="border-t border-border-subtle mt-3.5 pt-3 -mx-5 px-5">
+                <div className="flex items-center gap-1.5 text-[11px] text-text-secondary mb-1">
+                  <Mail size={12} className="text-text-muted shrink-0" />
+                  <span className="truncate" title={member.email}>{member.email || '-'}</span>
+                </div>
+                <div className="flex items-center gap-1.5 text-[11px] text-text-secondary">
+                  <Phone size={12} className="text-text-muted shrink-0" />
+                  <span>{member.phone || '-'}</span>
                 </div>
               </div>
-            </div>
+
+              {/* Actions */}
+              <div className="mt-3 flex justify-center">
+                <button
+                  className="text-caption text-accent-red hover:text-red-400 transition-colors px-2.5 py-1 rounded-md hover:bg-accent-red/10 border border-transparent hover:border-accent-red/20"
+                  onClick={() => handleDelete(member._id || member.id)}
+                >
+                  Remove
+                </button>
+              </div>
+            </motion.div>
           ))}
         </div>
       )}
 
       {/* Add Member Modal */}
       {showModal && (
-        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', zIndex: 2000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20 }}
-          onClick={e => e.target === e.currentTarget && setShowModal(false)}>
-          <div className="kai-card" style={{ width: '100%', maxWidth: 520, maxHeight: '90vh', overflow: 'auto' }}>
-            <div className="kai-card-header">
-              <h5>Add Team Member</h5>
-              <button className="kai-btn kai-btn-outline kai-btn-sm" onClick={() => setShowModal(false)}>&times;</button>
+        <div
+          className="fixed inset-0 bg-black/50 z-[2000] flex items-center justify-center p-5"
+          onClick={e => e.target === e.currentTarget && setShowModal(false)}
+          data-testid="add-member-modal"
+        >
+          <div className="bg-bg-card border border-border-default rounded-xl w-full max-w-[520px] max-h-[90vh] overflow-auto shadow-modal">
+            {/* Modal Header */}
+            <div className="flex items-center justify-between px-5 py-4 border-b border-border-default">
+              <h5 className="text-section font-heading text-text-primary">Add Team Member</h5>
+              <button
+                className="w-7 h-7 flex items-center justify-center rounded-md text-text-muted hover:text-text-primary hover:bg-bg-elevated transition-colors"
+                onClick={() => setShowModal(false)}
+              >
+                <X size={16} />
+              </button>
             </div>
             <form onSubmit={handleSubmit}>
-              <div className="kai-card-body" style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+              <div className="p-5 flex flex-col gap-4">
                 <div>
-                  <label className="kai-label">Full Name *</label>
-                  <input className="kai-input" required placeholder="John Doe" value={formData.name}
-                    onChange={e => setFormData(p => ({ ...p, name: e.target.value }))} />
+                  <label className="block text-label text-text-muted uppercase mb-1.5">Full Name *</label>
+                  <input
+                    className="w-full bg-bg-elevated border border-border-default rounded-lg px-3 py-2 text-body text-text-primary placeholder:text-text-muted outline-none focus:border-accent-purple transition-colors"
+                    required
+                    placeholder="John Doe"
+                    value={formData.name}
+                    onChange={e => setFormData(p => ({ ...p, name: e.target.value }))}
+                  />
                 </div>
                 <div>
-                  <label className="kai-label">Email *</label>
-                  <input className="kai-input" type="email" required placeholder="john@company.com" value={formData.email}
-                    onChange={e => setFormData(p => ({ ...p, email: e.target.value }))} />
+                  <label className="block text-label text-text-muted uppercase mb-1.5">Email *</label>
+                  <input
+                    className="w-full bg-bg-elevated border border-border-default rounded-lg px-3 py-2 text-body text-text-primary placeholder:text-text-muted outline-none focus:border-accent-purple transition-colors"
+                    type="email"
+                    required
+                    placeholder="john@company.com"
+                    value={formData.email}
+                    onChange={e => setFormData(p => ({ ...p, email: e.target.value }))}
+                  />
                 </div>
                 <div>
-                  <label className="kai-label">Phone</label>
-                  <input className="kai-input" placeholder="+91 9876543210" value={formData.phone}
-                    onChange={e => setFormData(p => ({ ...p, phone: e.target.value }))} />
+                  <label className="block text-label text-text-muted uppercase mb-1.5">Phone</label>
+                  <input
+                    className="w-full bg-bg-elevated border border-border-default rounded-lg px-3 py-2 text-body text-text-primary placeholder:text-text-muted outline-none focus:border-accent-purple transition-colors"
+                    placeholder="+91 9876543210"
+                    value={formData.phone}
+                    onChange={e => setFormData(p => ({ ...p, phone: e.target.value }))}
+                  />
                 </div>
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+                <div className="grid grid-cols-2 gap-3">
                   <div>
-                    <label className="kai-label">Role *</label>
-                    <select className="kai-input" value={formData.role}
-                      onChange={e => setFormData(p => ({ ...p, role: e.target.value }))}>
+                    <label className="block text-label text-text-muted uppercase mb-1.5">Role *</label>
+                    <select
+                      className="w-full bg-bg-elevated border border-border-default rounded-lg px-3 py-2 text-body text-text-primary outline-none focus:border-accent-purple transition-colors appearance-auto"
+                      value={formData.role}
+                      onChange={e => setFormData(p => ({ ...p, role: e.target.value }))}
+                    >
                       {ROLES.filter(r => r !== 'All').map(r => <option key={r} value={r}>{r}</option>)}
                     </select>
                   </div>
                   <div>
-                    <label className="kai-label">Department *</label>
-                    <select className="kai-input" value={formData.department}
-                      onChange={e => setFormData(p => ({ ...p, department: e.target.value }))}>
+                    <label className="block text-label text-text-muted uppercase mb-1.5">Department *</label>
+                    <select
+                      className="w-full bg-bg-elevated border border-border-default rounded-lg px-3 py-2 text-body text-text-primary outline-none focus:border-accent-purple transition-colors appearance-auto"
+                      value={formData.department}
+                      onChange={e => setFormData(p => ({ ...p, department: e.target.value }))}
+                    >
                       {DEPARTMENTS.filter(d => d !== 'All').map(d => <option key={d} value={d}>{d}</option>)}
                     </select>
                   </div>
                 </div>
               </div>
-              <div className="kai-card-footer" style={{ display: 'flex', justifyContent: 'flex-end', gap: 8 }}>
-                <button type="button" className="kai-btn kai-btn-outline" onClick={() => setShowModal(false)}>Cancel</button>
-                <button type="submit" className="kai-btn kai-btn-primary">Add Member</button>
+              {/* Modal Footer */}
+              <div className="flex items-center justify-end gap-2 px-5 py-3 border-t border-border-default">
+                <button
+                  type="button"
+                  className="text-btn text-text-secondary px-3.5 py-2 rounded-lg border border-border-default hover:bg-bg-elevated transition-colors"
+                  onClick={() => setShowModal(false)}
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="text-btn bg-[#7C3AED] text-white px-3.5 py-2 rounded-lg hover:bg-[#6D28D9] transition-colors"
+                >
+                  Add Member
+                </button>
               </div>
             </form>
           </div>

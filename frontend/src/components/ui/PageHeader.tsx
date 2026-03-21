@@ -1,44 +1,54 @@
 import { ChevronRight } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import type { ReactNode } from 'react';
+
+interface Breadcrumb {
+  label: string;
+  to?: string;
+}
+
+interface PageHeaderProps {
+  title: string;
+  subtitle?: string;
+  count?: number | string;
+  breadcrumbs?: Breadcrumb[];
+  actions?: ReactNode;
+  children?: ReactNode;
+  className?: string;
+}
 
 /**
- * PageHeader - Page header with title, subtitle, breadcrumbs, and action buttons.
- *
- * @param {Object}           props
- * @param {string}           props.title          - Page title
- * @param {string}           [props.subtitle]     - Optional subtitle
- * @param {Array}            [props.breadcrumbs]  - Array of { label, to? } objects
- * @param {React.ReactNode}  [props.actions]      - Action buttons / controls for the right side
- * @param {React.ReactNode}  [props.children]     - Extra content below the header
- * @param {string}           [props.className]
+ * PageHeader — Reusable page header with title, optional count badge, breadcrumbs, and action buttons.
+ * Design System V2: Tailwind CSS.
  */
 export default function PageHeader({
   title,
   subtitle,
+  count,
   breadcrumbs,
   actions,
   children,
   className = '',
-}) {
+}: PageHeaderProps) {
   return (
-    <div className={`kai-page-header ${className}`}>
+    <div className={`mb-4 ${className}`} data-testid="page-header">
       {/* Breadcrumbs */}
       {breadcrumbs && breadcrumbs.length > 0 && (
-        <nav className="kai-page-header__breadcrumbs" aria-label="Breadcrumb">
+        <nav className="flex items-center flex-wrap gap-0.5 mb-3" aria-label="Breadcrumb">
           {breadcrumbs.map((crumb, i) => {
             const isLast = i === breadcrumbs.length - 1;
             return (
-              <span key={i} className="kai-page-header__crumb">
+              <span key={i} className="inline-flex items-center gap-0.5 text-[13px] text-[var(--text-muted)]">
                 {crumb.to && !isLast ? (
-                  <Link to={crumb.to} className="kai-page-header__crumb-link">
+                  <Link to={crumb.to} className="text-[#3B82F6] hover:underline hover:opacity-75 transition-opacity">
                     {crumb.label}
                   </Link>
                 ) : (
-                  <span className={isLast ? 'kai-page-header__crumb-current' : ''}>
+                  <span className={isLast ? 'text-[var(--text-primary)] font-semibold' : ''}>
                     {crumb.label}
                   </span>
                 )}
-                {!isLast && <ChevronRight size={14} className="kai-page-header__crumb-sep" />}
+                {!isLast && <ChevronRight size={14} className="text-[var(--text-muted)] opacity-50 shrink-0" />}
               </span>
             );
           })}
@@ -46,105 +56,32 @@ export default function PageHeader({
       )}
 
       {/* Title Row */}
-      <div className="kai-page-header__row">
-        <div className="kai-page-header__text">
-          <h1 className="kai-page-header__title">{title}</h1>
-          {subtitle && <p className="kai-page-header__subtitle">{subtitle}</p>}
+      <div className="flex items-start justify-between gap-4 flex-wrap sm:flex-nowrap">
+        <div className="flex-1 min-w-0">
+          <div className="flex items-center gap-2">
+            <h1 className="text-page-title font-heading text-[var(--text-primary)] m-0 truncate">
+              {title}
+            </h1>
+            {count != null && (
+              <span className="bg-[var(--bg-elevated)] rounded-full px-2.5 py-0.5 text-[13px] text-[var(--text-secondary)] shrink-0">
+                {count}
+              </span>
+            )}
+          </div>
+          {subtitle && (
+            <p className="text-[14px] text-[var(--text-secondary)] mt-1 m-0 leading-relaxed">
+              {subtitle}
+            </p>
+          )}
         </div>
-        {actions && <div className="kai-page-header__actions">{actions}</div>}
+        {actions && (
+          <div className="flex items-center gap-2 shrink-0 flex-wrap">
+            {actions}
+          </div>
+        )}
       </div>
 
-      {/* Extra content */}
       {children}
-
-      <style>{`
-        .kai-page-header {
-          margin-bottom: 24px;
-        }
-
-        .kai-page-header__breadcrumbs {
-          display: flex;
-          align-items: center;
-          flex-wrap: wrap;
-          gap: 2px;
-          margin-bottom: 12px;
-        }
-
-        .kai-page-header__crumb {
-          display: inline-flex;
-          align-items: center;
-          gap: 2px;
-          font-size: 13px;
-          color: var(--kai-silver, #4C5963);
-        }
-
-        .kai-page-header__crumb-link {
-          color: var(--kai-accent, #3B82F6);
-          text-decoration: none;
-          transition: opacity 0.15s;
-        }
-        .kai-page-header__crumb-link:hover {
-          opacity: 0.75;
-          text-decoration: underline;
-        }
-
-        .kai-page-header__crumb-current {
-          color: var(--kai-near-black, #10222F);
-          font-weight: 600;
-        }
-
-        .kai-page-header__crumb-sep {
-          color: var(--kai-silver, #4C5963);
-          opacity: 0.5;
-          flex-shrink: 0;
-        }
-
-        .kai-page-header__row {
-          display: flex;
-          align-items: flex-start;
-          justify-content: space-between;
-          gap: 16px;
-          flex-wrap: wrap;
-        }
-
-        .kai-page-header__text {
-          flex: 1;
-          min-width: 0;
-        }
-
-        .kai-page-header__title {
-          font-size: 24px;
-          font-weight: 700;
-          color: var(--kai-near-black, #10222F);
-          margin: 0;
-          letter-spacing: -0.3px;
-          line-height: 1.2;
-        }
-
-        .kai-page-header__subtitle {
-          font-size: 14px;
-          color: var(--kai-silver, #4C5963);
-          margin: 4px 0 0;
-          line-height: 1.4;
-        }
-
-        .kai-page-header__actions {
-          display: flex;
-          align-items: center;
-          gap: 8px;
-          flex-shrink: 0;
-          flex-wrap: wrap;
-        }
-
-        @media (max-width: 640px) {
-          .kai-page-header__row {
-            flex-direction: column;
-          }
-          .kai-page-header__actions {
-            width: 100%;
-          }
-        }
-      `}</style>
     </div>
   );
 }

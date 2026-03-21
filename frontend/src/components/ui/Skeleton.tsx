@@ -1,6 +1,6 @@
 /**
- * Skeleton — Shimmer loading placeholder component.
- * Follows DESIGN.md: glass surface style, horizontal shimmer, 1.5s duration.
+ * Skeleton — Shimmer loading placeholder.
+ * Design System V2: bg-elevated with shimmer animation.
  */
 
 interface SkeletonProps {
@@ -14,13 +14,13 @@ interface SkeletonProps {
 export default function Skeleton({
   width,
   height,
-  borderRadius,
+  borderRadius = 8,
   className = '',
   style,
 }: SkeletonProps) {
   return (
     <div
-      className={`kai-skeleton ${className}`}
+      className={`skeleton rounded-lg ${className}`}
       style={{
         width,
         height,

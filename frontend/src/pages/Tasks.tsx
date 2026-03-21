@@ -1,8 +1,6 @@
-import ExportButtons from '../components/ui/ExportButtons';
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
-import { Row, Col, Modal, Spinner } from 'react-bootstrap';
 import { toast } from 'react-toastify';
 import {
   Plus,
@@ -21,6 +19,8 @@ import {
   Link2,
   ListTodo,
   User,
+  X,
+  Loader2,
 } from 'lucide-react';
 import { tasksApi, projectsApi, teamApi } from '../services/api';
 import EmptyState from '../components/ui/EmptyState';
@@ -42,28 +42,24 @@ const PRIORITY_OPTIONS = [
   { value: 'URGENT', label: 'Urgent' },
 ];
 
-const STATUS_BADGE = {
-  TODO: { bg: 'rgba(0,0,0,0.06)', color: 'var(--kai-text-secondary)' },
-  IN_PROGRESS: { bg: 'rgba(0,122,255,0.12)', color: 'var(--kai-primary)' },
-  IN_REVIEW: { bg: 'rgba(255,149,0,0.12)', color: 'var(--kai-warning)' },
-  COMPLETED: { bg: 'rgba(52,199,89,0.12)', color: 'var(--kai-success)' },
-  BLOCKED: { bg: 'rgba(255,59,48,0.12)', color: 'var(--kai-danger)' },
-};
-
-const PRIORITY_BADGE = {
-  LOW: { bg: 'rgba(0,0,0,0.06)', color: 'var(--kai-text-secondary)' },
-  MEDIUM: { bg: 'rgba(0,122,255,0.12)', color: 'var(--kai-primary)' },
-  HIGH: { bg: 'rgba(255,149,0,0.12)', color: 'var(--kai-warning)' },
-  URGENT: { bg: 'rgba(255,59,48,0.12)', color: 'var(--kai-danger)' },
-};
-
-const FILTER_TABS = [
-  { key: 'ALL', label: 'All Tasks' },
-  { key: 'MY', label: 'My Tasks' },
-  { key: 'TEAM', label: 'Team' },
-  { key: 'BLOCKED', label: 'Blocked' },
-  { key: 'CONTENT_REVIEW', label: 'Content Review' },
+const KANBAN_COLUMNS = [
+  { key: 'TODO', label: 'To Do' },
+  { key: 'IN_PROGRESS', label: 'In Progress' },
+  { key: 'IN_REVIEW', label: 'Review' },
+  { key: 'COMPLETED', label: 'Done' },
 ];
+
+const TAG_COLORS: Record<string, string> = {
+  CONTENT_REVIEW: 'bg-accent-blue/15 text-accent-blue',
+  BUG: 'bg-accent-red/15 text-accent-red',
+  FEATURE: 'bg-accent-purple/15 text-accent-purple',
+  IMPROVEMENT: 'bg-accent-green/15 text-accent-green',
+  REGULAR: 'bg-bg-elevated text-text-secondary',
+  LOW: 'bg-bg-elevated text-text-secondary',
+  MEDIUM: 'bg-accent-blue/15 text-accent-blue',
+  HIGH: 'bg-accent-amber/15 text-accent-amber',
+  URGENT: 'bg-accent-red/15 text-accent-red',
+};
 
 const PAGE_SIZE = 20;
 
@@ -72,25 +68,25 @@ const AVATAR_COLORS = [
   '#2563EB', '#7C3AED', '#059669', '#D97706', '#DC2626',
 ];
 
-function getInitials(name) {
+function getInitials(name: string) {
   if (!name) return '??';
   return name.split(' ').map(w => w[0]).join('').toUpperCase().slice(0, 2);
 }
 
-function getAvatarColor(name) {
+function getAvatarColor(name: string) {
   if (!name) return AVATAR_COLORS[0];
   let hash = 0;
   for (let i = 0; i < name.length; i++) hash = name.charCodeAt(i) + ((hash << 5) - hash);
   return AVATAR_COLORS[Math.abs(hash) % AVATAR_COLORS.length];
 }
 
-function formatDate(dateStr) {
+function formatDate(dateStr: string | null | undefined) {
   if (!dateStr) return '--';
   const d = new Date(dateStr);
-  return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+  return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
 }
 
-function isOverdue(dateStr) {
+function isOverdue(dateStr: string | null | undefined) {
   if (!dateStr) return false;
   return new Date(dateStr) < new Date() && new Date(dateStr).toDateString() !== new Date().toDateString();
 }
@@ -98,30 +94,29 @@ function isOverdue(dateStr) {
 export default function Tasks() {
   const dispatch = useDispatch();
   const navigate = useNavigate();
-  const user = useSelector((s) => s.auth.user);
+  const user = useSelector((s: any) => s.auth.user);
 
-  const [tasks, setTasks] = useState([]);
-  const [projects, setProjects] = useState([]);
-  const [teamMembers, setTeamMembers] = useState([]);
+  const [tasks, setTasks] = useState<any[]>([]);
+  const [projects, setProjects] = useState<any[]>([]);
+  const [teamMembers, setTeamMembers] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
+  const [error, setError] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
-  const [activeFilter, setActiveFilter] = useState('ALL');
   const [statusFilter, setStatusFilter] = useState('');
   const [priorityFilter, setPriorityFilter] = useState('');
   const [page, setPage] = useState(1);
   const [totalCount, setTotalCount] = useState(0);
-  const [selectedTasks, setSelectedTasks] = useState([]);
+  const [selectedTasks, setSelectedTasks] = useState<string[]>([]);
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [creating, setCreating] = useState(false);
-  const [bulkAction, setBulkAction] = useState('');
   const [bulkProcessing, setBulkProcessing] = useState(false);
+  const [showFilters, setShowFilters] = useState(false);
   const [formData, setFormData] = useState({
     title: '',
     description: '',
     project_id: '',
     assignee_id: '',
-    collaborators: [],
+    collaborators: [] as string[],
     priority: 'MEDIUM',
     status: 'TODO',
     due_date: '',
@@ -136,13 +131,10 @@ export default function Tasks() {
     try {
       setLoading(true);
       setError(null);
-      const params = { page, limit: PAGE_SIZE };
+      const params: any = { page, limit: PAGE_SIZE };
       if (searchQuery) params.search = searchQuery;
       if (statusFilter) params.status = statusFilter;
       if (priorityFilter) params.priority = priorityFilter;
-      if (activeFilter === 'MY' && user?.id) params.assignee_id = user.id;
-      if (activeFilter === 'BLOCKED') params.status = 'BLOCKED';
-      if (activeFilter === 'CONTENT_REVIEW') params.taskType = 'CONTENT_REVIEW';
       const res = await tasksApi.list(params);
       const data = res.data;
       if (Array.isArray(data)) {
@@ -152,13 +144,13 @@ export default function Tasks() {
         setTasks(data?.tasks || []);
         setTotalCount(data?.total || data?.count || data?.tasks?.length || 0);
       }
-    } catch (err) {
+    } catch (err: any) {
       setError(err.response?.data?.message || 'Failed to load tasks');
       toast.error('Failed to load tasks');
     } finally {
       setLoading(false);
     }
-  }, [page, searchQuery, statusFilter, priorityFilter, activeFilter, user]);
+  }, [page, searchQuery, statusFilter, priorityFilter]);
 
   const fetchProjects = useCallback(async () => {
     try {
@@ -187,7 +179,7 @@ export default function Tasks() {
     fetchTeam();
   }, [fetchProjects, fetchTeam]);
 
-  const handleCreate = async (e) => {
+  const handleCreate = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!formData.title.trim()) return toast.warning('Task title is required');
     if (!formData.project_id) return toast.warning('Project is required');
@@ -211,26 +203,26 @@ export default function Tasks() {
       setShowCreateModal(false);
       setFormData({ title: '', description: '', project_id: '', assignee_id: '', collaborators: [], priority: 'MEDIUM', status: 'TODO', due_date: '', taskType: 'REGULAR' });
       fetchTasks();
-    } catch (err) {
+    } catch (err: any) {
       toast.error(err.response?.data?.message || 'Failed to create task');
     } finally {
       setCreating(false);
     }
   };
 
-  const handleDelete = async (id) => {
+  const handleDelete = async (id: string) => {
     if (!window.confirm('Delete this task?')) return;
     try {
       await tasksApi.delete(id);
       toast.success('Task deleted');
       setSelectedTasks(prev => prev.filter(sid => sid !== id));
       fetchTasks();
-    } catch (err) {
+    } catch (err: any) {
       toast.error(err.response?.data?.message || 'Failed to delete task');
     }
   };
 
-  const handleStatusChange = async (taskId, newStatus) => {
+  const handleStatusChange = async (taskId: string, newStatus: string) => {
     try {
       await tasksApi.update(taskId, { status: newStatus });
       setTasks(prev => prev.map(t => t.id === taskId ? { ...t, status: newStatus } : t));
@@ -240,41 +232,10 @@ export default function Tasks() {
     }
   };
 
-  const handleSelectAll = () => {
-    if (selectedTasks.length === tasks.length) {
-      setSelectedTasks([]);
-    } else {
-      setSelectedTasks(tasks.map(t => t.id));
-    }
-  };
-
-  const handleSelectTask = (id) => {
+  const handleSelectTask = (id: string) => {
     setSelectedTasks(prev =>
       prev.includes(id) ? prev.filter(sid => sid !== id) : [...prev, id]
     );
-  };
-
-  const handleBulkAction = async () => {
-    if (!bulkAction || selectedTasks.length === 0) return;
-    setBulkProcessing(true);
-    try {
-      if (bulkAction.startsWith('status:')) {
-        const newStatus = bulkAction.split(':')[1];
-        await tasksApi.bulkUpdate(selectedTasks, { status: newStatus });
-        toast.success(`Updated ${selectedTasks.length} tasks`);
-      } else if (bulkAction.startsWith('assign:')) {
-        const assigneeId = bulkAction.split(':')[1];
-        await tasksApi.bulkUpdate(selectedTasks, { assigneeId });
-        toast.success(`Assigned ${selectedTasks.length} tasks`);
-      }
-      setSelectedTasks([]);
-      setBulkAction('');
-      fetchTasks();
-    } catch {
-      toast.error('Bulk action failed');
-    } finally {
-      setBulkProcessing(false);
-    }
   };
 
   const handleBulkComplete = async () => {
@@ -308,196 +269,123 @@ export default function Tasks() {
     }
   };
 
-  const totalPages = Math.ceil(totalCount / PAGE_SIZE) || 1;
+  // Group tasks by status for kanban columns
+  const columnTasks = useMemo(() => {
+    const grouped: Record<string, any[]> = {
+      TODO: [],
+      IN_PROGRESS: [],
+      IN_REVIEW: [],
+      COMPLETED: [],
+    };
+    tasks.forEach(task => {
+      const status = task.status || 'TODO';
+      if (grouped[status]) {
+        grouped[status].push(task);
+      } else {
+        // Map BLOCKED to TODO column
+        grouped.TODO.push(task);
+      }
+    });
+    return grouped;
+  }, [tasks]);
 
-  const stats = {
-    total: totalCount || tasks.length,
-    completed: tasks.filter(t => t.status === 'COMPLETED').length,
-    inProgress: tasks.filter(t => t.status === 'IN_PROGRESS').length,
-    overdue: tasks.filter(t => isOverdue(t.dueDate || t.due_date) && t.status !== 'COMPLETED').length,
+  const getAssigneeName = (task: any) => {
+    const assignee = task.assignee;
+    return assignee ? `${assignee.firstName || ''} ${assignee.lastName || ''}`.trim() : task.assignee_name || '';
+  };
+
+  const getProjectName = (task: any) => {
+    return task.project?.name || task.project_name || '';
   };
 
   return (
     <div>
       {/* Page Header */}
-      <div className="page-header">
-        <div>
-          <h1>Tasks</h1>
-          <p>Track and manage all tasks across projects</p>
+      <div className="flex justify-between items-center mb-4">
+        <div className="flex items-center gap-2.5">
+          <h1 className="text-[18px] font-semibold font-heading text-text-primary m-0">Tasks</h1>
+          <span className="bg-bg-elevated rounded-full px-2.5 py-0.5 text-[13px] text-text-secondary font-medium">
+            {totalCount}
+          </span>
         </div>
-        <div className="page-actions">
-          <ExportButtons data={tasks} pageType="tasks" title="Tasks Report" filename="tasks" />
-          <button className="kai-btn kai-btn-primary" onClick={() => setShowCreateModal(true)}>
-            <Plus /> New Task
+        <div className="flex items-center gap-2">
+          <button
+            onClick={() => setShowFilters(!showFilters)}
+            className="flex items-center gap-1.5 border border-border-default rounded-lg px-3 py-2 text-[13px] font-medium text-text-secondary bg-transparent hover:bg-bg-elevated transition-colors"
+          >
+            <Filter size={14} />
+            Filters
+          </button>
+          <button
+            onClick={() => setShowCreateModal(true)}
+            className="flex items-center gap-1.5 bg-[#7C3AED] text-white rounded-lg px-4 py-2 text-[13px] font-semibold hover:bg-[#6D28D9] transition-colors border-0"
+          >
+            <Plus size={14} />
+            New Task
           </button>
         </div>
       </div>
 
-      {/* Stats */}
-      <Row className="g-3 mb-4">
-        <Col xs={6} md={3}>
-          <div className="stat-card">
-            <div className="flex-between mb-2">
-              <div className="stat-icon" style={{ background: 'var(--kai-primary-light, rgba(17,24,39,0.08))', color: 'var(--kai-primary)' }}>
-                <ListTodo />
-              </div>
-            </div>
-            <div className="stat-value">{stats.total}</div>
-            <div className="stat-label">Total Tasks</div>
+      {/* Filter Bar */}
+      {showFilters && (
+        <div className="flex items-center gap-2 mb-4 flex-wrap">
+          <div className="relative min-w-[200px]">
+            <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-text-muted" />
+            <input
+              placeholder="Search tasks..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              onKeyDown={(e) => e.key === 'Enter' && fetchTasks()}
+              className="w-full pl-9 pr-3 py-2 bg-bg-elevated border border-border-default rounded-lg text-[13px] text-text-primary placeholder:text-text-muted outline-none focus:border-accent-purple transition-colors"
+            />
           </div>
-        </Col>
-        <Col xs={6} md={3}>
-          <div className="stat-card">
-            <div className="flex-between mb-2">
-              <div className="stat-icon" style={{ background: 'rgba(37,99,235,0.1)', color: 'var(--kai-info)' }}>
-                <Clock />
-              </div>
-            </div>
-            <div className="stat-value">{stats.inProgress}</div>
-            <div className="stat-label">In Progress</div>
-          </div>
-        </Col>
-        <Col xs={6} md={3}>
-          <div className="stat-card">
-            <div className="flex-between mb-2">
-              <div className="stat-icon" style={{ background: 'rgba(22,163,74,0.1)', color: 'var(--kai-success)' }}>
-                <CheckCircle2 />
-              </div>
-            </div>
-            <div className="stat-value">{stats.completed}</div>
-            <div className="stat-label">Completed</div>
-          </div>
-        </Col>
-        <Col xs={6} md={3}>
-          <div className="stat-card">
-            <div className="flex-between mb-2">
-              <div className="stat-icon" style={{ background: 'rgba(203,57,57,0.1)', color: 'var(--kai-danger)' }}>
-                <AlertTriangle />
-              </div>
-            </div>
-            <div className="stat-value">{stats.overdue}</div>
-            <div className="stat-label">Overdue</div>
-          </div>
-        </Col>
-      </Row>
-
-      {/* Filter Tabs + Search + Dropdowns */}
-      <div className="kai-card mb-4">
-        <div className="kai-card-body" style={{ padding: '12px 20px' }}>
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 12 }}>
-            {/* Filter Tabs */}
-            <div style={{ display: 'flex', gap: 4 }}>
-              {FILTER_TABS.map(tab => (
-                <button
-                  key={tab.key}
-                  className={`kai-btn kai-btn-sm ${activeFilter === tab.key ? 'kai-btn-primary' : 'kai-btn-outline'}`}
-                  onClick={() => { setActiveFilter(tab.key); setPage(1); }}
-                >
-                  {tab.label}
-                </button>
-              ))}
-            </div>
-
-            {/* Filters Row */}
-            <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
-              <div className="kai-search" style={{ minWidth: 200 }}>
-                <Search />
-                <input
-                  placeholder="Search tasks..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  onKeyDown={(e) => e.key === 'Enter' && fetchTasks()}
-                />
-              </div>
-              <select
-                className="kai-input"
-                value={statusFilter}
-                onChange={(e) => { setStatusFilter(e.target.value); setPage(1); }}
-                style={{ appearance: 'auto', width: 'auto', minWidth: 140 }}
-              >
-                {STATUS_OPTIONS.map(o => (
-                  <option key={o.value} value={o.value}>{o.label}</option>
-                ))}
-              </select>
-              <select
-                className="kai-input"
-                value={priorityFilter}
-                onChange={(e) => { setPriorityFilter(e.target.value); setPage(1); }}
-                style={{ appearance: 'auto', width: 'auto', minWidth: 140 }}
-              >
-                {PRIORITY_OPTIONS.map(o => (
-                  <option key={o.value} value={o.value}>{o.label}</option>
-                ))}
-              </select>
-            </div>
-          </div>
+          <select
+            value={statusFilter}
+            onChange={(e) => { setStatusFilter(e.target.value); setPage(1); }}
+            className="bg-bg-elevated border border-border-default rounded-lg px-3 py-2 text-[13px] text-text-secondary outline-none focus:border-accent-purple transition-colors appearance-auto"
+          >
+            {STATUS_OPTIONS.map(o => (
+              <option key={o.value} value={o.value}>{o.label}</option>
+            ))}
+          </select>
+          <select
+            value={priorityFilter}
+            onChange={(e) => { setPriorityFilter(e.target.value); setPage(1); }}
+            className="bg-bg-elevated border border-border-default rounded-lg px-3 py-2 text-[13px] text-text-secondary outline-none focus:border-accent-purple transition-colors appearance-auto"
+          >
+            {PRIORITY_OPTIONS.map(o => (
+              <option key={o.value} value={o.value}>{o.label}</option>
+            ))}
+          </select>
         </div>
-      </div>
+      )}
 
       {/* Floating Bulk Actions Bar */}
       {selectedTasks.length > 0 && (
-        <div style={{
-          position: 'fixed',
-          bottom: 24,
-          left: '50%',
-          transform: 'translateX(-50%)',
-          zIndex: 1050,
-          background: 'rgba(255,255,255,0.75)',
-          backdropFilter: 'blur(20px) saturate(180%)',
-          WebkitBackdropFilter: 'blur(20px) saturate(180%)',
-          borderRadius: 16,
-          border: '1px solid rgba(255,255,255,0.3)',
-          boxShadow: '0 8px 32px rgba(0,0,0,0.12), 0 2px 8px rgba(0,0,0,0.06)',
-          padding: '12px 24px',
-          display: 'flex',
-          alignItems: 'center',
-          gap: 16,
-          minWidth: 360,
-        }}>
-          <span style={{ fontSize: 13, fontWeight: 700, color: 'var(--kai-text)', whiteSpace: 'nowrap' }}>
+        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 bg-bg-card/90 backdrop-blur-xl border border-border-default rounded-2xl shadow-modal px-6 py-3 flex items-center gap-4 min-w-[360px]">
+          <span className="text-[13px] font-bold text-text-primary whitespace-nowrap">
             {selectedTasks.length} selected
           </span>
-          <div style={{ width: 1, height: 24, background: 'var(--kai-border)' }} />
+          <div className="w-px h-6 bg-border-default" />
           <button
-            className="kai-btn kai-btn-sm"
             disabled={bulkProcessing}
             onClick={handleBulkComplete}
-            style={{
-              background: 'rgba(52,199,89,0.12)',
-              color: 'var(--kai-success)',
-              border: 'none',
-              fontWeight: 600,
-              fontSize: 13,
-              display: 'flex',
-              alignItems: 'center',
-              gap: 6,
-            }}
+            className="flex items-center gap-1.5 bg-accent-green/15 text-accent-green border-0 rounded-lg px-3 py-1.5 text-[13px] font-semibold hover:bg-accent-green/25 transition-colors disabled:opacity-50"
           >
-            {bulkProcessing ? <Spinner animation="border" size="sm" /> : <CheckCircle2 size={14} />}
+            {bulkProcessing ? <Loader2 size={14} className="animate-spin" /> : <CheckCircle2 size={14} />}
             Mark Complete
           </button>
           <button
-            className="kai-btn kai-btn-sm"
             disabled={bulkProcessing}
             onClick={handleBulkDelete}
-            style={{
-              background: 'rgba(255,59,48,0.12)',
-              color: 'var(--kai-danger)',
-              border: 'none',
-              fontWeight: 600,
-              fontSize: 13,
-              display: 'flex',
-              alignItems: 'center',
-              gap: 6,
-            }}
+            className="flex items-center gap-1.5 bg-accent-red/15 text-accent-red border-0 rounded-lg px-3 py-1.5 text-[13px] font-semibold hover:bg-accent-red/25 transition-colors disabled:opacity-50"
           >
             <Trash2 size={14} />
             Delete
           </button>
           <button
-            className="kai-btn kai-btn-sm kai-btn-outline"
             onClick={() => setSelectedTasks([])}
-            style={{ fontSize: 13, fontWeight: 600 }}
+            className="flex items-center gap-1.5 border border-border-default bg-transparent text-text-secondary rounded-lg px-3 py-1.5 text-[13px] font-semibold hover:bg-bg-elevated transition-colors"
           >
             Clear
           </button>
@@ -506,446 +394,330 @@ export default function Tasks() {
 
       {/* Loading State */}
       {loading && (
-        <div className="flex-center" style={{ padding: 60 }}>
-          <Spinner animation="border" style={{ color: 'var(--kai-primary)' }} />
+        <div className="flex items-center justify-center py-16">
+          <Loader2 size={24} className="animate-spin text-accent-purple" />
         </div>
       )}
 
       {/* Error State */}
       {error && !loading && (
-        <div className="kai-card">
-          <div className="kai-card-body flex-center" style={{ padding: 60, flexDirection: 'column', gap: 12 }}>
-            <p style={{ color: 'var(--kai-danger)', margin: 0 }}>{error}</p>
-            <button className="kai-btn kai-btn-outline" onClick={fetchTasks}>Try Again</button>
-          </div>
+        <div className="bg-bg-card border border-border-default rounded-xl flex flex-col items-center justify-center py-16 gap-3">
+          <p className="text-accent-red text-[13px] m-0">{error}</p>
+          <button
+            onClick={fetchTasks}
+            className="border border-border-default bg-transparent text-text-secondary rounded-lg px-4 py-2 text-[13px] font-medium hover:bg-bg-elevated transition-colors"
+          >
+            Try Again
+          </button>
         </div>
       )}
 
       {/* Empty State */}
       {!loading && !error && tasks.length === 0 && (
-        <div className="kai-card">
-          <div className="kai-card-body">
-            <EmptyState
-              icon={CheckSquare}
-              title="No tasks yet"
-              description="Create your first task to get started"
-              actionLabel="New Task"
-              onAction={() => setShowCreateModal(true)}
-            />
-          </div>
+        <div className="bg-bg-card border border-border-default rounded-xl p-6">
+          <EmptyState
+            icon={CheckSquare}
+            title="No tasks yet"
+            description="Create your first task to get started"
+            actionLabel="New Task"
+            onAction={() => setShowCreateModal(true)}
+          />
         </div>
       )}
 
-      {/* Task Table */}
+      {/* Kanban Board */}
       {!loading && !error && tasks.length > 0 && (
-        <div className="kai-card">
-          <div style={{ overflowX: 'auto' }}>
-            <table className="kai-table">
-              <thead>
-                <tr>
-                  <th style={{ width: 40 }}>
-                    <input
-                      type="checkbox"
-                      checked={selectedTasks.length === tasks.length && tasks.length > 0}
-                      onChange={handleSelectAll}
-                      style={{ cursor: 'pointer' }}
-                    />
-                  </th>
-                  <th>Title</th>
-                  <th>Type</th>
-                  <th>Project</th>
-                  <th>Assigned To</th>
-                  <th>Team</th>
-                  <th>Status</th>
-                  <th>Priority</th>
-                  <th>Created</th>
-                  <th>Deadline</th>
-                  <th style={{ width: 80 }}>Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                {tasks.map((task) => {
-                  const assignee = task.assignee;
-                  const assigneeName = assignee ? `${assignee.firstName || ''} ${assignee.lastName || ''}`.trim() : task.assignee_name || '';
-                  const project = task.project;
-                  const projectName = project?.name || task.project_name || '';
-                  const projectId = task.projectId || task.project_id || project?.id;
-                  const assigneeId = task.assigneeId || task.assignee_id || assignee?.id;
-                  const overdue = isOverdue(task.dueDate || task.due_date) && task.status !== 'COMPLETED';
-                  const hasBlocker = task.blockedBy?.length > 0 || task.blocked_by || task.status === 'BLOCKED';
+        <div className="flex gap-3 overflow-x-auto items-start pb-4" data-testid="kanban-board">
+          {KANBAN_COLUMNS.map(col => {
+            const colTasks = columnTasks[col.key] || [];
+            const isDoneColumn = col.key === 'COMPLETED';
 
-                  return (
-                    <tr key={task.id}>
-                      {/* Checkbox */}
-                      <td onClick={e => e.stopPropagation()}>
-                        <input
-                          type="checkbox"
-                          checked={selectedTasks.includes(task.id)}
-                          onChange={() => handleSelectTask(task.id)}
-                          style={{ cursor: 'pointer' }}
-                        />
-                      </td>
+            return (
+              <div
+                key={col.key}
+                className="min-w-[240px] flex-shrink-0 flex-1"
+                data-testid={`column-${col.key.toLowerCase()}`}
+              >
+                {/* Column Header */}
+                <div className="flex items-center gap-2 py-2 mb-1">
+                  <span className="text-[12px] font-medium text-text-secondary">{col.label}</span>
+                  <span className="bg-bg-elevated rounded-full px-2 py-0.5 text-[10px] text-text-muted font-medium">
+                    {colTasks.length}
+                  </span>
+                </div>
 
-                      {/* Title - clickable to project */}
-                      <td style={{ cursor: 'pointer' }} onClick={() => projectId && navigate(`/projects/${projectId}`)}>
-                        <div className="flex-gap-8">
-                          {hasBlocker && (
-                            <Link2 size={14} style={{ color: 'var(--kai-danger)', flexShrink: 0 }} title="Blocked" />
-                          )}
-                          <span style={{ fontWeight: 600, fontSize: 13, color: 'var(--kai-text)' }}>{task.title}</span>
+                {/* Task Cards */}
+                <div className="flex flex-col">
+                  {colTasks.map(task => {
+                    const assigneeName = getAssigneeName(task);
+                    const projectName = getProjectName(task);
+                    const dueDate = task.dueDate || task.due_date;
+                    const overdue = isOverdue(dueDate) && task.status !== 'COMPLETED';
+                    const taskType = task.taskType || 'REGULAR';
+                    const priority = task.priority || 'MEDIUM';
+                    const projectId = task.projectId || task.project_id || task.project?.id;
+
+                    return (
+                      <div
+                        key={task.id}
+                        data-testid={`task-card-${task.id}`}
+                        className={`bg-[var(--bg-card)] border border-[var(--border-default)] rounded-xl p-3 mb-2 cursor-pointer hover:border-accent-purple/40 transition-colors group ${isDoneColumn ? 'opacity-60' : ''}`}
+                        onClick={() => projectId && navigate(`/projects/${projectId}`)}
+                      >
+                        {/* Title */}
+                        <div
+                          className={`text-[13px] font-medium text-text-primary mb-1.5 truncate ${isDoneColumn ? 'line-through' : ''}`}
+                          title={task.title}
+                        >
+                          {task.title}
                         </div>
-                        {task.description && (
-                          <div style={{ fontSize: 11, color: 'var(--kai-text-muted)', marginTop: 2, maxWidth: 300 }} className="truncate">{task.description}</div>
-                        )}
-                      </td>
 
-                      {/* Task Type */}
-                      <td>
-                        <span className={`task-type-badge ${
-                          task.taskType === 'CONTENT_REVIEW' ? 'content-review' :
-                          task.taskType === 'BUG' ? 'bug' :
-                          task.taskType === 'FEATURE' ? 'feature' :
-                          task.taskType === 'IMPROVEMENT' ? 'improvement' : 'regular'
-                        }`}>
-                          {(task.taskType || 'REGULAR').replace('_', ' ')}
-                        </span>
-                      </td>
-
-                      {/* Project - clickable */}
-                      <td>
-                        {projectName ? (
-                          <span
-                            style={{ fontSize: 12, color: 'var(--kai-primary)', cursor: 'pointer', fontWeight: 500 }}
-                            onClick={() => projectId && navigate(`/projects/${projectId}`)}
-                          >
-                            {projectName}
+                        {/* Tags */}
+                        <div className="flex flex-wrap gap-1">
+                          {taskType !== 'REGULAR' && (
+                            <span className={`text-[10px] rounded px-1.5 py-0.5 ${TAG_COLORS[taskType] || TAG_COLORS.REGULAR}`}>
+                              {taskType.replace('_', ' ')}
+                            </span>
+                          )}
+                          <span className={`text-[10px] rounded px-1.5 py-0.5 ${TAG_COLORS[priority] || TAG_COLORS.MEDIUM}`}>
+                            {priority}
                           </span>
-                        ) : (
-                          <span style={{ fontSize: 12, color: 'var(--kai-text-muted)' }}>--</span>
-                        )}
-                      </td>
+                          {overdue && (
+                            <span className="text-[10px] rounded px-1.5 py-0.5 bg-accent-red/15 text-accent-red">
+                              Overdue
+                            </span>
+                          )}
+                        </div>
 
-                      {/* Assignee - clickable to profile */}
-                      <td>
-                        {assigneeName ? (
-                          <div className="flex-gap-8" style={{ cursor: 'pointer' }} onClick={() => assigneeId && navigate(`/profile/${assigneeId}`)}>
+                        {/* Footer */}
+                        <div className="flex justify-between items-center mt-2">
+                          {assigneeName ? (
                             <div
-                              className="kai-avatar kai-avatar-sm"
-                              style={{ background: getAvatarColor(assigneeName), width: 24, height: 24, fontSize: 10 }}
+                              className="w-5 h-5 rounded-full flex items-center justify-center text-[8px] font-semibold text-white flex-shrink-0"
+                              style={{ backgroundColor: getAvatarColor(assigneeName) }}
+                              title={assigneeName}
                             >
                               {getInitials(assigneeName)}
                             </div>
-                            <span style={{ fontSize: 13, color: 'var(--kai-primary)', fontWeight: 500 }}>{assigneeName}</span>
-                          </div>
-                        ) : (
-                          <span style={{ fontSize: 12, color: 'var(--kai-text-muted)' }}>Unassigned</span>
-                        )}
-                        {task.createdBy && (
-                          <div style={{ fontSize: 10, color: 'var(--kai-text-muted)', marginTop: 2 }}>
-                            by {task.createdBy.firstName} {task.createdBy.lastName?.[0]}
-                          </div>
-                        )}
-                      </td>
-
-                      {/* Team / Collaborators */}
-                      <td>
-                        {task.collaborators?.length > 0 ? (
-                          <div className="d-flex" style={{ gap: -4 }}>
-                            {task.collaborators.slice(0, 3).map((cId, i) => {
-                              const collab = teamMembers.find(m => m.id === cId);
-                              const cName = collab ? `${collab.firstName || ''} ${collab.lastName || ''}`.trim() : '';
-                              return (
-                                <div key={cId} className="kai-avatar kai-avatar-sm"
-                                  style={{ background: getAvatarColor(cName || 'U'), width: 22, height: 22, fontSize: 9, marginLeft: i > 0 ? -6 : 0, border: '2px solid var(--kai-bg)', zIndex: 3 - i }}
-                                  title={cName || cId}>
-                                  {getInitials(cName || 'U')}
-                                </div>
-                              );
-                            })}
-                            {task.collaborators.length > 3 && (
-                              <span style={{ fontSize: 10, color: 'var(--kai-text-muted)', marginLeft: 4 }}>+{task.collaborators.length - 3}</span>
-                            )}
-                          </div>
-                        ) : (
-                          <span style={{ fontSize: 11, color: 'var(--kai-text-muted)' }}>--</span>
-                        )}
-                      </td>
-
-                      {/* Status */}
-                      <td>
-                        <select
-                          className="kai-badge"
-                          value={task.status}
-                          onChange={(e) => handleStatusChange(task.id, e.target.value)}
-                          style={{
-                            background: STATUS_BADGE[task.status]?.bg || '#e3e7ed',
-                            color: STATUS_BADGE[task.status]?.color || '#596882',
-                            border: 'none',
-                            cursor: 'pointer',
-                            appearance: 'auto',
-                            fontSize: 11,
-                            fontWeight: 600,
-                            padding: '3px 8px',
-                            borderRadius: 'var(--kai-radius-pill)',
-                          }}
-                        >
-                          <option value="TODO">Todo</option>
-                          <option value="IN_PROGRESS">In Progress</option>
-                          <option value="IN_REVIEW">In Review</option>
-                          <option value="COMPLETED">Completed</option>
-                          <option value="BLOCKED">Blocked</option>
-                        </select>
-                      </td>
-
-                      {/* Priority */}
-                      <td>
-                        <span
-                          className="kai-badge"
-                          style={{
-                            background: PRIORITY_BADGE[task.priority]?.bg || '#e3e7ed',
-                            color: PRIORITY_BADGE[task.priority]?.color || '#596882',
-                          }}
-                        >
-                          <Flag size={10} />
-                          {task.priority || 'MEDIUM'}
-                        </span>
-                      </td>
-
-                      {/* Created */}
-                      <td>
-                        <span style={{ fontSize: 11, color: 'var(--kai-text-muted)' }}>
-                          {formatDate(task.createdAt)}
-                        </span>
-                      </td>
-
-                      {/* Deadline */}
-                      <td>
-                        <span
-                          className="flex-gap-8"
-                          style={{
-                            fontSize: 12,
-                            color: overdue ? 'var(--kai-danger)' : 'var(--kai-text-muted)',
-                            fontWeight: overdue ? 600 : 400,
-                          }}
-                        >
-                          <Calendar size={12} />
-                          {formatDate(task.dueDate || task.due_date)}
-                          {overdue && <AlertTriangle size={12} />}
-                        </span>
-                      </td>
-
-                      {/* Actions */}
-                      <td>
-                        <div className="flex-gap-8">
-                          <button
-                            className="kai-btn kai-btn-sm kai-btn-outline"
-                            style={{ padding: '4px 6px', border: 'none' }}
-                            title="Delete"
-                            onClick={() => handleDelete(task.id)}
-                          >
-                            <Trash2 size={14} style={{ color: 'var(--kai-danger)' }} />
-                          </button>
+                          ) : (
+                            <div className="w-5 h-5 rounded-full bg-bg-elevated flex items-center justify-center">
+                              <User size={10} className="text-text-muted" />
+                            </div>
+                          )}
+                          <span className={`text-[10px] ${overdue ? 'text-accent-red font-medium' : 'text-text-muted'}`}>
+                            {dueDate ? formatDate(dueDate) : ''}
+                          </span>
                         </div>
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          </div>
-
-          {/* Pagination */}
-          {totalPages > 1 && (
-            <div className="kai-card-footer">
-              <div className="flex-between">
-                <span style={{ fontSize: 12, color: 'var(--kai-text-muted)' }}>
-                  Showing {((page - 1) * PAGE_SIZE) + 1}-{Math.min(page * PAGE_SIZE, totalCount)} of {totalCount}
-                </span>
-                <div className="flex-gap-8">
-                  <button
-                    className="kai-btn kai-btn-sm kai-btn-outline"
-                    disabled={page <= 1}
-                    onClick={() => setPage(p => Math.max(1, p - 1))}
-                  >
-                    <ChevronLeft size={14} /> Prev
-                  </button>
-                  {Array.from({ length: Math.min(totalPages, 5) }, (_, i) => {
-                    let pageNum;
-                    if (totalPages <= 5) {
-                      pageNum = i + 1;
-                    } else if (page <= 3) {
-                      pageNum = i + 1;
-                    } else if (page >= totalPages - 2) {
-                      pageNum = totalPages - 4 + i;
-                    } else {
-                      pageNum = page - 2 + i;
-                    }
-                    return (
-                      <button
-                        key={pageNum}
-                        className={`kai-btn kai-btn-sm ${page === pageNum ? 'kai-btn-primary' : 'kai-btn-outline'}`}
-                        onClick={() => setPage(pageNum)}
-                        style={{ minWidth: 32 }}
-                      >
-                        {pageNum}
-                      </button>
+                      </div>
                     );
                   })}
-                  <button
-                    className="kai-btn kai-btn-sm kai-btn-outline"
-                    disabled={page >= totalPages}
-                    onClick={() => setPage(p => Math.min(totalPages, p + 1))}
+
+                  {/* Add Task Button */}
+                  <div
+                    className="border border-dashed border-border-default rounded-xl p-3 flex items-center justify-center cursor-pointer hover:border-[#7C3AED]/40 transition-colors group"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setFormData(prev => ({ ...prev, status: col.key === 'COMPLETED' ? 'COMPLETED' : col.key === 'IN_REVIEW' ? 'IN_REVIEW' : col.key === 'IN_PROGRESS' ? 'IN_PROGRESS' : 'TODO' }));
+                      setShowCreateModal(true);
+                    }}
                   >
-                    Next <ChevronRight size={14} />
-                  </button>
+                    <span className="text-[12px] text-text-muted group-hover:text-accent-purple transition-colors">+ Add task</span>
+                  </div>
                 </div>
               </div>
-            </div>
-          )}
+            );
+          })}
         </div>
       )}
 
       {/* Create Task Modal */}
-      <Modal show={showCreateModal} onHide={() => setShowCreateModal(false)} centered size="lg">
-        <form onSubmit={handleCreate}>
-          <Modal.Header closeButton style={{ borderBottom: '1px solid var(--kai-border)', padding: '16px 20px' }}>
-            <Modal.Title style={{ fontSize: 18, fontWeight: 700 }}>Add New Task</Modal.Title>
-          </Modal.Header>
-          <Modal.Body style={{ padding: 20 }}>
-            <Row className="g-3">
-              <Col xs={12}>
-                <label className="kai-label">Title *</label>
-                <input
-                  className="kai-input"
-                  placeholder="Enter task title"
-                  value={formData.title}
-                  onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-                  required
-                />
-              </Col>
-              <Col xs={12}>
-                <label className="kai-label">Description</label>
-                <textarea
-                  className="kai-input"
-                  placeholder="Describe the task..."
-                  rows={3}
-                  value={formData.description}
-                  onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                  style={{ resize: 'vertical' }}
-                />
-              </Col>
-              <Col xs={12} md={6}>
-                <label className="kai-label">Project *</label>
-                <select
-                  className="kai-input"
-                  value={formData.project_id}
-                  onChange={(e) => setFormData({ ...formData, project_id: e.target.value })}
-                  style={{ appearance: 'auto' }}
-                  required
+      {showCreateModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center">
+          {/* Backdrop */}
+          <div
+            className="absolute inset-0 bg-black/60"
+            onClick={() => setShowCreateModal(false)}
+          />
+          {/* Modal */}
+          <div className="relative bg-bg-card border border-border-default rounded-xl w-full max-w-2xl mx-4 shadow-modal max-h-[90vh] overflow-y-auto">
+            <form onSubmit={handleCreate}>
+              {/* Header */}
+              <div className="flex items-center justify-between px-5 py-4 border-b border-border-default">
+                <h2 className="text-[18px] font-bold text-text-primary m-0 font-heading">Add New Task</h2>
+                <button
+                  type="button"
+                  onClick={() => setShowCreateModal(false)}
+                  className="text-text-muted hover:text-text-primary transition-colors bg-transparent border-0 p-1"
                 >
-                  <option value="">Select Project</option>
-                  {projects.map(p => (
-                    <option key={p.id} value={p.id}>{p.name}</option>
-                  ))}
-                </select>
-              </Col>
-              <Col xs={12} md={6}>
-                <label className="kai-label">Primary Assignee *</label>
-                <select
-                  className="kai-input"
-                  value={formData.assignee_id}
-                  onChange={(e) => setFormData({ ...formData, assignee_id: e.target.value })}
-                  style={{ appearance: 'auto' }}
-                  required
-                >
-                  <option value="">Select Assignee</option>
-                  {teamMembers.map(m => (
-                    <option key={m.id} value={m.id}>{m.name || m.full_name || `${m.firstName || ''} ${m.lastName || ''}`.trim() || m.email}</option>
-                  ))}
-                </select>
-              </Col>
-              <Col xs={12}>
-                <label className="kai-label">Team Members (Collaborators)</label>
-                <div style={{ maxHeight: 140, overflowY: 'auto', border: '1px solid var(--kai-border)', borderRadius: 8, padding: 8, background: 'var(--kai-bg)' }}>
-                  {teamMembers.filter(m => m.id !== formData.assignee_id).map(m => {
-                    const mName = m.name || m.full_name || `${m.firstName || ''} ${m.lastName || ''}`.trim() || m.email;
-                    return (
-                      <label key={m.id} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '4px 0', cursor: 'pointer', fontSize: 13 }}>
-                        <input type="checkbox" checked={formData.collaborators.includes(m.id)}
-                          onChange={(e) => setFormData(prev => ({
-                            ...prev,
-                            collaborators: e.target.checked ? [...prev.collaborators, m.id] : prev.collaborators.filter(x => x !== m.id)
-                          }))} />
-                        <span>{mName}</span>
-                        {m.role && <span style={{ fontSize: 10, color: 'var(--kai-text-muted)', marginLeft: 'auto' }}>{m.role}</span>}
-                      </label>
-                    );
-                  })}
+                  <X size={18} />
+                </button>
+              </div>
+
+              {/* Body */}
+              <div className="p-5 grid grid-cols-12 gap-3">
+                {/* Title */}
+                <div className="col-span-12">
+                  <label className="block text-[10px] font-medium text-text-muted uppercase tracking-wider mb-1.5">Title *</label>
+                  <input
+                    className="w-full bg-bg-elevated border border-border-default rounded-lg px-3 py-2 text-[13px] text-text-primary placeholder:text-text-muted outline-none focus:border-accent-purple transition-colors"
+                    placeholder="Enter task title"
+                    value={formData.title}
+                    onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+                    required
+                  />
                 </div>
-                <small style={{ color: 'var(--kai-text-muted)' }}>{formData.collaborators.length} member(s) selected</small>
-              </Col>
-              <Col xs={12} md={4}>
-                <label className="kai-label">Priority</label>
-                <select
-                  className="kai-input"
-                  value={formData.priority}
-                  onChange={(e) => setFormData({ ...formData, priority: e.target.value })}
-                  style={{ appearance: 'auto' }}
+
+                {/* Description */}
+                <div className="col-span-12">
+                  <label className="block text-[10px] font-medium text-text-muted uppercase tracking-wider mb-1.5">Description</label>
+                  <textarea
+                    className="w-full bg-bg-elevated border border-border-default rounded-lg px-3 py-2 text-[13px] text-text-primary placeholder:text-text-muted outline-none focus:border-accent-purple transition-colors resize-y"
+                    placeholder="Describe the task..."
+                    rows={3}
+                    value={formData.description}
+                    onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                  />
+                </div>
+
+                {/* Project */}
+                <div className="col-span-12 md:col-span-6">
+                  <label className="block text-[10px] font-medium text-text-muted uppercase tracking-wider mb-1.5">Project *</label>
+                  <select
+                    className="w-full bg-bg-elevated border border-border-default rounded-lg px-3 py-2 text-[13px] text-text-primary outline-none focus:border-accent-purple transition-colors appearance-auto"
+                    value={formData.project_id}
+                    onChange={(e) => setFormData({ ...formData, project_id: e.target.value })}
+                    required
+                  >
+                    <option value="">Select Project</option>
+                    {projects.map(p => (
+                      <option key={p.id} value={p.id}>{p.name}</option>
+                    ))}
+                  </select>
+                </div>
+
+                {/* Assignee */}
+                <div className="col-span-12 md:col-span-6">
+                  <label className="block text-[10px] font-medium text-text-muted uppercase tracking-wider mb-1.5">Primary Assignee *</label>
+                  <select
+                    className="w-full bg-bg-elevated border border-border-default rounded-lg px-3 py-2 text-[13px] text-text-primary outline-none focus:border-accent-purple transition-colors appearance-auto"
+                    value={formData.assignee_id}
+                    onChange={(e) => setFormData({ ...formData, assignee_id: e.target.value })}
+                    required
+                  >
+                    <option value="">Select Assignee</option>
+                    {teamMembers.map(m => (
+                      <option key={m.id} value={m.id}>{m.name || m.full_name || `${m.firstName || ''} ${m.lastName || ''}`.trim() || m.email}</option>
+                    ))}
+                  </select>
+                </div>
+
+                {/* Collaborators */}
+                <div className="col-span-12">
+                  <label className="block text-[10px] font-medium text-text-muted uppercase tracking-wider mb-1.5">Team Members (Collaborators)</label>
+                  <div className="max-h-[140px] overflow-y-auto border border-border-default rounded-lg p-2 bg-bg-elevated">
+                    {teamMembers.filter(m => m.id !== formData.assignee_id).map(m => {
+                      const mName = m.name || m.full_name || `${m.firstName || ''} ${m.lastName || ''}`.trim() || m.email;
+                      return (
+                        <label key={m.id} className="flex items-center gap-2 py-1 cursor-pointer text-[13px] text-text-primary">
+                          <input
+                            type="checkbox"
+                            checked={formData.collaborators.includes(m.id)}
+                            onChange={(e) => setFormData(prev => ({
+                              ...prev,
+                              collaborators: e.target.checked ? [...prev.collaborators, m.id] : prev.collaborators.filter(x => x !== m.id)
+                            }))}
+                            className="accent-accent-purple"
+                          />
+                          <span>{mName}</span>
+                          {m.role && <span className="text-[10px] text-text-muted ml-auto">{m.role}</span>}
+                        </label>
+                      );
+                    })}
+                  </div>
+                  <span className="text-[11px] text-text-muted mt-1 block">{formData.collaborators.length} member(s) selected</span>
+                </div>
+
+                {/* Priority */}
+                <div className="col-span-12 md:col-span-4">
+                  <label className="block text-[10px] font-medium text-text-muted uppercase tracking-wider mb-1.5">Priority</label>
+                  <select
+                    className="w-full bg-bg-elevated border border-border-default rounded-lg px-3 py-2 text-[13px] text-text-primary outline-none focus:border-accent-purple transition-colors appearance-auto"
+                    value={formData.priority}
+                    onChange={(e) => setFormData({ ...formData, priority: e.target.value })}
+                  >
+                    <option value="LOW">Low</option>
+                    <option value="MEDIUM">Medium</option>
+                    <option value="HIGH">High</option>
+                    <option value="URGENT">Urgent</option>
+                  </select>
+                </div>
+
+                {/* Status */}
+                <div className="col-span-12 md:col-span-4">
+                  <label className="block text-[10px] font-medium text-text-muted uppercase tracking-wider mb-1.5">Status</label>
+                  <select
+                    className="w-full bg-bg-elevated border border-border-default rounded-lg px-3 py-2 text-[13px] text-text-primary outline-none focus:border-accent-purple transition-colors appearance-auto"
+                    value={formData.status}
+                    onChange={(e) => setFormData({ ...formData, status: e.target.value })}
+                  >
+                    <option value="TODO">Todo</option>
+                    <option value="IN_PROGRESS">In Progress</option>
+                    <option value="IN_REVIEW">In Review</option>
+                    <option value="COMPLETED">Completed</option>
+                  </select>
+                </div>
+
+                {/* Deadline */}
+                <div className="col-span-12 md:col-span-4">
+                  <label className="block text-[10px] font-medium text-text-muted uppercase tracking-wider mb-1.5">Deadline *</label>
+                  <input
+                    type="date"
+                    className="w-full bg-bg-elevated border border-border-default rounded-lg px-3 py-2 text-[13px] text-text-primary outline-none focus:border-accent-purple transition-colors"
+                    value={formData.due_date}
+                    onChange={(e) => setFormData({ ...formData, due_date: e.target.value })}
+                    required
+                  />
+                </div>
+
+                {/* Task Type */}
+                <div className="col-span-12 md:col-span-4">
+                  <label className="block text-[10px] font-medium text-text-muted uppercase tracking-wider mb-1.5">Task Type</label>
+                  <select
+                    className="w-full bg-bg-elevated border border-border-default rounded-lg px-3 py-2 text-[13px] text-text-primary outline-none focus:border-accent-purple transition-colors appearance-auto"
+                    value={formData.taskType || 'REGULAR'}
+                    onChange={(e) => setFormData({ ...formData, taskType: e.target.value })}
+                  >
+                    <option value="REGULAR">Regular Task</option>
+                    <option value="CONTENT_REVIEW">Content Review</option>
+                    <option value="BUG">Bug Fix</option>
+                    <option value="FEATURE">Feature</option>
+                    <option value="IMPROVEMENT">Improvement</option>
+                  </select>
+                </div>
+              </div>
+
+              {/* Footer */}
+              <div className="flex items-center justify-end gap-2 px-5 py-4 border-t border-border-default">
+                <button
+                  type="button"
+                  onClick={() => setShowCreateModal(false)}
+                  className="border border-border-default bg-transparent text-text-secondary rounded-lg px-4 py-2 text-[13px] font-semibold hover:bg-bg-elevated transition-colors"
                 >
-                  <option value="LOW">Low</option>
-                  <option value="MEDIUM">Medium</option>
-                  <option value="HIGH">High</option>
-                  <option value="URGENT">Urgent</option>
-                </select>
-              </Col>
-              <Col xs={12} md={4}>
-                <label className="kai-label">Status</label>
-                <select
-                  className="kai-input"
-                  value={formData.status}
-                  onChange={(e) => setFormData({ ...formData, status: e.target.value })}
-                  style={{ appearance: 'auto' }}
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={creating}
+                  className="flex items-center gap-1.5 bg-[#7C3AED] text-white rounded-lg px-4 py-2 text-[13px] font-semibold hover:bg-[#6D28D9] transition-colors border-0 disabled:opacity-50"
                 >
-                  <option value="TODO">Todo</option>
-                  <option value="IN_PROGRESS">In Progress</option>
-                  <option value="IN_REVIEW">In Review</option>
-                  <option value="COMPLETED">Completed</option>
-                </select>
-              </Col>
-              <Col xs={12} md={4}>
-                <label className="kai-label">Deadline *</label>
-                <input
-                  type="date"
-                  className="kai-input"
-                  value={formData.due_date}
-                  onChange={(e) => setFormData({ ...formData, due_date: e.target.value })}
-                  required
-                />
-              </Col>
-              <Col xs={12} md={4}>
-                <label className="kai-label">Task Type</label>
-                <select className="kai-input" value={formData.taskType || 'REGULAR'}
-                  onChange={(e) => setFormData({ ...formData, taskType: e.target.value })} style={{ appearance: 'auto' }}>
-                  <option value="REGULAR">Regular Task</option>
-                  <option value="CONTENT_REVIEW">Content Review</option>
-                  <option value="BUG">Bug Fix</option>
-                  <option value="FEATURE">Feature</option>
-                  <option value="IMPROVEMENT">Improvement</option>
-                </select>
-              </Col>
-            </Row>
-          </Modal.Body>
-          <Modal.Footer style={{ borderTop: '1px solid var(--kai-border)', padding: '12px 20px', gap: 8 }}>
-            <button type="button" className="kai-btn kai-btn-outline" onClick={() => setShowCreateModal(false)}>
-              Cancel
-            </button>
-            <button type="submit" className="kai-btn kai-btn-primary" disabled={creating}>
-              {creating ? <Spinner animation="border" size="sm" /> : <Plus size={16} />}
-              {creating ? 'Creating...' : 'Create Task'}
-            </button>
-          </Modal.Footer>
-        </form>
-      </Modal>
+                  {creating ? <Loader2 size={14} className="animate-spin" /> : <Plus size={14} />}
+                  {creating ? 'Creating...' : 'Create Task'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

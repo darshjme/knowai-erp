@@ -1,142 +1,82 @@
 import { TrendingUp, TrendingDown } from 'lucide-react';
+import { motion } from 'framer-motion';
+import type { LucideIcon } from 'lucide-react';
 
-const VARIANT_STYLES = {
-  primary: {
-    iconBg: 'var(--kai-primary, #111827)',
-    iconColor: '#fff',
-  },
-  success: {
-    iconBg: '#059669',
-    iconColor: '#fff',
-  },
-  warning: {
-    iconBg: '#D97706',
-    iconColor: '#fff',
-  },
-  danger: {
-    iconBg: '#DC2626',
-    iconColor: '#fff',
-  },
-  info: {
-    iconBg: '#0891B2',
-    iconColor: '#fff',
-  },
-  neutral: {
-    iconBg: 'var(--kai-silver, #4C5963)',
-    iconColor: '#fff',
-  },
-};
+interface StatCardProps {
+  icon: LucideIcon;
+  value: string | number;
+  label: string;
+  delta?: number;
+  iconColor?: string;
+  onClick?: () => void;
+  className?: string;
+}
 
 /**
- * StatCard - Reusable stat card with icon, value, label, and optional delta.
- *
- * @param {Object}          props
- * @param {React.ElementType} props.icon     - Lucide icon component
- * @param {string|number}   props.value      - Main value (e.g. "12,340")
- * @param {string}          props.label      - Description label
- * @param {number}          [props.delta]    - Percentage change (positive = up, negative = down)
- * @param {'primary'|'success'|'warning'|'danger'|'info'|'neutral'} [props.variant='primary']
- * @param {string}          [props.className]
- * @param {Object}          [props.style]
+ * StatCard — Reusable stat card with icon, value, label, trend delta, and hover animation.
+ * Design System V2: dark theme, Tailwind, Framer Motion hover.
  */
 export default function StatCard({
   icon: Icon,
   value,
   label,
   delta,
-  variant = 'primary',
+  iconColor = '#7C3AED',
+  onClick,
   className = '',
-  style,
-}) {
-  const vs = VARIANT_STYLES[variant] || VARIANT_STYLES.primary;
+}: StatCardProps) {
   const deltaPositive = delta != null && delta >= 0;
-  const deltaColor = deltaPositive ? '#059669' : '#DC2626';
 
   return (
-    <div className={`kai-stat-card ${className}`} style={style}>
-      <div className="kai-stat-card__header">
-        {Icon && (
-          <div
-            className="kai-stat-card__icon"
-            style={{ background: vs.iconBg, color: vs.iconColor }}
-          >
-            <Icon size={20} />
-          </div>
-        )}
-        {delta != null && (
-          <span
-            className="kai-stat-card__delta"
-            style={{
-              color: deltaColor,
-              background: deltaPositive ? '#05966915' : '#DC262615',
-            }}
-          >
-            {deltaPositive ? <TrendingUp size={14} /> : <TrendingDown size={14} />}
-            {Math.abs(delta).toFixed(1)}%
-          </span>
-        )}
+    <motion.div
+      whileHover={{ y: -2 }}
+      transition={{ duration: 0.2 }}
+      onClick={onClick}
+      data-testid="stat-card"
+      className={`
+        bg-[var(--bg-card)] border border-[var(--border-default)] rounded-[10px]
+        p-3 text-center cursor-pointer
+        hover:border-[#7C3AED]/40 hover:shadow-card-hover
+        transition-[border-color,box-shadow] duration-200
+        ${className}
+      `}
+    >
+      {/* Icon */}
+      {Icon && (
+        <div
+          className="w-5 h-5 rounded-[5px] flex items-center justify-center mx-auto mb-2"
+          style={{ background: `${iconColor}20`, color: iconColor }}
+        >
+          <Icon size={12} />
+        </div>
+      )}
+
+      {/* Value */}
+      <div
+        className="text-[clamp(13px,1.2vw,18px)] font-bold text-[var(--text-primary)] leading-tight truncate tabular-nums"
+        title={String(value)}
+      >
+        {value}
       </div>
 
-      <div className="kai-stat-card__value">{value}</div>
-      <div className="kai-stat-card__label">{label}</div>
+      {/* Label */}
+      <div className="text-[10px] text-[var(--text-muted)] mt-1 leading-tight truncate" title={label}>
+        {label}
+      </div>
 
-      <style>{`
-        .kai-stat-card {
-          background: var(--kai-card-bg, #fff);
-          border: 1px solid var(--kai-border, #E5E7EB);
-          border-radius: 10px;
-          padding: 20px;
-          display: flex;
-          flex-direction: column;
-          gap: 12px;
-          transition: box-shadow 0.2s;
-        }
-        .kai-stat-card:hover {
-          box-shadow: var(--kai-shadow);
-        }
-        .kai-stat-card__header {
-          display: flex;
-          align-items: center;
-          justify-content: space-between;
-        }
-        .kai-stat-card__icon {
-          width: 40px;
-          height: 40px;
-          border-radius: 10px;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          flex-shrink: 0;
-        }
-        .kai-stat-card__delta {
-          display: inline-flex;
-          align-items: center;
-          gap: 4px;
-          font-size: 12px;
-          font-weight: 600;
-          padding: 3px 8px;
-          border-radius: 100px;
-          line-height: 1;
-        }
-        .kai-stat-card__value {
-          font-size: 26px;
-          font-weight: 700;
-          color: var(--kai-near-black, #10222F);
-          line-height: 1.1;
-          letter-spacing: -0.5px;
-          overflow: hidden;
-          text-overflow: ellipsis;
-          white-space: nowrap;
-        }
-        .kai-stat-card__label {
-          font-size: 13px;
-          color: var(--kai-silver, #4C5963);
-          font-weight: 500;
-          overflow: hidden;
-          text-overflow: ellipsis;
-          white-space: nowrap;
-        }
-      `}</style>
-    </div>
+      {/* Trend delta */}
+      {delta != null && (
+        <div
+          className={`inline-flex items-center gap-0.5 text-[9px] font-semibold mt-1 px-1.5 py-0.5 rounded-full ${
+            deltaPositive
+              ? 'text-[#10B981] bg-[#10B981]/15'
+              : 'text-[#EF4444] bg-[#EF4444]/15'
+          }`}
+        >
+          {deltaPositive ? <TrendingUp size={10} /> : <TrendingDown size={10} />}
+          {Math.abs(delta).toFixed(1)}%
+        </div>
+      )}
+    </motion.div>
   );
 }

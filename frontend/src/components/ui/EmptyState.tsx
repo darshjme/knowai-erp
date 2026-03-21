@@ -12,9 +12,8 @@ interface EmptyStateProps {
 }
 
 /**
- * EmptyState - Empty state placeholder with icon, title, description, and action button.
- * Styled per DESIGN.md: centered layout, icon in tinted circle, warm friendly copy,
- * primary #111827 CTA button, secondary text #86868B.
+ * EmptyState — Empty state with icon, warm message, and primary action.
+ * Design System V2: dark theme, centered, max-w-[400px].
  */
 export default function EmptyState({
   icon: Icon = Inbox,
@@ -26,91 +25,33 @@ export default function EmptyState({
   className = '',
 }: EmptyStateProps) {
   return (
-    <div className={`kai-empty-state ${className}`}>
-      <div className="kai-empty-state__icon">
+    <div className={`flex flex-col items-center justify-center text-center py-12 px-6 max-w-[400px] mx-auto gap-2 ${className}`}>
+      <div className="w-20 h-20 rounded-full bg-[var(--bg-elevated)] flex items-center justify-center text-[var(--text-muted)] opacity-50 mb-2">
         <Icon size={48} strokeWidth={1.2} />
       </div>
 
-      <h3 className="kai-empty-state__title">{title}</h3>
+      <h3 className="text-[17px] font-semibold text-[var(--text-primary)] m-0 leading-tight">
+        {title}
+      </h3>
 
       {description && (
-        <p className="kai-empty-state__desc">{description}</p>
+        <p className="text-[13px] text-[var(--text-muted)] m-0 max-w-[360px] leading-relaxed">
+          {description}
+        </p>
       )}
 
       {children ? (
-        <div className="kai-empty-state__actions">{children}</div>
+        <div className="mt-3">{children}</div>
       ) : actionLabel && onAction ? (
-        <div className="kai-empty-state__actions">
-          <button className="kai-empty-state__btn" onClick={onAction}>
+        <div className="mt-3">
+          <button
+            onClick={onAction}
+            className="inline-flex items-center gap-1.5 px-5 py-2 text-[13px] font-semibold text-white bg-[#7C3AED] border-none rounded-lg cursor-pointer hover:bg-[#7C3AED]/90 active:scale-[0.98] transition-all"
+          >
             {actionLabel}
           </button>
         </div>
       ) : null}
-
-      <style>{`
-        .kai-empty-state {
-          display: flex;
-          flex-direction: column;
-          align-items: center;
-          justify-content: center;
-          text-align: center;
-          padding: 48px 24px;
-          max-width: 400px;
-          margin: 0 auto;
-          gap: 8px;
-        }
-        .kai-empty-state__icon {
-          width: 80px;
-          height: 80px;
-          border-radius: 50%;
-          background: var(--kai-primary-light, rgba(17, 24, 39, 0.06));
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          color: #86868B;
-          opacity: 0.5;
-          margin-bottom: 8px;
-        }
-        .kai-empty-state__title {
-          font-size: 17px;
-          font-weight: 600;
-          color: var(--kai-text, #1D1D1F);
-          margin: 0;
-          line-height: 1.3;
-        }
-        .kai-empty-state__desc {
-          font-size: 13px;
-          color: #86868B;
-          margin: 0;
-          max-width: 360px;
-          line-height: 1.5;
-        }
-        .kai-empty-state__actions {
-          margin-top: 12px;
-        }
-        .kai-empty-state__btn {
-          display: inline-flex;
-          align-items: center;
-          gap: 6px;
-          padding: 8px 20px;
-          font-size: 13px;
-          font-weight: 600;
-          font-family: inherit;
-          color: #fff;
-          background: #111827;
-          border: none;
-          border-radius: 8px;
-          cursor: pointer;
-          transition: background 0.15s, transform 0.15s;
-        }
-        .kai-empty-state__btn:hover {
-          background: #1F2937;
-          transform: translateY(-1px);
-        }
-        .kai-empty-state__btn:active {
-          transform: translateY(0);
-        }
-      `}</style>
     </div>
   );
 }
