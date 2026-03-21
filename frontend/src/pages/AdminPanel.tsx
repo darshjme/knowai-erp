@@ -84,19 +84,19 @@ export default function AdminPanel() {
   const getSection = (section) => config[section] || {};
 
   return (
-    <div style={{ padding: '24px', maxWidth: 1400, margin: '0 auto' }}>
+    <div data-testid="admin-panel" style={{ padding: '24px', maxWidth: 1400, margin: '0 auto' }}>
       {/* Header */}
       <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 24 }}>
         <div style={{
           width: 44, height: 44, borderRadius: 12,
-          background: 'linear-gradient(135deg, #111827 0%, #0F172A 100%)',
+          background: 'linear-gradient(135deg, #7C3AED 0%, #0F172A 100%)',
           display: 'flex', alignItems: 'center', justifyContent: 'center'
         }}>
           <Shield size={22} color="#fff" />
         </div>
         <div>
-          <h1 style={{ margin: 0, fontSize: 24, fontWeight: 700, color: '#10222F' }}>Admin Panel</h1>
-          <p style={{ margin: 0, fontSize: 13, color: '#6B7280' }}>System configuration and management</p>
+          <h1 style={{ margin: 0, fontSize: 24, fontWeight: 700, color: 'var(--text-primary)' }}>Admin Panel</h1>
+          <p style={{ margin: 0, fontSize: 13, color: 'var(--text-muted)' }}>System configuration and management</p>
         </div>
       </div>
 
@@ -104,7 +104,7 @@ export default function AdminPanel() {
         {/* Tab Nav */}
         <div style={{
           width: 220, flexShrink: 0,
-          background: '#fff', borderRadius: 12, border: '1px solid #E5E7EB',
+          background: 'var(--bg-card)', borderRadius: 12, border: '1px solid var(--border-default)',
           padding: '8px', height: 'fit-content', position: 'sticky', top: 80,
         }}>
           {TABS.map((tab) => {
@@ -117,7 +117,7 @@ export default function AdminPanel() {
                 style={{
                   width: '100%', display: 'flex', alignItems: 'center', gap: 10,
                   padding: '10px 12px', borderRadius: 8, border: 'none', cursor: 'pointer',
-                  background: isActive ? '#111827' : 'transparent',
+                  background: isActive ? '#7C3AED' : 'transparent',
                   color: isActive ? '#fff' : '#374151',
                   fontSize: 14, fontWeight: isActive ? 600 : 500,
                   transition: 'all 0.15s',
@@ -135,7 +135,7 @@ export default function AdminPanel() {
         {/* Content */}
         <div style={{ flex: 1, minWidth: 0 }}>
           {loading ? (
-            <div style={{ textAlign: 'center', padding: 60, color: '#6B7280' }}>
+            <div style={{ textAlign: 'center', padding: 60, color: 'var(--text-muted)' }}>
               <RefreshCw size={32} className="spin" style={{ animation: 'spin 1s linear infinite' }} />
               <p style={{ marginTop: 12 }}>Loading admin data...</p>
               <style>{`@keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }`}</style>
@@ -163,13 +163,13 @@ export default function AdminPanel() {
 function Card({ title, icon: Icon, children, style }) {
   return (
     <div style={{
-      background: '#fff', borderRadius: 12, border: '1px solid #E5E7EB',
+      background: 'var(--bg-card)', borderRadius: 12, border: '1px solid var(--border-default)',
       padding: 24, marginBottom: 16, ...style,
     }}>
       {title && (
         <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 16 }}>
           {Icon && <Icon size={18} color="#3B82F6" />}
-          <h3 style={{ margin: 0, fontSize: 16, fontWeight: 600, color: '#10222F' }}>{title}</h3>
+          <h3 style={{ margin: 0, fontSize: 16, fontWeight: 600, color: 'var(--text-primary)' }}>{title}</h3>
         </div>
       )}
       {children}
@@ -180,11 +180,11 @@ function Card({ title, icon: Icon, children, style }) {
 function FormField({ label, children, hint }) {
   return (
     <div style={{ marginBottom: 16 }}>
-      <label style={{ display: 'block', fontSize: 13, fontWeight: 600, color: '#374151', marginBottom: 6 }}>
+      <label style={{ display: 'block', fontSize: 13, fontWeight: 600, color: 'var(--text-secondary)', marginBottom: 6 }}>
         {label}
       </label>
       {children}
-      {hint && <p style={{ margin: '4px 0 0', fontSize: 12, color: '#9CA3AF' }}>{hint}</p>}
+      {hint && <p style={{ margin: '4px 0 0', fontSize: 12, color: 'var(--text-muted)' }}>{hint}</p>}
     </div>
   );
 }
@@ -198,7 +198,7 @@ function Input({ value, onChange, type = 'text', placeholder, disabled, style: e
       placeholder={placeholder}
       disabled={disabled}
       style={{
-        width: '100%', padding: '8px 12px', borderRadius: 8, border: '1px solid #D1D5DB',
+        width: '100%', padding: '8px 12px', borderRadius: 8, border: '1px solid var(--border-default)',
         fontSize: 14, outline: 'none', transition: 'border-color 0.15s',
         background: disabled ? '#F3F4F6' : '#fff', ...extraStyle,
       }}
@@ -216,7 +216,7 @@ function TextArea({ value, onChange, placeholder, rows = 3 }) {
       placeholder={placeholder}
       rows={rows}
       style={{
-        width: '100%', padding: '8px 12px', borderRadius: 8, border: '1px solid #D1D5DB',
+        width: '100%', padding: '8px 12px', borderRadius: 8, border: '1px solid var(--border-default)',
         fontSize: 14, outline: 'none', resize: 'vertical', fontFamily: 'inherit',
       }}
       onFocus={(e) => { e.target.style.borderColor = '#3B82F6'; }}
@@ -232,18 +232,18 @@ function Toggle({ checked, onChange, label }) {
         onClick={() => onChange(!checked)}
         style={{
           width: 44, height: 24, borderRadius: 12, cursor: 'pointer',
-          background: checked ? '#111827' : '#D1D5DB', transition: 'background 0.2s',
+          background: checked ? '#7C3AED' : '#D1D5DB', transition: 'background 0.2s',
           position: 'relative',
         }}
       >
         <div style={{
-          width: 20, height: 20, borderRadius: 10, background: '#fff',
+          width: 20, height: 20, borderRadius: 10, background: 'var(--bg-card)',
           position: 'absolute', top: 2,
           left: checked ? 22 : 2, transition: 'left 0.2s',
           boxShadow: '0 1px 3px rgba(0,0,0,0.2)',
         }} />
       </div>
-      {label && <span style={{ color: '#374151' }}>{label}</span>}
+      {label && <span style={{ color: 'var(--text-secondary)' }}>{label}</span>}
     </label>
   );
 }
@@ -256,7 +256,7 @@ function SaveButton({ onClick, saving, label = 'Save Changes' }) {
       style={{
         display: 'inline-flex', alignItems: 'center', gap: 8,
         padding: '10px 24px', borderRadius: 8, border: 'none',
-        background: saving ? '#93C5FD' : '#111827', color: '#fff',
+        background: saving ? '#93C5FD' : '#7C3AED', color: '#fff',
         fontSize: 14, fontWeight: 600, cursor: saving ? 'default' : 'pointer',
         transition: 'background 0.15s',
       }}
@@ -270,18 +270,18 @@ function SaveButton({ onClick, saving, label = 'Save Changes' }) {
 function StatCard({ label, value, icon: Icon, color, sub }) {
   return (
     <div style={{
-      background: '#fff', borderRadius: 12, border: '1px solid #E5E7EB',
+      background: 'var(--bg-card)', borderRadius: 12, border: '1px solid var(--border-default)',
       padding: '16px 20px', flex: '1 1 180px', minWidth: 180,
     }}>
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
-        <span style={{ fontSize: 12, fontWeight: 600, color: '#6B7280', textTransform: 'uppercase', letterSpacing: 0.5 }}>{label}</span>
+        <span style={{ fontSize: 12, fontWeight: 600, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: 0.5 }}>{label}</span>
         {Icon && <div style={{
           width: 32, height: 32, borderRadius: 8, background: `${color}15`,
           display: 'flex', alignItems: 'center', justifyContent: 'center',
         }}><Icon size={16} color={color} /></div>}
       </div>
-      <div style={{ fontSize: 28, fontWeight: 700, color: '#10222F' }}>{value ?? '---'}</div>
-      {sub && <div style={{ fontSize: 12, color: '#6B7280', marginTop: 2 }}>{sub}</div>}
+      <div style={{ fontSize: 28, fontWeight: 700, color: 'var(--text-primary)' }}>{value ?? '---'}</div>
+      {sub && <div style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 2 }}>{sub}</div>}
     </div>
   );
 }
@@ -302,7 +302,7 @@ function PasswordInput({ value, onChange, placeholder }) {
         onClick={() => setShow(!show)}
         style={{
           position: 'absolute', right: 8, top: '50%', transform: 'translateY(-50%)',
-          background: 'none', border: 'none', cursor: 'pointer', color: '#6B7280', padding: 4,
+          background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-muted)', padding: 4,
         }}
       >
         {show ? <EyeOff size={16} /> : <Eye size={16} />}
@@ -327,13 +327,13 @@ function DashboardTab({ stats, onRefresh }) {
   return (
     <>
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
-        <h2 style={{ margin: 0, fontSize: 20, fontWeight: 700, color: '#10222F' }}>System Dashboard</h2>
+        <h2 style={{ margin: 0, fontSize: 20, fontWeight: 700, color: 'var(--text-primary)' }}>System Dashboard</h2>
         <button
           onClick={onRefresh}
           style={{
             display: 'inline-flex', alignItems: 'center', gap: 6,
-            padding: '8px 16px', borderRadius: 8, border: '1px solid #D1D5DB',
-            background: '#fff', fontSize: 13, fontWeight: 500, cursor: 'pointer', color: '#374151',
+            padding: '8px 16px', borderRadius: 8, border: '1px solid var(--border-default)',
+            background: 'var(--bg-card)', fontSize: 13, fontWeight: 500, cursor: 'pointer', color: 'var(--text-secondary)',
           }}
         >
           <RefreshCw size={14} /> Refresh
@@ -342,7 +342,7 @@ function DashboardTab({ stats, onRefresh }) {
 
       {/* Stats Grid */}
       <div style={{ display: 'flex', flexWrap: 'wrap', gap: 12, marginBottom: 20 }}>
-        <StatCard label="Total Users" value={u.total} icon={Users} color="#111827" sub={`${u.active || 0} active, ${u.newThisMonth || 0} new this month`} />
+        <StatCard label="Total Users" value={u.total} icon={Users} color="#7C3AED" sub={`${u.active || 0} active, ${u.newThisMonth || 0} new this month`} />
         <StatCard label="Projects" value={p.total} icon={FileText} color="#7C3AED" sub={`${p.active || 0} active`} />
         <StatCard label="Tasks" value={t.total} icon={Activity} color="#059669" sub={`${t.completed || 0} completed (${t.completionRate || 0}%)`} />
         <StatCard label="Revenue" value={`₹${((inv.revenue || 0) / 1000).toFixed(1)}K`} icon={TrendingUp} color="#D97706" sub={`₹${((inv.pendingPayments || 0) / 1000).toFixed(1)}K pending`} />
@@ -354,20 +354,20 @@ function DashboardTab({ stats, onRefresh }) {
       <Card title="System Health" icon={Server}>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: 16 }}>
           <div>
-            <div style={{ fontSize: 12, color: '#6B7280', marginBottom: 4 }}>Uptime</div>
-            <div style={{ fontSize: 16, fontWeight: 600, color: '#10222F' }}>{sys.uptime || '---'}</div>
+            <div style={{ fontSize: 12, color: 'var(--text-muted)', marginBottom: 4 }}>Uptime</div>
+            <div style={{ fontSize: 16, fontWeight: 600, color: 'var(--text-primary)' }}>{sys.uptime || '---'}</div>
           </div>
           <div>
-            <div style={{ fontSize: 12, color: '#6B7280', marginBottom: 4 }}>Node Version</div>
-            <div style={{ fontSize: 16, fontWeight: 600, color: '#10222F' }}>{sys.nodeVersion || '---'}</div>
+            <div style={{ fontSize: 12, color: 'var(--text-muted)', marginBottom: 4 }}>Node Version</div>
+            <div style={{ fontSize: 16, fontWeight: 600, color: 'var(--text-primary)' }}>{sys.nodeVersion || '---'}</div>
           </div>
           <div>
-            <div style={{ fontSize: 12, color: '#6B7280', marginBottom: 4 }}>Memory Usage</div>
-            <div style={{ fontSize: 16, fontWeight: 600, color: '#10222F' }}>{sys.memoryUsageMB || 0} MB</div>
+            <div style={{ fontSize: 12, color: 'var(--text-muted)', marginBottom: 4 }}>Memory Usage</div>
+            <div style={{ fontSize: 16, fontWeight: 600, color: 'var(--text-primary)' }}>{sys.memoryUsageMB || 0} MB</div>
           </div>
           <div>
-            <div style={{ fontSize: 12, color: '#6B7280', marginBottom: 4 }}>Platform</div>
-            <div style={{ fontSize: 16, fontWeight: 600, color: '#10222F' }}>{sys.platform || '---'}</div>
+            <div style={{ fontSize: 12, color: 'var(--text-muted)', marginBottom: 4 }}>Platform</div>
+            <div style={{ fontSize: 16, fontWeight: 600, color: 'var(--text-primary)' }}>{sys.platform || '---'}</div>
           </div>
         </div>
       </Card>
@@ -378,11 +378,11 @@ function DashboardTab({ stats, onRefresh }) {
           <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
             {u.byRole.map((r) => (
               <div key={r.role} style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                <span style={{ width: 160, fontSize: 13, fontWeight: 500, color: '#374151' }}>{r.role}</span>
-                <div style={{ flex: 1, height: 24, background: '#F3F4F6', borderRadius: 6, overflow: 'hidden' }}>
+                <span style={{ width: 160, fontSize: 13, fontWeight: 500, color: 'var(--text-secondary)' }}>{r.role}</span>
+                <div style={{ flex: 1, height: 24, background: 'var(--bg-elevated)', borderRadius: 6, overflow: 'hidden' }}>
                   <div style={{
                     height: '100%', borderRadius: 6,
-                    background: 'linear-gradient(90deg, #111827, #3B82F6)',
+                    background: 'linear-gradient(90deg, #7C3AED, #3B82F6)',
                     width: `${Math.max((r.count / (u.total || 1)) * 100, 4)}%`,
                     display: 'flex', alignItems: 'center', justifyContent: 'flex-end', paddingRight: 8,
                     fontSize: 11, fontWeight: 700, color: '#fff', minWidth: 30,
@@ -402,10 +402,10 @@ function DashboardTab({ stats, onRefresh }) {
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(150px, 1fr))', gap: 12 }}>
             {Object.entries(stats.dbTables).map(([table, count]) => (
               <div key={table} style={{
-                padding: '10px 14px', background: '#FAFAFA', borderRadius: 8, border: '1px solid #E5E7EB',
+                padding: '10px 14px', background: 'var(--bg-elevated)', borderRadius: 8, border: '1px solid var(--border-default)',
               }}>
-                <div style={{ fontSize: 11, color: '#6B7280', textTransform: 'uppercase', letterSpacing: 0.5 }}>{table}</div>
-                <div style={{ fontSize: 20, fontWeight: 700, color: '#10222F' }}>{String(count)}</div>
+                <div style={{ fontSize: 11, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: 0.5 }}>{table}</div>
+                <div style={{ fontSize: 20, fontWeight: 700, color: 'var(--text-primary)' }}>{String(count)}</div>
               </div>
             ))}
           </div>
@@ -422,7 +422,7 @@ function BrandingTab({ data, onSave, saving }) {
     name: data.name || 'Know AI',
     logo_url: data.logo_url || '/logo.png',
     favicon_url: data.favicon_url || '/favicon.ico',
-    primary_color: data.primary_color || '#111827',
+    primary_color: data.primary_color || '#7C3AED',
     tagline: data.tagline || '',
   });
 
@@ -449,16 +449,16 @@ function BrandingTab({ data, onSave, saving }) {
               type="color"
               value={form.primary_color}
               onChange={(e) => set('primary_color', e.target.value)}
-              style={{ width: 44, height: 36, border: '1px solid #D1D5DB', borderRadius: 8, cursor: 'pointer', padding: 2 }}
+              style={{ width: 44, height: 36, border: '1px solid var(--border-default)', borderRadius: 8, cursor: 'pointer', padding: 2 }}
             />
-            <Input value={form.primary_color} onChange={(v) => set('primary_color', v)} placeholder="#111827" style={{ flex: 1 }} />
+            <Input value={form.primary_color} onChange={(v) => set('primary_color', v)} placeholder="#7C3AED" style={{ flex: 1 }} />
           </div>
         </FormField>
       </div>
 
       {/* Live Preview */}
-      <div style={{ marginTop: 20, padding: 20, background: '#FAFAFA', borderRadius: 12, border: '1px solid #E5E7EB' }}>
-        <h4 style={{ margin: '0 0 12px', fontSize: 14, fontWeight: 600, color: '#6B7280' }}>Live Preview</h4>
+      <div style={{ marginTop: 20, padding: 20, background: 'var(--bg-elevated)', borderRadius: 12, border: '1px solid var(--border-default)' }}>
+        <h4 style={{ margin: '0 0 12px', fontSize: 14, fontWeight: 600, color: 'var(--text-muted)' }}>Live Preview</h4>
         <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 12 }}>
           <div style={{
             width: 40, height: 40, borderRadius: 10, background: form.primary_color,
@@ -468,8 +468,8 @@ function BrandingTab({ data, onSave, saving }) {
             {form.name?.[0] || 'K'}
           </div>
           <div>
-            <div style={{ fontSize: 18, fontWeight: 700, color: '#10222F' }}>{form.name || 'Know AI'}</div>
-            <div style={{ fontSize: 12, color: '#6B7280' }}>{form.tagline || 'Your tagline here'}</div>
+            <div style={{ fontSize: 18, fontWeight: 700, color: 'var(--text-primary)' }}>{form.name || 'Know AI'}</div>
+            <div style={{ fontSize: 12, color: 'var(--text-muted)' }}>{form.tagline || 'Your tagline here'}</div>
           </div>
         </div>
         <button style={{
@@ -554,8 +554,8 @@ function EmailTab({ data, onSave, saving }) {
           disabled={testing}
           style={{
             display: 'inline-flex', alignItems: 'center', gap: 8,
-            padding: '10px 20px', borderRadius: 8, border: '1px solid #D1D5DB',
-            background: '#fff', color: '#374151', fontSize: 14, fontWeight: 500,
+            padding: '10px 20px', borderRadius: 8, border: '1px solid var(--border-default)',
+            background: 'var(--bg-card)', color: 'var(--text-secondary)', fontSize: 14, fontWeight: 500,
             cursor: testing ? 'default' : 'pointer',
           }}
         >
@@ -617,16 +617,16 @@ function StorageTab({ data, onSave, saving, stats }) {
     <Card title="File Storage" icon={HardDrive}>
       {/* Storage usage */}
       <div style={{
-        padding: 16, background: '#FAFAFA', borderRadius: 10, border: '1px solid #E5E7EB', marginBottom: 20,
+        padding: 16, background: 'var(--bg-elevated)', borderRadius: 10, border: '1px solid var(--border-default)', marginBottom: 20,
         display: 'flex', gap: 24,
       }}>
         <div>
-          <div style={{ fontSize: 12, color: '#6B7280' }}>Total Files</div>
-          <div style={{ fontSize: 24, fontWeight: 700, color: '#10222F' }}>{fileStats.total || 0}</div>
+          <div style={{ fontSize: 12, color: 'var(--text-muted)' }}>Total Files</div>
+          <div style={{ fontSize: 24, fontWeight: 700, color: 'var(--text-primary)' }}>{fileStats.total || 0}</div>
         </div>
         <div>
-          <div style={{ fontSize: 12, color: '#6B7280' }}>Storage Used</div>
-          <div style={{ fontSize: 24, fontWeight: 700, color: '#10222F' }}>{fileStats.storageUsedMB || 0} MB</div>
+          <div style={{ fontSize: 12, color: 'var(--text-muted)' }}>Storage Used</div>
+          <div style={{ fontSize: 24, fontWeight: 700, color: 'var(--text-primary)' }}>{fileStats.storageUsedMB || 0} MB</div>
         </div>
       </div>
 
@@ -711,8 +711,8 @@ function StorageTab({ data, onSave, saving, stats }) {
           disabled={testing}
           style={{
             display: 'inline-flex', alignItems: 'center', gap: 8,
-            padding: '10px 20px', borderRadius: 8, border: '1px solid #D1D5DB',
-            background: '#fff', color: '#374151', fontSize: 14, fontWeight: 500,
+            padding: '10px 20px', borderRadius: 8, border: '1px solid var(--border-default)',
+            background: 'var(--bg-card)', color: 'var(--text-secondary)', fontSize: 14, fontWeight: 500,
             cursor: testing ? 'default' : 'pointer',
           }}
         >
@@ -741,7 +741,7 @@ function CompanyTab({ data, onSave, saving }) {
 
   return (
     <Card title="Company Information" icon={Building2}>
-      <p style={{ fontSize: 13, color: '#6B7280', marginTop: -8, marginBottom: 16 }}>
+      <p style={{ fontSize: 13, color: 'var(--text-muted)', marginTop: -8, marginBottom: 16 }}>
         This information appears on invoices and official documents.
       </p>
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
@@ -891,8 +891,8 @@ function IntegrationsTab({ data, notifs, onSave, saving }) {
             <button
               onClick={() => testWebhook(notifForm.slack_webhook, 'Slack')}
               style={{
-                padding: '8px 14px', borderRadius: 8, border: '1px solid #D1D5DB',
-                background: '#fff', fontSize: 12, fontWeight: 500, cursor: 'pointer', whiteSpace: 'nowrap',
+                padding: '8px 14px', borderRadius: 8, border: '1px solid var(--border-default)',
+                background: 'var(--bg-card)', fontSize: 12, fontWeight: 500, cursor: 'pointer', whiteSpace: 'nowrap',
               }}
             >
               Test
@@ -907,8 +907,8 @@ function IntegrationsTab({ data, notifs, onSave, saving }) {
             <button
               onClick={() => testWebhook(notifForm.discord_webhook, 'Discord')}
               style={{
-                padding: '8px 14px', borderRadius: 8, border: '1px solid #D1D5DB',
-                background: '#fff', fontSize: 12, fontWeight: 500, cursor: 'pointer', whiteSpace: 'nowrap',
+                padding: '8px 14px', borderRadius: 8, border: '1px solid var(--border-default)',
+                background: 'var(--bg-card)', fontSize: 12, fontWeight: 500, cursor: 'pointer', whiteSpace: 'nowrap',
               }}
             >
               Test
@@ -923,8 +923,8 @@ function IntegrationsTab({ data, notifs, onSave, saving }) {
             <button
               onClick={() => testWebhook(notifForm.teams_webhook, 'Teams')}
               style={{
-                padding: '8px 14px', borderRadius: 8, border: '1px solid #D1D5DB',
-                background: '#fff', fontSize: 12, fontWeight: 500, cursor: 'pointer', whiteSpace: 'nowrap',
+                padding: '8px 14px', borderRadius: 8, border: '1px solid var(--border-default)',
+                background: 'var(--bg-card)', fontSize: 12, fontWeight: 500, cursor: 'pointer', whiteSpace: 'nowrap',
               }}
             >
               Test
@@ -973,7 +973,7 @@ function UsersTab({ stats }) {
     { level: 60, roles: ['BRAND_PARTNER'], label: 'Partners (Level 60)', color: '#EA580C' },
     { level: 50, roles: ['SR_DEVELOPER', 'SR_GRAPHIC_DESIGNER', 'SR_EDITOR', 'SR_CONTENT_STRATEGIST', 'SR_SCRIPT_WRITER', 'SR_BRAND_STRATEGIST', 'SR_ACCOUNTANT'], label: 'Senior Staff (Level 50)', color: '#4F46E5' },
     { level: 30, roles: ['JR_DEVELOPER', 'JR_GRAPHIC_DESIGNER', 'JR_EDITOR', 'JR_CONTENT_STRATEGIST', 'JR_SCRIPT_WRITER', 'JR_BRAND_STRATEGIST', 'JR_ACCOUNTANT'], label: 'Junior Staff (Level 30)', color: '#6366F1' },
-    { level: 10, roles: ['GUY', 'OFFICE_BOY', 'DRIVER'], label: 'General (Level 10)', color: '#6B7280' },
+    { level: 10, roles: ['GUY', 'OFFICE_BOY', 'DRIVER'], label: 'General (Level 10)', color: 'var(--text-muted)' },
   ];
 
   const byRole = u.byRole || [];
@@ -989,15 +989,15 @@ function UsersTab({ stats }) {
             const totalInTier = tier.roles.reduce((sum, r) => sum + (roleMap[r] || 0), 0);
             return (
               <div key={tier.level} style={{
-                padding: '12px 16px', borderRadius: 10, border: '1px solid #E5E7EB',
-                background: '#FAFAFA',
+                padding: '12px 16px', borderRadius: 10, border: '1px solid var(--border-default)',
+                background: 'var(--bg-elevated)',
               }}>
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                     <div style={{
                       width: 8, height: 8, borderRadius: 4, background: tier.color,
                     }} />
-                    <span style={{ fontSize: 14, fontWeight: 600, color: '#10222F' }}>{tier.label}</span>
+                    <span style={{ fontSize: 14, fontWeight: 600, color: 'var(--text-primary)' }}>{tier.label}</span>
                   </div>
                   <span style={{
                     fontSize: 12, fontWeight: 600, color: tier.color,
@@ -1010,7 +1010,7 @@ function UsersTab({ stats }) {
                   {tier.roles.map((role) => (
                     <span key={role} style={{
                       fontSize: 12, padding: '3px 10px', borderRadius: 6,
-                      background: '#fff', border: '1px solid #E5E7EB', color: '#374151',
+                      background: 'var(--bg-card)', border: '1px solid var(--border-default)', color: 'var(--text-secondary)',
                       fontWeight: 500,
                     }}>
                       {role.replace(/_/g, ' ')} ({roleMap[role] || 0})
@@ -1032,19 +1032,19 @@ function UsersTab({ stats }) {
               return (
                 <div key={r.role} style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
                   <span style={{
-                    width: 180, fontSize: 12, fontWeight: 500, color: '#374151',
+                    width: 180, fontSize: 12, fontWeight: 500, color: 'var(--text-secondary)',
                     overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
                   }}>
                     {r.role.replace(/_/g, ' ')}
                   </span>
-                  <div style={{ flex: 1, height: 20, background: '#F3F4F6', borderRadius: 4, overflow: 'hidden' }}>
+                  <div style={{ flex: 1, height: 20, background: 'var(--bg-elevated)', borderRadius: 4, overflow: 'hidden' }}>
                     <div style={{
                       height: '100%', borderRadius: 4,
-                      background: 'linear-gradient(90deg, #111827, #3B82F6)',
+                      background: 'linear-gradient(90deg, #7C3AED, #3B82F6)',
                       width: `${pct}%`, transition: 'width 0.3s',
                     }} />
                   </div>
-                  <span style={{ width: 30, fontSize: 13, fontWeight: 600, color: '#10222F', textAlign: 'right' }}>
+                  <span style={{ width: 30, fontSize: 13, fontWeight: 600, color: 'var(--text-primary)', textAlign: 'right' }}>
                     {r.count}
                   </span>
                 </div>
@@ -1056,7 +1056,7 @@ function UsersTab({ stats }) {
 
       {/* Quick Stats */}
       <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
-        <StatCard label="Total Users" value={u.total} icon={Users} color="#111827" />
+        <StatCard label="Total Users" value={u.total} icon={Users} color="#7C3AED" />
         <StatCard label="Active Now" value={u.active} icon={Activity} color="#059669" />
         <StatCard label="New This Month" value={u.newThisMonth} icon={TrendingUp} color="#D97706" />
         <StatCard label="Unique Roles" value={byRole.length} icon={Shield} color="#7C3AED" />

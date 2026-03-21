@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useDispatch } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
-import { Row, Col, Spinner, Alert } from 'react-bootstrap';
+// react-bootstrap removed - using Tailwind grid/flex
 import Chart from 'react-apexcharts';
 import {
   Users,
@@ -249,8 +249,8 @@ export default function HrDashboard() {
 
   if (loading) {
     return (
-      <div className="flex-center" style={{ minHeight: 400 }}>
-        <Spinner animation="border" style={{ color: 'var(--kai-primary)' }} />
+      <div className="flex items-center justify-center" style={{ minHeight: 400 }}>
+        <div className="w-8 h-8 border-2 border-[#7C3AED] border-t-transparent rounded-full animate-spin" />
       </div>
     );
   }
@@ -258,16 +258,16 @@ export default function HrDashboard() {
   if (error) {
     return (
       <div>
-        <div className="page-header">
+        <div className="flex items-center justify-between mb-6 flex-wrap gap-4">
           <div><h1>HR Dashboard</h1><p>Human resources overview</p></div>
         </div>
-        <Alert variant="danger" className="d-flex align-items-center gap-2">
+        <div className="flex items-center gap-2 p-4 rounded-lg bg-[#CB3939]/10 text-[#CB3939] text-[13px]">
           <AlertCircle size={18} />
           <div>
             <strong>Error loading HR data.</strong> {error}
-            <button className="kai-btn kai-btn-outline kai-btn-sm ms-3" onClick={fetchHrData}>Retry</button>
+            <button className="bg-transparent border border-[var(--border-default)] text-[var(--text-secondary)] rounded-lg px-2 py-1 text-[13px] hover:bg-[var(--bg-elevated)] transition-colors ml-3" onClick={fetchHrData}>Retry</button>
           </div>
-        </Alert>
+        </div>
       </div>
     );
   }
@@ -275,79 +275,79 @@ export default function HrDashboard() {
   return (
     <div>
       {/* Page Header */}
-      <div className="page-header">
+      <div className="flex items-center justify-between mb-6 flex-wrap gap-4">
         <div>
           <h1>HR Dashboard</h1>
           <p>Human resources overview</p>
         </div>
-        <div className="page-actions">
-          <button className="kai-btn kai-btn-outline kai-btn-sm" onClick={fetchHrData}>Refresh</button>
+        <div className="flex items-center gap-2">
+          <button className="bg-transparent border border-[var(--border-default)] text-[var(--text-secondary)] rounded-lg px-2 py-1 text-[13px] hover:bg-[var(--bg-elevated)] transition-colors" onClick={fetchHrData}>Refresh</button>
         </div>
       </div>
 
       {/* Top Stats Row */}
-      <Row className="g-3 mb-4">
+      <div className="grid grid-cols-12 gap-3 mb-4">
         {/* Total Employees */}
-        <Col xs={12} sm={6} lg={3}>
-          <div className="stat-card">
-            <div className="flex-between" style={{ marginBottom: 16 }}>
-              <div className="stat-icon" style={{ background: '#F3F4F6', color: '#111827' }}><Users /></div>
+        <div className="col-span-12 sm:col-span-6 lg:col-span-3">
+          <div className="bg-[var(--bg-card)] border border-[var(--border-default)] rounded-xl p-5">
+            <div className="flex items-center justify-between" style={{ marginBottom: 16 }}>
+              <div className="w-12 h-12 rounded-2xl flex items-center justify-center" style={{ background: '#F3F4F6', color: '#111827' }}><Users /></div>
             </div>
-            <div className="stat-value">{totalEmployees}</div>
-            <div className="stat-label">Total Employees</div>
+            <div className="text-[22px] font-bold text-[var(--text-primary)]">{totalEmployees}</div>
+            <div className="text-[13px] text-[var(--text-secondary)] mt-1">Total Employees</div>
           </div>
-        </Col>
+        </div>
 
         {/* Leave Summary */}
-        <Col xs={12} sm={6} lg={3}>
-          <div className="stat-card">
-            <div className="flex-between" style={{ marginBottom: 16 }}>
-              <div className="stat-icon" style={{ background: '#FFF4ED', color: '#EA580C' }}><CalendarX2 /></div>
+        <div className="col-span-12 sm:col-span-6 lg:col-span-3">
+          <div className="bg-[var(--bg-card)] border border-[var(--border-default)] rounded-xl p-5">
+            <div className="flex items-center justify-between" style={{ marginBottom: 16 }}>
+              <div className="w-12 h-12 rounded-2xl flex items-center justify-center" style={{ background: '#FFF4ED', color: '#EA580C' }}><CalendarX2 /></div>
             </div>
             <div style={{ display: 'flex', gap: 16, marginBottom: 4 }}>
               <div>
-                <div style={{ fontSize: 22, fontWeight: 700, color: 'var(--kai-warning)' }}>{leaveSummary.pending}</div>
-                <div style={{ fontSize: 11, color: 'var(--kai-text-muted)' }}>Pending</div>
+                <div style={{ fontSize: 22, fontWeight: 700, color: '#F59E0B' }}>{leaveSummary.pending}</div>
+                <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>Pending</div>
               </div>
               <div>
-                <div style={{ fontSize: 22, fontWeight: 700, color: 'var(--kai-success)' }}>{leaveSummary.approved}</div>
-                <div style={{ fontSize: 11, color: 'var(--kai-text-muted)' }}>Approved</div>
+                <div style={{ fontSize: 22, fontWeight: 700, color: '#10B981' }}>{leaveSummary.approved}</div>
+                <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>Approved</div>
               </div>
               <div>
-                <div style={{ fontSize: 22, fontWeight: 700, color: 'var(--kai-danger)' }}>{leaveSummary.rejected}</div>
-                <div style={{ fontSize: 11, color: 'var(--kai-text-muted)' }}>Rejected</div>
+                <div style={{ fontSize: 22, fontWeight: 700, color: '#EF4444' }}>{leaveSummary.rejected}</div>
+                <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>Rejected</div>
               </div>
             </div>
-            <div className="stat-label">Leave Summary</div>
+            <div className="text-[13px] text-[var(--text-secondary)] mt-1">Leave Summary</div>
           </div>
-        </Col>
+        </div>
 
         {/* Payroll Overview */}
-        <Col xs={12} sm={6} lg={3}>
-          <div className="stat-card">
-            <div className="flex-between" style={{ marginBottom: 16 }}>
-              <div className="stat-icon" style={{ background: '#E8F9EF', color: '#16A34A' }}><DollarSign /></div>
+        <div className="col-span-12 sm:col-span-6 lg:col-span-3">
+          <div className="bg-[var(--bg-card)] border border-[var(--border-default)] rounded-xl p-5">
+            <div className="flex items-center justify-between" style={{ marginBottom: 16 }}>
+              <div className="w-12 h-12 rounded-2xl flex items-center justify-center" style={{ background: '#E8F9EF', color: '#16A34A' }}><DollarSign /></div>
             </div>
-            <div className="stat-value" style={{ fontSize: 22 }}>{formatCurrency(payrollOverview.total)}</div>
-            <div className="stat-label" style={{ marginBottom: 8 }}>Total Payroll This Month</div>
+            <div className="text-[22px] font-bold text-[var(--text-primary)]" style={{ fontSize: 22 }}>{formatCurrency(payrollOverview.total)}</div>
+            <div className="text-[13px] text-[var(--text-secondary)] mt-1" style={{ marginBottom: 8 }}>Total Payroll This Month</div>
             <div style={{ display: 'flex', gap: 12 }}>
-              <span className="kai-badge warning" style={{ fontSize: 10 }}>
+              <span className="text-[10px] px-2 py-0.5 rounded-full font-medium bg-[#EA580C]/10 text-[#EA580C]" style={{ fontSize: 10 }}>
                 <Clock size={10} /> Pending: {formatCurrency(payrollOverview.pending)}
               </span>
-              <span className="kai-badge success" style={{ fontSize: 10 }}>
+              <span className="text-[10px] px-2 py-0.5 rounded-full font-medium bg-[#16A34A]/10 text-[#16A34A]" style={{ fontSize: 10 }}>
                 <CheckCircle2 size={10} /> Paid: {formatCurrency(payrollOverview.paid)}
               </span>
             </div>
           </div>
-        </Col>
+        </div>
 
         {/* Attendance Overview */}
-        <Col xs={12} sm={6} lg={3}>
-          <div className="stat-card">
-            <div className="flex-between" style={{ marginBottom: 16 }}>
-              <div className="stat-icon" style={{ background: '#F3EAFF', color: '#8B3FE9' }}><ClipboardCheck /></div>
+        <div className="col-span-12 sm:col-span-6 lg:col-span-3">
+          <div className="bg-[var(--bg-card)] border border-[var(--border-default)] rounded-xl p-5">
+            <div className="flex items-center justify-between" style={{ marginBottom: 16 }}>
+              <div className="w-12 h-12 rounded-2xl flex items-center justify-center" style={{ background: '#F3EAFF', color: '#8B3FE9' }}><ClipboardCheck /></div>
             </div>
-            <div className="stat-label" style={{ marginBottom: 8, fontWeight: 600 }}>Attendance Today</div>
+            <div className="text-[13px] text-[var(--text-secondary)] mt-1" style={{ marginBottom: 8, fontWeight: 600 }}>Attendance Today</div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
               {[
                 { label: 'Present', value: attendance.present, color: '#16A34A' },
@@ -357,10 +357,10 @@ export default function HrDashboard() {
               ].map((item) => (
                 <div key={item.label} style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                   <div style={{ width: 8, height: 8, borderRadius: '50%', background: item.color, flexShrink: 0 }} />
-                  <span style={{ fontSize: 12, color: 'var(--kai-text-muted)', flex: 1 }}>{item.label}</span>
-                  <span style={{ fontSize: 13, fontWeight: 700, color: 'var(--kai-text)' }}>{item.value}</span>
+                  <span style={{ fontSize: 12, color: 'var(--text-muted)', flex: 1 }}>{item.label}</span>
+                  <span style={{ fontSize: 13, fontWeight: 700, color: 'var(--text-primary)' }}>{item.value}</span>
                   {totalAttendance > 0 && (
-                    <span style={{ fontSize: 11, color: 'var(--kai-text-muted)' }}>
+                    <span style={{ fontSize: 11, color: 'var(--text-muted)' }}>
                       ({((item.value / totalAttendance) * 100).toFixed(0)}%)
                     </span>
                   )}
@@ -368,19 +368,19 @@ export default function HrDashboard() {
               ))}
             </div>
           </div>
-        </Col>
-      </Row>
+        </div>
+      </div>
 
       {/* Charts Row */}
-      <Row className="g-3 mb-4">
+      <div className="grid grid-cols-12 gap-3 mb-4">
         {/* Employees by Role */}
-        <Col xs={12} lg={7}>
-          <div className="kai-card" style={{ height: '100%' }}>
-            <div className="kai-card-header">
+        <div className="col-span-12 lg:col-span-7">
+          <div className="bg-[var(--bg-card)] border border-[var(--border-default)] rounded-xl" style={{ height: '100%' }}>
+            <div className="flex items-center justify-between p-4 border-b border-[var(--border-subtle)]">
               <h6>Employees by Role</h6>
-              <span className="kai-badge secondary">{employeesByRole.length} roles</span>
+              <span className="text-[10px] px-2 py-0.5 rounded-full font-medium bg-[var(--bg-elevated)] text-[var(--text-secondary)]">{employeesByRole.length} roles</span>
             </div>
-            <div className="kai-card-body">
+            <div className="p-4">
               {roleValues.length > 0 && roleValues.some((v) => v > 0) ? (
                 <Chart
                   options={{ ...roleBarOptions, xaxis: { ...roleBarOptions.xaxis, categories: roleLabels } }}
@@ -389,39 +389,39 @@ export default function HrDashboard() {
                   height={320}
                 />
               ) : (
-                <div className="flex-center text-muted" style={{ height: 320 }}>No employee role data available</div>
+                <div className="flex items-center justify-center text-[var(--text-muted)]" style={{ height: 320 }}>No employee role data available</div>
               )}
             </div>
           </div>
-        </Col>
+        </div>
 
         {/* Department Distribution */}
-        <Col xs={12} lg={5}>
-          <div className="kai-card" style={{ height: '100%' }}>
-            <div className="kai-card-header">
+        <div className="col-span-12 lg:col-span-5">
+          <div className="bg-[var(--bg-card)] border border-[var(--border-default)] rounded-xl" style={{ height: '100%' }}>
+            <div className="flex items-center justify-between p-4 border-b border-[var(--border-subtle)]">
               <h6>Department Distribution</h6>
             </div>
-            <div className="kai-card-body">
+            <div className="p-4">
               {deptValues.length > 0 && deptValues.some((v) => v > 0) ? (
                 <Chart options={deptPieOptions} series={deptValues} type="pie" height={320} />
               ) : (
-                <div className="flex-center text-muted" style={{ height: 320 }}>No department data available</div>
+                <div className="flex items-center justify-center text-[var(--text-muted)]" style={{ height: 320 }}>No department data available</div>
               )}
             </div>
           </div>
-        </Col>
-      </Row>
+        </div>
+      </div>
 
       {/* Bottom Row */}
-      <Row className="g-3">
+      <div className="grid grid-cols-12 gap-3">
         {/* Recent Hires */}
-        <Col xs={12} lg={4}>
-          <div className="kai-card" style={{ height: '100%' }}>
-            <div className="kai-card-header">
+        <div className="col-span-12 lg:col-span-4">
+          <div className="bg-[var(--bg-card)] border border-[var(--border-default)] rounded-xl" style={{ height: '100%' }}>
+            <div className="flex items-center justify-between p-4 border-b border-[var(--border-subtle)]">
               <h6>Recent Hires</h6>
-              <UserPlus size={16} style={{ color: 'var(--kai-primary)' }} />
+              <UserPlus size={16} style={{ color: '#7C3AED' }} />
             </div>
-            <div className="kai-card-body">
+            <div className="p-4">
               {recentHires.length > 0 ? (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
                   {recentHires.slice(0, 5).map((hire, idx) => {
@@ -431,16 +431,16 @@ export default function HrDashboard() {
                     return (
                       <div key={hire.id || idx} style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
                         <div
-                          className="kai-avatar"
+                          className="w-9 h-9 rounded-full flex items-center justify-center text-white font-bold text-[12px]"
                           style={{ background: AVATAR_COLORS[idx % AVATAR_COLORS.length], width: 36, height: 36, fontSize: 13 }}
                         >
                           {getInitials(name)}
                         </div>
                         <div style={{ flex: 1, minWidth: 0 }}>
-                          <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--kai-text)' }} className="truncate">{name}</div>
-                          <div style={{ fontSize: 12, color: 'var(--kai-text-muted)' }}>{role}</div>
+                          <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--text-primary)' }} className="truncate">{name}</div>
+                          <div style={{ fontSize: 12, color: 'var(--text-muted)' }}>{role}</div>
                         </div>
-                        <span style={{ fontSize: 11, color: 'var(--kai-text-muted)', flexShrink: 0 }}>
+                        <span style={{ fontSize: 11, color: 'var(--text-muted)', flexShrink: 0 }}>
                           {joinDate ? new Date(joinDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : ''}
                         </span>
                       </div>
@@ -448,20 +448,20 @@ export default function HrDashboard() {
                   })}
                 </div>
               ) : (
-                <div className="text-muted flex-center" style={{ height: 120 }}>No recent hires</div>
+                <div className="text-[var(--text-muted)] flex items-center justify-center" style={{ height: 120 }}>No recent hires</div>
               )}
             </div>
           </div>
-        </Col>
+        </div>
 
         {/* Upcoming Birthdays */}
-        <Col xs={12} lg={4}>
-          <div className="kai-card" style={{ height: '100%' }}>
-            <div className="kai-card-header">
+        <div className="col-span-12 lg:col-span-4">
+          <div className="bg-[var(--bg-card)] border border-[var(--border-default)] rounded-xl" style={{ height: '100%' }}>
+            <div className="flex items-center justify-between p-4 border-b border-[var(--border-subtle)]">
               <h6>Upcoming Birthdays</h6>
               <Cake size={16} style={{ color: '#EA580C' }} />
             </div>
-            <div className="kai-card-body">
+            <div className="p-4">
               {upcomingBirthdays.length > 0 ? (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
                   {upcomingBirthdays.slice(0, 5).map((person, idx) => {
@@ -483,18 +483,18 @@ export default function HrDashboard() {
                         }}
                       >
                         <div
-                          className="kai-avatar"
+                          className="w-9 h-9 rounded-full flex items-center justify-center text-white font-bold text-[12px]"
                           style={{ background: AVATAR_COLORS[idx % AVATAR_COLORS.length], width: 36, height: 36, fontSize: 13 }}
                         >
                           {getInitials(name)}
                         </div>
                         <div style={{ flex: 1, minWidth: 0 }}>
-                          <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--kai-text)' }} className="truncate">
+                          <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--text-primary)' }} className="truncate">
                             {name} {isToday && <span style={{ fontSize: 11, color: '#EA580C', fontWeight: 700 }}>(Today!)</span>}
                           </div>
-                          <div style={{ fontSize: 12, color: 'var(--kai-text-muted)' }}>{department}</div>
+                          <div style={{ fontSize: 12, color: 'var(--text-muted)' }}>{department}</div>
                         </div>
-                        <span style={{ fontSize: 11, color: 'var(--kai-text-muted)', flexShrink: 0 }}>
+                        <span style={{ fontSize: 11, color: 'var(--text-muted)', flexShrink: 0 }}>
                           {bdayDate ? bdayDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : ''}
                         </span>
                       </div>
@@ -502,37 +502,37 @@ export default function HrDashboard() {
                   })}
                 </div>
               ) : (
-                <div className="text-muted flex-center" style={{ height: 120 }}>No upcoming birthdays</div>
+                <div className="text-[var(--text-muted)] flex items-center justify-center" style={{ height: 120 }}>No upcoming birthdays</div>
               )}
             </div>
           </div>
-        </Col>
+        </div>
 
         {/* Quick Actions */}
-        <Col xs={12} lg={4}>
-          <div className="kai-card" style={{ height: '100%' }}>
-            <div className="kai-card-header">
+        <div className="col-span-12 lg:col-span-4">
+          <div className="bg-[var(--bg-card)] border border-[var(--border-default)] rounded-xl" style={{ height: '100%' }}>
+            <div className="flex items-center justify-between p-4 border-b border-[var(--border-subtle)]">
               <h6>Quick Actions</h6>
             </div>
-            <div className="kai-card-body">
+            <div className="p-4">
               <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
                 {quickActions.map((action) => (
                   <button
                     key={action.label}
-                    className="kai-btn kai-btn-outline"
+                    className="bg-transparent border border-[var(--border-default)] text-[var(--text-secondary)] rounded-lg px-4 py-2 text-[13px] font-semibold hover:bg-[var(--bg-elevated)] transition-colors"
                     style={{ justifyContent: 'flex-start', width: '100%' }}
                     onClick={() => navigate(action.path)}
                   >
                     <span style={{ color: action.color }}>{action.icon}</span>
                     {action.label}
-                    <ArrowRight size={14} style={{ marginLeft: 'auto', color: 'var(--kai-text-muted)' }} />
+                    <ArrowRight size={14} style={{ marginLeft: 'auto', color: 'var(--text-muted)' }} />
                   </button>
                 ))}
               </div>
 
               {/* Leave Quick Stats */}
-              <div style={{ marginTop: 24, padding: 16, background: 'var(--kai-bg)', borderRadius: 8 }}>
-                <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--kai-text-secondary)', marginBottom: 12, textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+              <div style={{ marginTop: 24, padding: 16, background: 'var(--bg-primary)', borderRadius: 8 }}>
+                <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--text-secondary)', marginBottom: 12, textTransform: 'uppercase', letterSpacing: '0.5px' }}>
                   Leave Requests
                 </div>
                 <div style={{ display: 'flex', gap: 12 }}>
@@ -552,21 +552,21 @@ export default function HrDashboard() {
               </div>
 
               {/* Payroll Quick Stats */}
-              <div style={{ marginTop: 16, padding: 16, background: 'var(--kai-bg)', borderRadius: 8 }}>
-                <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--kai-text-secondary)', marginBottom: 12, textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+              <div style={{ marginTop: 16, padding: 16, background: 'var(--bg-primary)', borderRadius: 8 }}>
+                <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--text-secondary)', marginBottom: 12, textTransform: 'uppercase', letterSpacing: '0.5px' }}>
                   Payroll Status
                 </div>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
-                  <span style={{ fontSize: 12, color: 'var(--kai-text-muted)' }}>Total</span>
-                  <span style={{ fontSize: 14, fontWeight: 700, color: 'var(--kai-text)' }}>{formatCurrency(payrollOverview.total)}</span>
+                  <span style={{ fontSize: 12, color: 'var(--text-muted)' }}>Total</span>
+                  <span style={{ fontSize: 14, fontWeight: 700, color: 'var(--text-primary)' }}>{formatCurrency(payrollOverview.total)}</span>
                 </div>
                 {payrollOverview.total > 0 && (
-                  <div style={{ width: '100%', height: 8, background: 'var(--kai-border)', borderRadius: 4, overflow: 'hidden' }}>
+                  <div style={{ width: '100%', height: 8, background: 'var(--border-default)', borderRadius: 4, overflow: 'hidden' }}>
                     <div
                       style={{
                         width: `${(payrollOverview.paid / payrollOverview.total) * 100}%`,
                         height: '100%',
-                        background: 'var(--kai-success)',
+                        background: '#10B981',
                         borderRadius: 4,
                         transition: 'width 0.5s ease',
                       }}
@@ -574,29 +574,29 @@ export default function HrDashboard() {
                   </div>
                 )}
                 <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 6 }}>
-                  <span style={{ fontSize: 11, color: 'var(--kai-success)' }}>Paid: {formatCurrency(payrollOverview.paid)}</span>
-                  <span style={{ fontSize: 11, color: 'var(--kai-warning)' }}>Pending: {formatCurrency(payrollOverview.pending)}</span>
+                  <span style={{ fontSize: 11, color: '#10B981' }}>Paid: {formatCurrency(payrollOverview.paid)}</span>
+                  <span style={{ fontSize: 11, color: '#F59E0B' }}>Pending: {formatCurrency(payrollOverview.pending)}</span>
                 </div>
               </div>
             </div>
           </div>
-        </Col>
-      </Row>
+        </div>
+      </div>
 
       {/* ── Personality & Behavioral Analytics Section ──────────────── */}
       {analyticsData && (
         <>
           {/* Personality Test Completion + Distribution Row */}
-          <Row className="g-3 mb-4" style={{ marginTop: 24 }}>
+          <div className="grid grid-cols-12 gap-3 mb-4 mt-6">
             {/* Personality Test Completion */}
-            <Col xs={12} lg={4}>
-              <div className="kai-card" style={{ height: '100%' }}>
-                <div className="kai-card-header">
+            <div className="col-span-12 lg:col-span-4">
+              <div className="bg-[var(--bg-card)] border border-[var(--border-default)] rounded-xl" style={{ height: '100%' }}>
+                <div className="flex items-center justify-between p-4 border-b border-[var(--border-subtle)]">
                   <h6 style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                     <Brain size={18} style={{ color: '#8B3FE9' }} /> Test Completion
                   </h6>
                 </div>
-                <div className="kai-card-body">
+                <div className="p-4">
                   <div style={{ textAlign: 'center', padding: '16px 0' }}>
                     <div style={{ fontSize: 40, fontWeight: 800, color: '#3B82F6' }}>
                       {analyticsData.testsTaken}
@@ -620,7 +620,7 @@ export default function HrDashboard() {
                     </div>
                   </div>
                   <button
-                    className="kai-btn kai-btn-outline kai-btn-sm"
+                    className="bg-transparent border border-[var(--border-default)] text-[var(--text-secondary)] rounded-lg px-2 py-1 text-[13px] hover:bg-[var(--bg-elevated)] transition-colors"
                     style={{ width: '100%', marginTop: 12 }}
                     onClick={() => toast.info('Reminder sent to employees who have not taken the test')}
                   >
@@ -628,18 +628,18 @@ export default function HrDashboard() {
                   </button>
                 </div>
               </div>
-            </Col>
+            </div>
 
             {/* Personality Type Distribution Pie Chart */}
-            <Col xs={12} lg={8}>
-              <div className="kai-card" style={{ height: '100%' }}>
-                <div className="kai-card-header">
+            <div className="col-span-12 lg:col-span-8">
+              <div className="bg-[var(--bg-card)] border border-[var(--border-default)] rounded-xl" style={{ height: '100%' }}>
+                <div className="flex items-center justify-between p-4 border-b border-[var(--border-subtle)]">
                   <h6 style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                     <Brain size={18} style={{ color: '#3B82F6' }} /> Personality Distribution
                   </h6>
-                  <span className="kai-badge secondary">{Object.keys(analyticsData.personalityDistribution || {}).length} types</span>
+                  <span className="text-[10px] px-2 py-0.5 rounded-full font-medium bg-[var(--bg-elevated)] text-[var(--text-secondary)]">{Object.keys(analyticsData.personalityDistribution || {}).length} types</span>
                 </div>
-                <div className="kai-card-body">
+                <div className="p-4">
                   {Object.keys(analyticsData.personalityDistribution || {}).length > 0 ? (
                     <Chart
                       options={{
@@ -656,22 +656,22 @@ export default function HrDashboard() {
                       height={320}
                     />
                   ) : (
-                    <div className="flex-center text-muted" style={{ height: 320 }}>No personality data yet. Employees need to take the test.</div>
+                    <div className="flex items-center justify-center text-[var(--text-muted)]" style={{ height: 320 }}>No personality data yet. Employees need to take the test.</div>
                   )}
                 </div>
               </div>
-            </Col>
-          </Row>
+            </div>
+          </div>
 
           {/* Employee Behavioral Table */}
-          <Row className="g-3 mb-4">
-            <Col xs={12}>
-              <div className="kai-card">
-                <div className="kai-card-header">
+          <div className="grid grid-cols-12 gap-3 mb-4">
+            <div className="col-span-12">
+              <div className="bg-[var(--bg-card)] border border-[var(--border-default)] rounded-xl">
+                <div className="flex items-center justify-between p-4 border-b border-[var(--border-subtle)]">
                   <h6>Employee Behavioral Overview</h6>
-                  <span className="kai-badge secondary">{analyticsData.employees?.length || 0} employees</span>
+                  <span className="text-[10px] px-2 py-0.5 rounded-full font-medium bg-[var(--bg-elevated)] text-[var(--text-secondary)]">{analyticsData.employees?.length || 0} employees</span>
                 </div>
-                <div className="kai-card-body" style={{ overflowX: 'auto' }}>
+                <div className="p-4" style={{ overflowX: 'auto' }}>
                   <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
                     <thead>
                       <tr style={{ borderBottom: '2px solid #E5E7EB' }}>
@@ -685,7 +685,7 @@ export default function HrDashboard() {
                         <tr key={emp.id} style={{ borderBottom: '1px solid #F3F4F6' }}>
                           <td style={{ padding: '10px 12px' }}>
                             <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                              <div className="kai-avatar" style={{ background: AVATAR_COLORS[idx % AVATAR_COLORS.length], width: 30, height: 30, fontSize: 11 }}>
+                              <div className="w-9 h-9 rounded-full flex items-center justify-center text-white font-bold text-[12px]" style={{ background: AVATAR_COLORS[idx % AVATAR_COLORS.length], width: 30, height: 30, fontSize: 11 }}>
                                 {getInitials(emp.name)}
                               </div>
                               <div>
@@ -742,38 +742,38 @@ export default function HrDashboard() {
                     </tbody>
                   </table>
                   {(!analyticsData.employees || analyticsData.employees.length === 0) && (
-                    <div className="flex-center text-muted" style={{ padding: 40 }}>No employee data available</div>
+                    <div className="flex items-center justify-center text-[var(--text-muted)]" style={{ padding: 40 }}>No employee data available</div>
                   )}
                 </div>
               </div>
-            </Col>
-          </Row>
+            </div>
+          </div>
         </>
       )}
 
       {analyticsLoading && (
-        <div className="flex-center" style={{ padding: 40 }}>
-          <Spinner size="sm" animation="border" style={{ color: '#3B82F6' }} />
+        <div className="flex items-center justify-center" style={{ padding: 40 }}>
+          <div className="w-5 h-5 border-2 border-[#3B82F6] border-t-transparent rounded-full animate-spin" />
           <span style={{ marginLeft: 8, color: '#5B6B76', fontSize: 13 }}>Loading analytics...</span>
         </div>
       )}
 
       {/* ── Password Management Section ────────────────────────────── */}
-      <Row className="g-3 mb-4" style={{ marginTop: analyticsData ? 0 : 24 }}>
-        <Col xs={12}>
-          <div className="kai-card">
-            <div className="kai-card-header">
+      <div className={`grid grid-cols-12 gap-3 mb-4 ${analyticsData ? '' : 'mt-6'}`}>
+        <div className="col-span-12">
+          <div className="bg-[var(--bg-card)] border border-[var(--border-default)] rounded-xl">
+            <div className="flex items-center justify-between p-4 border-b border-[var(--border-subtle)]">
               <h6 style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                 <KeyRound size={18} style={{ color: '#EA580C' }} /> Password Management
               </h6>
-              <button className="kai-btn kai-btn-outline kai-btn-sm" onClick={fetchPasswordData}>
+              <button className="bg-transparent border border-[var(--border-default)] text-[var(--text-secondary)] rounded-lg px-2 py-1 text-[13px] hover:bg-[var(--bg-elevated)] transition-colors" onClick={fetchPasswordData}>
                 <RotateCcw size={12} /> Refresh
               </button>
             </div>
-            <div className="kai-card-body" style={{ overflowX: 'auto' }}>
+            <div className="p-4" style={{ overflowX: 'auto' }}>
               {passwordLoading ? (
-                <div className="flex-center" style={{ padding: 40 }}>
-                  <Spinner size="sm" animation="border" style={{ color: '#3B82F6' }} />
+                <div className="flex items-center justify-center" style={{ padding: 40 }}>
+                  <div className="w-5 h-5 border-2 border-[#3B82F6] border-t-transparent rounded-full animate-spin" />
                 </div>
               ) : passwordUsers.length > 0 ? (
                 <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
@@ -792,7 +792,7 @@ export default function HrDashboard() {
                         <tr key={u.id} style={{ borderBottom: '1px solid #F3F4F6', background: isLocked ? '#FEF2F210' : 'transparent' }}>
                           <td style={{ padding: '10px 12px' }}>
                             <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                              <div className="kai-avatar" style={{ background: AVATAR_COLORS[idx % AVATAR_COLORS.length], width: 28, height: 28, fontSize: 10 }}>
+                              <div className="w-9 h-9 rounded-full flex items-center justify-center text-white font-bold text-[12px]" style={{ background: AVATAR_COLORS[idx % AVATAR_COLORS.length], width: 28, height: 28, fontSize: 10 }}>
                                 {getInitials(u.name)}
                               </div>
                               <div>
@@ -808,17 +808,17 @@ export default function HrDashboard() {
                           <td style={{ padding: '10px 12px' }}>
                             <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
                               {isLocked && (
-                                <span className="kai-badge danger" style={{ fontSize: 10 }}>
+                                <span className="text-[10px] px-2 py-0.5 rounded-full font-medium bg-[#CB3939]/10 text-[#CB3939]" style={{ fontSize: 10 }}>
                                   <Lock size={10} /> Locked
                                 </span>
                               )}
                               {needsReset && (
-                                <span className="kai-badge warning" style={{ fontSize: 10 }}>
+                                <span className="text-[10px] px-2 py-0.5 rounded-full font-medium bg-[#EA580C]/10 text-[#EA580C]" style={{ fontSize: 10 }}>
                                   <ShieldAlert size={10} /> Reset Required
                                 </span>
                               )}
                               {!isLocked && !needsReset && (
-                                <span className="kai-badge success" style={{ fontSize: 10 }}>
+                                <span className="text-[10px] px-2 py-0.5 rounded-full font-medium bg-[#16A34A]/10 text-[#16A34A]" style={{ fontSize: 10 }}>
                                   <CheckCircle2 size={10} /> Active
                                 </span>
                               )}
@@ -832,34 +832,34 @@ export default function HrDashboard() {
                           <td style={{ padding: '10px 12px' }}>
                             <div style={{ display: 'flex', gap: 6 }}>
                               <button
-                                className="kai-btn kai-btn-outline kai-btn-sm"
+                                className="bg-transparent border border-[var(--border-default)] text-[var(--text-secondary)] rounded-lg px-2 py-1 text-[13px] hover:bg-[var(--bg-elevated)] transition-colors"
                                 style={{ fontSize: 11, padding: '4px 8px' }}
                                 onClick={() => handlePasswordAction('reset', u.id, u.name)}
                                 disabled={actionLoading[`reset-${u.id}`]}
                                 title="Reset Password"
                               >
-                                {actionLoading[`reset-${u.id}`] ? <Spinner size="sm" animation="border" /> : <><KeyRound size={12} /> Reset</>}
+                                {actionLoading[`reset-${u.id}`] ? <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin" /> : <><KeyRound size={12} /> Reset</>}
                               </button>
                               {isLocked && (
                                 <button
-                                  className="kai-btn kai-btn-outline kai-btn-sm"
+                                  className="bg-transparent border border-[var(--border-default)] text-[var(--text-secondary)] rounded-lg px-2 py-1 text-[13px] hover:bg-[var(--bg-elevated)] transition-colors"
                                   style={{ fontSize: 11, padding: '4px 8px', borderColor: '#16A34A', color: '#16A34A' }}
                                   onClick={() => handlePasswordAction('unlock', u.id, u.name)}
                                   disabled={actionLoading[`unlock-${u.id}`]}
                                   title="Unlock Account"
                                 >
-                                  {actionLoading[`unlock-${u.id}`] ? <Spinner size="sm" animation="border" /> : <><Unlock size={12} /> Unlock</>}
+                                  {actionLoading[`unlock-${u.id}`] ? <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin" /> : <><Unlock size={12} /> Unlock</>}
                                 </button>
                               )}
                               {!needsReset && (
                                 <button
-                                  className="kai-btn kai-btn-outline kai-btn-sm"
+                                  className="bg-transparent border border-[var(--border-default)] text-[var(--text-secondary)] rounded-lg px-2 py-1 text-[13px] hover:bg-[var(--bg-elevated)] transition-colors"
                                   style={{ fontSize: 11, padding: '4px 8px', borderColor: '#EA580C', color: '#EA580C' }}
                                   onClick={() => handlePasswordAction('force', u.id, u.name)}
                                   disabled={actionLoading[`force-${u.id}`]}
                                   title="Force Password Change"
                                 >
-                                  {actionLoading[`force-${u.id}`] ? <Spinner size="sm" animation="border" /> : <><ShieldAlert size={12} /> Force Change</>}
+                                  {actionLoading[`force-${u.id}`] ? <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin" /> : <><ShieldAlert size={12} /> Force Change</>}
                                 </button>
                               )}
                             </div>
@@ -870,12 +870,12 @@ export default function HrDashboard() {
                   </tbody>
                 </table>
               ) : (
-                <div className="flex-center text-muted" style={{ padding: 40 }}>No user data available</div>
+                <div className="flex items-center justify-center text-[var(--text-muted)]" style={{ padding: 40 }}>No user data available</div>
               )}
             </div>
           </div>
-        </Col>
-      </Row>
+        </div>
+      </div>
 
       {/* ── Identity Verification Section ────────────────────────────── */}
       {(() => {
@@ -890,11 +890,11 @@ export default function HrDashboard() {
         const totalVerified = verificationDocs.filter((d) => d.status === 'approved').length;
 
         return (
-          <Row className="g-3 mb-4" style={{ marginTop: 0 }}>
-            <Col xs={12}>
-              <div className="kai-card">
+          <div className="grid grid-cols-12 gap-3 mb-4">
+            <div className="col-span-12">
+              <div className="bg-[var(--bg-card)] border border-[var(--border-default)] rounded-xl">
                 <div
-                  className="kai-card-header"
+                  className="flex items-center justify-between p-4 border-b border-[var(--border-subtle)]"
                   style={{ cursor: 'pointer', userSelect: 'none' }}
                   onClick={() => setVerificationExpanded((v) => !v)}
                 >
@@ -903,24 +903,24 @@ export default function HrDashboard() {
                   </h6>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                     {pendingDocs.length > 0 && (
-                      <span className="kai-badge warning" style={{ fontSize: 10 }}>
+                      <span className="text-[10px] px-2 py-0.5 rounded-full font-medium bg-[#EA580C]/10 text-[#EA580C]" style={{ fontSize: 10 }}>
                         {pendingDocs.length} pending
                       </span>
                     )}
-                    <button className="kai-btn kai-btn-outline kai-btn-sm" onClick={(e) => { e.stopPropagation(); fetchVerificationDocs(); }}>
+                    <button className="bg-transparent border border-[var(--border-default)] text-[var(--text-secondary)] rounded-lg px-2 py-1 text-[13px] hover:bg-[var(--bg-elevated)] transition-colors" onClick={(e) => { e.stopPropagation(); fetchVerificationDocs(); }}>
                       <RotateCcw size={12} /> Refresh
                     </button>
-                    <span style={{ fontSize: 16, color: 'var(--kai-text-muted)', transition: 'transform 0.2s', transform: verificationExpanded ? 'rotate(0deg)' : 'rotate(-90deg)' }}>
+                    <span style={{ fontSize: 16, color: 'var(--text-muted)', transition: 'transform 0.2s', transform: verificationExpanded ? 'rotate(0deg)' : 'rotate(-90deg)' }}>
                       <ArrowRight size={14} style={{ transform: 'rotate(90deg)' }} />
                     </span>
                   </div>
                 </div>
 
                 {verificationExpanded && (
-                  <div className="kai-card-body">
+                  <div className="p-4">
                     {verificationLoading ? (
-                      <div className="flex-center" style={{ padding: 40 }}>
-                        <Spinner size="sm" animation="border" style={{ color: '#3B82F6' }} />
+                      <div className="flex items-center justify-center" style={{ padding: 40 }}>
+                        <div className="w-5 h-5 border-2 border-[#3B82F6] border-t-transparent rounded-full animate-spin" />
                         <span style={{ marginLeft: 8, color: '#5B6B76', fontSize: 13 }}>Loading verification data...</span>
                       </div>
                     ) : (
@@ -944,7 +944,7 @@ export default function HrDashboard() {
                         {/* Pending Documents Table */}
                         {pendingDocs.length > 0 && (
                           <>
-                            <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--kai-text)', marginBottom: 12 }}>
+                            <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--text-primary)', marginBottom: 12 }}>
                               Pending Documents
                             </div>
                             <div style={{ overflowX: 'auto', marginBottom: 24 }}>
@@ -970,10 +970,10 @@ export default function HrDashboard() {
                                       <tr key={docId} style={{ borderBottom: '1px solid #F3F4F6' }}>
                                         <td style={{ padding: '10px 12px' }}>
                                           <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                                            <div className="kai-avatar" style={{ background: AVATAR_COLORS[idx % AVATAR_COLORS.length], width: 32, height: 32, fontSize: 11 }}>
+                                            <div className="w-9 h-9 rounded-full flex items-center justify-center text-white font-bold text-[12px]" style={{ background: AVATAR_COLORS[idx % AVATAR_COLORS.length], width: 32, height: 32, fontSize: 11 }}>
                                               {getInitials(name)}
                                             </div>
-                                            <span style={{ fontWeight: 600, color: 'var(--kai-text)' }}>{name}</span>
+                                            <span style={{ fontWeight: 600, color: 'var(--text-primary)' }}>{name}</span>
                                           </div>
                                         </td>
                                         <td style={{ padding: '10px 12px' }}>
@@ -1005,21 +1005,21 @@ export default function HrDashboard() {
                                           {!activeAction ? (
                                             <div style={{ display: 'flex', gap: 6 }}>
                                               <button
-                                                className="kai-btn kai-btn-sm"
+                                                className="rounded-lg px-2 py-1 text-[13px] font-semibold transition-colors"
                                                 style={{ fontSize: 11, padding: '4px 10px', background: '#16A34A', color: '#fff', border: 'none', borderRadius: 6 }}
                                                 onClick={() => setVerificationActiveAction((prev) => ({ ...prev, [docId]: 'approve' }))}
                                               >
                                                 <CheckCircle2 size={12} /> Approve
                                               </button>
                                               <button
-                                                className="kai-btn kai-btn-sm"
+                                                className="rounded-lg px-2 py-1 text-[13px] font-semibold transition-colors"
                                                 style={{ fontSize: 11, padding: '4px 10px', background: '#CB3939', color: '#fff', border: 'none', borderRadius: 6 }}
                                                 onClick={() => setVerificationActiveAction((prev) => ({ ...prev, [docId]: 'reject' }))}
                                               >
                                                 <AlertCircle size={12} /> Reject
                                               </button>
                                               <button
-                                                className="kai-btn kai-btn-sm"
+                                                className="rounded-lg px-2 py-1 text-[13px] font-semibold transition-colors"
                                                 style={{ fontSize: 11, padding: '4px 10px', background: '#EA580C', color: '#fff', border: 'none', borderRadius: 6 }}
                                                 onClick={() => setVerificationActiveAction((prev) => ({ ...prev, [docId]: 'requestResubmit' }))}
                                               >
@@ -1040,16 +1040,16 @@ export default function HrDashboard() {
                                                   width: '100%',
                                                   padding: '5px 8px',
                                                   fontSize: 12,
-                                                  border: '1px solid var(--kai-border, #E5E7EB)',
+                                                  border: '1px solid var(--border-default)',
                                                   borderRadius: 6,
                                                   outline: 'none',
-                                                  color: 'var(--kai-text)',
-                                                  background: 'var(--kai-bg, #fff)',
+                                                  color: 'var(--text-primary)',
+                                                  background: 'var(--bg-primary)',
                                                 }}
                                               />
                                               <div style={{ display: 'flex', gap: 6 }}>
                                                 <button
-                                                  className="kai-btn kai-btn-sm"
+                                                  className="rounded-lg px-2 py-1 text-[13px] font-semibold transition-colors"
                                                   style={{
                                                     fontSize: 11,
                                                     padding: '4px 10px',
@@ -1062,13 +1062,13 @@ export default function HrDashboard() {
                                                   onClick={() => handleVerificationAction(activeAction, docId, noteValue)}
                                                 >
                                                   {verificationActionLoading[`${activeAction}-${docId}`] ? (
-                                                    <Spinner size="sm" animation="border" />
+                                                    <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin" />
                                                   ) : (
                                                     'Confirm'
                                                   )}
                                                 </button>
                                                 <button
-                                                  className="kai-btn kai-btn-outline kai-btn-sm"
+                                                  className="bg-transparent border border-[var(--border-default)] text-[var(--text-secondary)] rounded-lg px-2 py-1 text-[13px] hover:bg-[var(--bg-elevated)] transition-colors"
                                                   style={{ fontSize: 11, padding: '4px 10px' }}
                                                   onClick={() => {
                                                     setVerificationActiveAction((prev) => { const n = { ...prev }; delete n[docId]; return n; });
@@ -1090,7 +1090,7 @@ export default function HrDashboard() {
                           </>
                         )}
                         {pendingDocs.length === 0 && !verificationLoading && (
-                          <div className="flex-center text-muted" style={{ padding: 20, marginBottom: 16, background: '#F9FAFB', borderRadius: 8 }}>
+                          <div className="flex items-center justify-center text-[var(--text-muted)]" style={{ padding: 20, marginBottom: 16, background: '#F9FAFB', borderRadius: 8 }}>
                             <CheckCircle2 size={16} style={{ marginRight: 8, color: '#16A34A' }} />
                             No pending verifications. All caught up!
                           </div>
@@ -1099,7 +1099,7 @@ export default function HrDashboard() {
                         {/* Recently Reviewed */}
                         {reviewedDocs.length > 0 && (
                           <>
-                            <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--kai-text)', marginBottom: 12 }}>
+                            <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--text-primary)', marginBottom: 12 }}>
                               Recently Reviewed
                             </div>
                             <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
@@ -1117,12 +1117,12 @@ export default function HrDashboard() {
                                 const sc = statusConfig[status] || { bg: '#E5E7EB', color: '#5B6B76', label: status };
                                 return (
                                   <div key={doc.id || doc._id || idx} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '8px 12px', background: '#F9FAFB', borderRadius: 8 }}>
-                                    <div className="kai-avatar" style={{ background: AVATAR_COLORS[idx % AVATAR_COLORS.length], width: 28, height: 28, fontSize: 10 }}>
+                                    <div className="w-9 h-9 rounded-full flex items-center justify-center text-white font-bold text-[12px]" style={{ background: AVATAR_COLORS[idx % AVATAR_COLORS.length], width: 28, height: 28, fontSize: 10 }}>
                                       {getInitials(name)}
                                     </div>
                                     <div style={{ flex: 1, minWidth: 0 }}>
-                                      <span style={{ fontSize: 13, fontWeight: 600, color: 'var(--kai-text)' }}>{name}</span>
-                                      <span style={{ fontSize: 12, color: 'var(--kai-text-muted)', marginLeft: 8 }}>{docType}</span>
+                                      <span style={{ fontSize: 13, fontWeight: 600, color: 'var(--text-primary)' }}>{name}</span>
+                                      <span style={{ fontSize: 12, color: 'var(--text-muted)', marginLeft: 8 }}>{docType}</span>
                                     </div>
                                     <span style={{
                                       padding: '3px 8px',
@@ -1134,7 +1134,7 @@ export default function HrDashboard() {
                                     }}>
                                       {sc.label}
                                     </span>
-                                    <span style={{ fontSize: 11, color: 'var(--kai-text-muted)', flexShrink: 0 }}>
+                                    <span style={{ fontSize: 11, color: 'var(--text-muted)', flexShrink: 0 }}>
                                       {reviewedAt ? new Date(reviewedAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : ''}
                                     </span>
                                   </div>
@@ -1148,8 +1148,8 @@ export default function HrDashboard() {
                   </div>
                 )}
               </div>
-            </Col>
-          </Row>
+            </div>
+          </div>
         );
       })()}
     </div>

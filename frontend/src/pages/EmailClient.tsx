@@ -3,6 +3,9 @@ import { useDispatch } from 'react-redux';
 import { toast } from 'react-toastify';
 import { emailApi } from '../services/api';
 
+// Tailwind migration: kai-* classes replaced with Tailwind equivalents
+// All inline styles preserved for complex email UI layouts
+
 const FOLDERS = [
   { key: 'inbox', label: 'Inbox', icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="22 12 16 12 14 15 10 15 8 12 2 12"/><path d="M5.45 5.11L2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z"/></svg> },
   { key: 'sent', label: 'Sent', icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg> },
@@ -179,13 +182,13 @@ export default function EmailClient() {
 
   return (
     <div>
-      <div className="page-header">
+      <div className="flex items-center justify-between mb-6 flex-wrap gap-4">
         <div>
-          <h1>Email</h1>
-          <p>Manage your emails and communications</p>
+          <h1 className="text-[24px] font-bold text-[var(--text-primary)] tracking-tight font-[Manrope]">Email</h1>
+          <p className="text-[13px] text-[var(--text-secondary)] mt-1">Manage your emails and communications</p>
         </div>
-        <div className="page-actions">
-          <button className="kai-btn kai-btn-primary" onClick={() => { setCompose({ to: '', cc: '', bcc: '', subject: '', body: '', attachments: [] }); setShowCompose(true); }}>
+        <div className="flex items-center gap-2">
+          <button data-testid="compose-email" className="bg-[#7C3AED] text-white rounded-lg px-4 py-2 text-[13px] font-semibold hover:bg-[#7C3AED]/90 transition-colors" onClick={() => { setCompose({ to: '', cc: '', bcc: '', subject: '', body: '', attachments: [] }); setShowCompose(true); }}>
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
             Compose
           </button>
@@ -224,7 +227,7 @@ export default function EmailClient() {
                 {count > 0 && (
                   <span style={{
                     fontSize: 11, fontWeight: 700, background: isActive ? '#7C3AED' : 'var(--bg-primary)',
-                    color: isActive ? '#fff' : 'var(--text-muted)', padding: '2px 8px', borderRadius: 'var(--kai-radius-pill)',
+                    color: isActive ? '#fff' : 'var(--text-muted)', padding: '2px 8px', borderRadius: '999px',
                   }}>
                     {count}
                   </span>
@@ -238,7 +241,7 @@ export default function EmailClient() {
         <div style={{ width: 350, borderRight: '1px solid var(--border-default)', display: 'flex', flexDirection: 'column', flexShrink: 0 }}>
           {/* Search + Bulk Actions */}
           <div style={{ padding: 12, borderBottom: '1px solid var(--border-default)' }}>
-            <div className="kai-search" style={{ marginBottom: 8 }}>
+            <div className="relative" style={{ marginBottom: 8 }}>
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
               <input placeholder="Search emails..." value={search} onChange={e => setSearch(e.target.value)} />
             </div>
@@ -254,11 +257,11 @@ export default function EmailClient() {
               </label>
               {selectedIds.length > 0 && (
                 <>
-                  <button className="kai-btn kai-btn-outline kai-btn-sm" onClick={() => handleBulkAction('read')}>
+                  <button className="bg-transparent border border-[var(--border-default)] text-[var(--text-secondary)] rounded-lg px-2 py-1 text-[13px] hover:bg-[var(--bg-elevated)] transition-colors" onClick={() => handleBulkAction('read')}>
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
                     Mark Read
                   </button>
-                  <button className="kai-btn kai-btn-outline kai-btn-sm" onClick={() => handleBulkAction('delete')}>
+                  <button className="bg-transparent border border-[var(--border-default)] text-[var(--text-secondary)] rounded-lg px-2 py-1 text-[13px] hover:bg-[var(--bg-elevated)] transition-colors" onClick={() => handleBulkAction('delete')}>
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
                     Delete
                   </button>
@@ -293,7 +296,7 @@ export default function EmailClient() {
                       gap: 10,
                       padding: '12px 16px',
                       cursor: 'pointer',
-                      borderBottom: '1px solid var(--kai-border-light)',
+                      borderBottom: '1px solid var(--border-default)',
                       background: isActive ? 'rgba(124, 58, 237, 0.1)' : isUnread ? 'rgba(17,24,39,0.02)' : 'transparent',
                       borderLeft: isActive ? '3px solid #7C3AED' : '3px solid transparent',
                       transition: 'all 0.15s ease',
@@ -344,18 +347,18 @@ export default function EmailClient() {
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 12 }}>
                   <h2 style={{ margin: 0, fontSize: 18, fontWeight: 700, lineHeight: 1.3 }}>{selectedEmail.subject || '(No Subject)'}</h2>
                   <div style={{ display: 'flex', gap: 6, flexShrink: 0 }}>
-                    <button className="kai-btn kai-btn-outline kai-btn-sm" onClick={handleReply}>
+                    <button className="bg-transparent border border-[var(--border-default)] text-[var(--text-secondary)] rounded-lg px-2 py-1 text-[13px] hover:bg-[var(--bg-elevated)] transition-colors" onClick={handleReply}>
                       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="9 17 4 12 9 7"/><path d="M20 18v-2a4 4 0 0 0-4-4H4"/></svg>
                       Reply
                     </button>
-                    <button className="kai-btn kai-btn-outline kai-btn-sm" onClick={handleForward}>
+                    <button className="bg-transparent border border-[var(--border-default)] text-[var(--text-secondary)] rounded-lg px-2 py-1 text-[13px] hover:bg-[var(--bg-elevated)] transition-colors" onClick={handleForward}>
                       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="15 17 20 12 15 7"/><path d="M4 18v-2a4 4 0 0 1 4-4h12"/></svg>
                       Forward
                     </button>
                   </div>
                 </div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                  <div className="kai-avatar" style={{ background: '#111827' }}>
+                  <div className="w-9 h-9 rounded-full flex items-center justify-center text-white font-bold text-[12px]" style={{ background: '#111827' }}>
                     {(selectedEmail.from || selectedEmail.sender || '?')[0]?.toUpperCase()}
                   </div>
                   <div style={{ flex: 1 }}>
@@ -419,10 +422,10 @@ export default function EmailClient() {
       {showCompose && (
         <div style={{ position: 'fixed', inset: 0, zIndex: 2000, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
           <div style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.5)' }} onClick={() => setShowCompose(false)} />
-          <div className="kai-card" style={{ position: 'relative', width: 640, maxWidth: '90vw', maxHeight: '85vh', display: 'flex', flexDirection: 'column', zIndex: 1 }}>
-            <div className="kai-card-header">
+          <div className="bg-[var(--bg-card)] border border-[var(--border-default)] rounded-xl" style={{ position: 'relative', width: 640, maxWidth: '90vw', maxHeight: '85vh', display: 'flex', flexDirection: 'column', zIndex: 1 }}>
+            <div className="flex items-center justify-between p-4 border-b border-[var(--border-subtle)]">
               <h5>Compose Email</h5>
-              <button className="kai-btn kai-btn-outline kai-btn-sm" onClick={() => setShowCompose(false)}>
+              <button className="bg-transparent border border-[var(--border-default)] text-[var(--text-secondary)] rounded-lg px-2 py-1 text-[13px] hover:bg-[var(--bg-elevated)] transition-colors" onClick={() => setShowCompose(false)}>
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
               </button>
             </div>
@@ -431,14 +434,14 @@ export default function EmailClient() {
                 <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                   <label style={{ fontSize: 13, fontWeight: 600, color: 'var(--text-muted)', width: 50 }}>To</label>
                   <input
-                    className="kai-input"
+                    className="w-full bg-[var(--bg-elevated)] border border-[var(--border-default)] rounded-lg px-3 py-2 text-[var(--text-primary)] placeholder:text-[var(--text-muted)] focus:border-[#7C3AED] focus:ring-2 focus:ring-[#7C3AED]/20 outline-none text-[13px]"
                     placeholder="recipient@example.com"
                     value={compose.to}
                     onChange={e => setCompose(p => ({ ...p, to: e.target.value }))}
                     style={{ flex: 1 }}
                   />
                   {!showCcBcc && (
-                    <button type="button" className="kai-btn kai-btn-outline kai-btn-sm" onClick={() => setShowCcBcc(true)}>CC/BCC</button>
+                    <button type="button" className="bg-transparent border border-[var(--border-default)] text-[var(--text-secondary)] rounded-lg px-2 py-1 text-[13px] hover:bg-[var(--bg-elevated)] transition-colors" onClick={() => setShowCcBcc(true)}>CC/BCC</button>
                   )}
                 </div>
                 {showCcBcc && (
@@ -446,7 +449,7 @@ export default function EmailClient() {
                     <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                       <label style={{ fontSize: 13, fontWeight: 600, color: 'var(--text-muted)', width: 50 }}>CC</label>
                       <input
-                        className="kai-input"
+                        className="w-full bg-[var(--bg-elevated)] border border-[var(--border-default)] rounded-lg px-3 py-2 text-[var(--text-primary)] placeholder:text-[var(--text-muted)] focus:border-[#7C3AED] focus:ring-2 focus:ring-[#7C3AED]/20 outline-none text-[13px]"
                         placeholder="cc@example.com"
                         value={compose.cc}
                         onChange={e => setCompose(p => ({ ...p, cc: e.target.value }))}
@@ -456,7 +459,7 @@ export default function EmailClient() {
                     <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                       <label style={{ fontSize: 13, fontWeight: 600, color: 'var(--text-muted)', width: 50 }}>BCC</label>
                       <input
-                        className="kai-input"
+                        className="w-full bg-[var(--bg-elevated)] border border-[var(--border-default)] rounded-lg px-3 py-2 text-[var(--text-primary)] placeholder:text-[var(--text-muted)] focus:border-[#7C3AED] focus:ring-2 focus:ring-[#7C3AED]/20 outline-none text-[13px]"
                         placeholder="bcc@example.com"
                         value={compose.bcc}
                         onChange={e => setCompose(p => ({ ...p, bcc: e.target.value }))}
@@ -468,7 +471,7 @@ export default function EmailClient() {
                 <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                   <label style={{ fontSize: 13, fontWeight: 600, color: 'var(--text-muted)', width: 50 }}>Subject</label>
                   <input
-                    className="kai-input"
+                    className="w-full bg-[var(--bg-elevated)] border border-[var(--border-default)] rounded-lg px-3 py-2 text-[var(--text-primary)] placeholder:text-[var(--text-muted)] focus:border-[#7C3AED] focus:ring-2 focus:ring-[#7C3AED]/20 outline-none text-[13px]"
                     placeholder="Email subject"
                     value={compose.subject}
                     onChange={e => setCompose(p => ({ ...p, subject: e.target.value }))}
@@ -478,7 +481,7 @@ export default function EmailClient() {
               </div>
 
               {/* Rich Text Toolbar */}
-              <div style={{ padding: '8px 20px', borderBottom: '1px solid var(--kai-border-light)', display: 'flex', gap: 4 }}>
+              <div style={{ padding: '8px 20px', borderBottom: '1px solid var(--border-default)', display: 'flex', gap: 4 }}>
                 {[
                   { cmd: 'bold', icon: 'B', style: { fontWeight: 700 } },
                   { cmd: 'italic', icon: 'I', style: { fontStyle: 'italic' } },
@@ -488,7 +491,7 @@ export default function EmailClient() {
                   <button
                     key={btn.cmd}
                     type="button"
-                    className="kai-btn kai-btn-outline kai-btn-sm"
+                    className="bg-transparent border border-[var(--border-default)] text-[var(--text-secondary)] rounded-lg px-2 py-1 text-[13px] hover:bg-[var(--bg-elevated)] transition-colors"
                     style={{ ...btn.style, minWidth: 32, padding: '4px 8px' }}
                     onClick={() => document.execCommand(btn.cmd)}
                   >
@@ -496,10 +499,10 @@ export default function EmailClient() {
                   </button>
                 ))}
                 <div style={{ width: 1, background: 'var(--border-default)', margin: '0 4px' }} />
-                <button type="button" className="kai-btn kai-btn-outline kai-btn-sm" onClick={() => document.execCommand('insertUnorderedList')}>
+                <button type="button" className="bg-transparent border border-[var(--border-default)] text-[var(--text-secondary)] rounded-lg px-2 py-1 text-[13px] hover:bg-[var(--bg-elevated)] transition-colors" onClick={() => document.execCommand('insertUnorderedList')}>
                   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
                 </button>
-                <button type="button" className="kai-btn kai-btn-outline kai-btn-sm" onClick={() => document.execCommand('insertOrderedList')}>
+                <button type="button" className="bg-transparent border border-[var(--border-default)] text-[var(--text-secondary)] rounded-lg px-2 py-1 text-[13px] hover:bg-[var(--bg-elevated)] transition-colors" onClick={() => document.execCommand('insertOrderedList')}>
                   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="10" y1="6" x2="21" y2="6"/><line x1="10" y1="12" x2="21" y2="12"/><line x1="10" y1="18" x2="21" y2="18"/><path d="M4 6h1v4"/><path d="M4 10h2"/><path d="M6 18H4c0-1 2-2 2-3s-1-1.5-2-1"/></svg>
                 </button>
               </div>
@@ -524,9 +527,9 @@ export default function EmailClient() {
                 }}
               />
 
-              <div className="kai-card-footer" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <div className="p-4 border-t border-[var(--border-subtle)]" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                 <div style={{ display: 'flex', gap: 8 }}>
-                  <button type="button" className="kai-btn kai-btn-outline kai-btn-sm" onClick={() => fileRef.current?.click()}>
+                  <button type="button" className="bg-transparent border border-[var(--border-default)] text-[var(--text-secondary)] rounded-lg px-2 py-1 text-[13px] hover:bg-[var(--bg-elevated)] transition-colors" onClick={() => fileRef.current?.click()}>
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"/></svg>
                     Attach
                   </button>
@@ -541,8 +544,8 @@ export default function EmailClient() {
                   )}
                 </div>
                 <div style={{ display: 'flex', gap: 8 }}>
-                  <button type="button" className="kai-btn kai-btn-outline" onClick={() => setShowCompose(false)}>Discard</button>
-                  <button type="submit" className="kai-btn kai-btn-primary" disabled={sending}>
+                  <button type="button" className="bg-transparent border border-[var(--border-default)] text-[var(--text-secondary)] rounded-lg px-4 py-2 text-[13px] font-semibold hover:bg-[var(--bg-elevated)] transition-colors" onClick={() => setShowCompose(false)}>Discard</button>
+                  <button type="submit" data-testid="compose-email" className="bg-[#7C3AED] text-white rounded-lg px-4 py-2 text-[13px] font-semibold hover:bg-[#7C3AED]/90 transition-colors" disabled={sending}>
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
                     {sending ? 'Sending...' : 'Send'}
                   </button>
