@@ -4,12 +4,6 @@ import { toast } from 'react-toastify';
 
 /**
  * Export buttons for CSV and PDF
- * @param {Object} props
- * @param {Array} props.data - Array of data objects
- * @param {string} props.pageType - One of: tasks, projects, team, clients, leads, invoices, expenses, payroll, leaves, hiring, complaints, documents, audit, timeTracking
- * @param {string} props.title - Title for PDF header
- * @param {string} props.filename - Base filename for downloads
- * @param {Array} [props.columns] - Custom columns (overrides pageType defaults)
  */
 export default function ExportButtons({ data, pageType, title, filename, columns }: { data: any; pageType?: any; title?: any; filename?: any; columns?: any }) {
   const cols = columns || getExportColumns(pageType);
@@ -26,11 +20,21 @@ export default function ExportButtons({ data, pageType, title, filename, columns
   };
 
   return (
-    <div style={{ display: 'flex', gap: 6 }}>
-      <button className="kai-btn kai-btn-outline kai-btn-sm" onClick={handleCSV} title="Export as CSV">
+    <div className="flex gap-1.5">
+      <button
+        data-testid="export-csv"
+        className="bg-transparent border border-[var(--border-default)] text-[var(--text-secondary)] rounded-lg px-3 py-1.5 text-[13px] font-medium hover:bg-[var(--bg-elevated)] transition-colors inline-flex items-center gap-1.5"
+        onClick={handleCSV}
+        title="Export as CSV"
+      >
         <Download size={14} /> CSV
       </button>
-      <button className="kai-btn kai-btn-outline kai-btn-sm" onClick={handlePDF} title="Export as PDF">
+      <button
+        data-testid="export-pdf"
+        className="bg-transparent border border-[var(--border-default)] text-[var(--text-secondary)] rounded-lg px-3 py-1.5 text-[13px] font-medium hover:bg-[var(--bg-elevated)] transition-colors inline-flex items-center gap-1.5"
+        onClick={handlePDF}
+        title="Export as PDF"
+      >
         <FileText size={14} /> PDF
       </button>
     </div>

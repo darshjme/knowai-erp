@@ -33,7 +33,7 @@ const ROOM_ICONS = {
   ),
 };
 
-const AVATAR_COLORS = ['#146DF7', '#8B3FE9', '#16A34A', '#EA580C', '#CB3939', '#2563EB', '#D946EF', '#0891B2'];
+const AVATAR_COLORS = ['#111827', '#8B3FE9', '#16A34A', '#EA580C', '#CB3939', '#2563EB', '#D946EF', '#0891B2'];
 
 function getAvatarColor(name) {
   let hash = 0;
@@ -71,7 +71,7 @@ function renderMessageText(text) {
   const parts = text.split(/(@\w[\w\s]*?)(?=\s|$|@)/g);
   return parts.map((part, i) => {
     if (part.startsWith('@')) {
-      return <span key={i} style={{ background: 'rgba(20,109,247,0.15)', color: '#146DF7', padding: '1px 4px', borderRadius: 4, fontWeight: 600, fontSize: 13 }}>{part}</span>;
+      return <span key={i} style={{ background: 'rgba(59,130,246,0.15)', color: '#3B82F6', padding: '1px 4px', borderRadius: 4, fontWeight: 600, fontSize: 13 }}>{part}</span>;
     }
     return part;
   });
@@ -300,24 +300,24 @@ export default function Chat() {
 
   return (
     <div>
-      <div className="page-header">
+      <div className="flex items-center justify-between mb-6 flex-wrap gap-4">
         <div>
-          <h1>Chat</h1>
-          <p>Team conversations and direct messages</p>
+          <h1 className="text-[24px] font-bold text-[var(--text-primary)] tracking-tight font-[Manrope]">Chat</h1>
+          <p className="text-[13px] text-[var(--text-secondary)] mt-1">Team conversations and direct messages</p>
         </div>
-        <div className="page-actions">
-          <button className="kai-btn kai-btn-primary" onClick={() => setShowCreateRoom(true)}>
+        <div className="flex items-center gap-2">
+          <button className="bg-[#7C3AED] text-white rounded-lg px-4 py-2 text-[13px] font-semibold hover:bg-[#7C3AED]/90 transition-colors" onClick={() => setShowCreateRoom(true)}>
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
             New Room
           </button>
         </div>
       </div>
 
-      <div className="chat-layout" style={{ display: 'flex', height: 'calc(100vh - 180px)', border: '1px solid var(--kai-border)', borderRadius: 'var(--kai-radius-lg)', overflow: 'hidden', background: 'var(--kai-surface)' }}>
+      <div className="chat-layout" style={{ display: 'flex', height: 'calc(100vh - 180px)', border: '1px solid var(--border-default)', borderRadius: '12px', overflow: 'hidden', background: 'var(--bg-card)' }}>
         {/* Room List Panel */}
-        <div className="chat-sidebar" style={{ width: 280, borderRight: '1px solid var(--kai-border)', display: 'flex', flexDirection: 'column', flexShrink: 0, ...(mobileShowMessages ? {} : {}) }}>
+        <div className="chat-sidebar" style={{ width: 280, borderRight: '1px solid var(--border-default)', display: 'flex', flexDirection: 'column', flexShrink: 0, ...(mobileShowMessages ? {} : {}) }}>
           <div style={{ padding: 12 }}>
-            <div className="kai-search">
+            <div className="relative">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
               <input
                 placeholder="Search conversations..."
@@ -328,9 +328,9 @@ export default function Chat() {
           </div>
           <div style={{ flex: 1, overflowY: 'auto' }}>
             {loading ? (
-              <div style={{ padding: 20, textAlign: 'center', color: 'var(--kai-text-muted)' }}>Loading rooms...</div>
+              <div style={{ padding: 20, textAlign: 'center', color: 'var(--text-muted)' }}>Loading rooms...</div>
             ) : filteredRooms.length === 0 ? (
-              <div style={{ padding: 20, textAlign: 'center', color: 'var(--kai-text-muted)' }}>No conversations found</div>
+              <div style={{ padding: 20, textAlign: 'center', color: 'var(--text-muted)' }}>No conversations found</div>
             ) : (
               filteredRooms.map(room => {
                 const roomId = room._id || room.id;
@@ -345,34 +345,34 @@ export default function Chat() {
                       gap: 12,
                       padding: '10px 16px',
                       cursor: 'pointer',
-                      background: isActive ? 'rgba(20, 109, 247, 0.08)' : 'transparent',
-                      borderLeft: isActive ? '3px solid var(--kai-primary)' : '3px solid transparent',
-                      transition: 'var(--kai-transition)',
+                      background: isActive ? 'rgba(124, 58, 237, 0.1)' : 'transparent',
+                      borderLeft: isActive ? '3px solid #7C3AED' : '3px solid transparent',
+                      transition: 'all 0.15s ease',
                     }}
-                    onMouseEnter={e => { if (!isActive) e.currentTarget.style.background = 'var(--kai-surface-hover)'; }}
+                    onMouseEnter={e => { if (!isActive) e.currentTarget.style.background = 'var(--bg-elevated)'; }}
                     onMouseLeave={e => { if (!isActive) e.currentTarget.style.background = 'transparent'; }}
                   >
                     <div
-                      className="kai-avatar"
+                      className="w-9 h-9 rounded-full flex items-center justify-center text-white font-bold text-[12px]"
                       style={{ background: getAvatarColor(room.name), width: 40, height: 40 }}
                     >
                       {room.avatar ? <img src={room.avatar} alt="" /> : getInitials(room.name)}
                     </div>
                     <div style={{ flex: 1, minWidth: 0 }}>
                       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                        <span style={{ fontWeight: 600, fontSize: 13.5, color: 'var(--kai-text)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                        <span style={{ fontWeight: 600, fontSize: 13.5, color: 'var(--text-primary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                           {room.name || 'Unnamed'}
                         </span>
-                        <span style={{ fontSize: 11, color: 'var(--kai-text-muted)', flexShrink: 0 }}>
+                        <span style={{ fontSize: 11, color: 'var(--text-muted)', flexShrink: 0 }}>
                           {formatTime(room.lastMessage?.createdAt || room.lastMessageAt || room.updatedAt)}
                         </span>
                       </div>
                       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: 2 }}>
-                        <span className="truncate" style={{ fontSize: 12, color: 'var(--kai-text-muted)', flex: 1 }}>
+                        <span className="truncate" style={{ fontSize: 12, color: 'var(--text-muted)', flex: 1 }}>
                           {typeof room.lastMessage === 'object' ? room.lastMessage?.content?.slice(0, 50) : room.lastMessage || 'No messages yet'}
                         </span>
                         {room.unreadCount > 0 && (
-                          <span className="kai-badge primary" style={{ marginLeft: 8, fontSize: 10, padding: '1px 7px', minWidth: 18, textAlign: 'center' }}>
+                          <span className="text-[10px] px-2 py-0.5 rounded-full font-medium bg-[#7C3AED]/10 text-[#7C3AED]" style={{ marginLeft: 8, fontSize: 10, padding: '1px 7px', minWidth: 18, textAlign: 'center' }}>
                             {room.unreadCount}
                           </span>
                         )}
@@ -390,17 +390,17 @@ export default function Chat() {
           {selectedRoom ? (
             <>
               {/* Chat Header */}
-              <div style={{ padding: '12px 20px', borderBottom: '1px solid var(--kai-border)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexShrink: 0, flexWrap: 'wrap', gap: 8 }}>
+              <div style={{ padding: '12px 20px', borderBottom: '1px solid var(--border-default)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexShrink: 0, flexWrap: 'wrap', gap: 8 }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
                   <button className="kai-btn kai-btn-outline kai-btn-sm hide-desktop" style={{ display: 'none' }} onClick={() => setMobileShowMessages(false)}>
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="15 18 9 12 15 6"/></svg>
                   </button>
-                  <div className="kai-avatar" style={{ background: getAvatarColor(selectedRoom.name) }}>
+                  <div className="w-9 h-9 rounded-full flex items-center justify-center text-white font-bold text-[12px]" style={{ background: getAvatarColor(selectedRoom.name) }}>
                     {getInitials(selectedRoom.name)}
                   </div>
                   <div>
-                    <div style={{ fontWeight: 600, fontSize: 15, color: 'var(--kai-text)' }}>{selectedRoom.name}</div>
-                    <div style={{ fontSize: 12, color: 'var(--kai-text-muted)', display: 'flex', alignItems: 'center', gap: 6 }}>
+                    <div style={{ fontWeight: 600, fontSize: 15, color: 'var(--text-primary)' }}>{selectedRoom.name}</div>
+                    <div style={{ fontSize: 12, color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: 6 }}>
                       {ROOM_ICONS[selectedRoom.type] || ROOM_ICONS.group}
                       <span>{selectedRoom.type} {selectedRoom.members?.length ? `- ${selectedRoom.members.length} members` : ''}
                         {['CTO','CEO','ADMIN','BRAND_FACE'].includes(currentUser?.role) && !(selectedRoom.members || []).some(m => (m.userId || m.id) === currentUserId) && (
@@ -411,11 +411,11 @@ export default function Chat() {
                   </div>
                 </div>
                 <div style={{ display: 'flex', gap: 6 }}>
-                  <button className="kai-btn kai-btn-outline kai-btn-sm" onClick={() => setShowAddMembers(true)} title="Add team members">
+                  <button className="bg-transparent border border-[var(--border-default)] text-[var(--text-secondary)] rounded-lg px-2 py-1 text-[13px] hover:bg-[var(--bg-elevated)] transition-colors" onClick={() => setShowAddMembers(true)} title="Add team members">
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><line x1="19" y1="8" x2="19" y2="14"/><line x1="22" y1="11" x2="16" y2="11"/></svg>
                     Add
                   </button>
-                  <button className="kai-btn kai-btn-outline kai-btn-sm" onClick={() => setShowInfoPanel(!showInfoPanel)}>
+                  <button className="bg-transparent border border-[var(--border-default)] text-[var(--text-secondary)] rounded-lg px-2 py-1 text-[13px] hover:bg-[var(--bg-elevated)] transition-colors" onClick={() => setShowInfoPanel(!showInfoPanel)}>
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
                     Info
                   </button>
@@ -426,15 +426,15 @@ export default function Chat() {
               <div style={{ flex: 1, overflowY: 'auto', padding: 20, display: 'flex', flexDirection: 'column', gap: 4 }}>
                 {hasMore && messages.length > 0 && (
                   <div style={{ textAlign: 'center', marginBottom: 12 }}>
-                    <button className="kai-btn kai-btn-outline kai-btn-sm" onClick={handleLoadMore}>Load earlier messages</button>
+                    <button className="bg-transparent border border-[var(--border-default)] text-[var(--text-secondary)] rounded-lg px-2 py-1 text-[13px] hover:bg-[var(--bg-elevated)] transition-colors" onClick={handleLoadMore}>Load earlier messages</button>
                   </div>
                 )}
                 {messagesLoading && messages.length === 0 && (
-                  <div style={{ textAlign: 'center', color: 'var(--kai-text-muted)', padding: 40 }}>Loading messages...</div>
+                  <div style={{ textAlign: 'center', color: 'var(--text-muted)', padding: 40 }}>Loading messages...</div>
                 )}
                 {!messagesLoading && messages.length === 0 && (
-                  <div style={{ textAlign: 'center', color: 'var(--kai-text-muted)', padding: 40 }}>
-                    <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="var(--kai-border)" strokeWidth="1.5" style={{ marginBottom: 12 }}>
+                  <div style={{ textAlign: 'center', color: 'var(--text-muted)', padding: 40 }}>
+                    <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="var(--border-default)" strokeWidth="1.5" style={{ marginBottom: 12 }}>
                       <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
                     </svg>
                     <div>No messages yet. Start the conversation!</div>
@@ -455,14 +455,14 @@ export default function Chat() {
                     >
                       <div style={{ display: 'flex', gap: 8, maxWidth: '70%', flexDirection: isSent ? 'row-reverse' : 'row', alignItems: 'flex-end' }}>
                         {showAvatar && !isSent && (
-                          <div className="kai-avatar kai-avatar-sm" style={{ background: getAvatarColor(senderName), marginBottom: 2 }}>
+                          <div className="w-7 h-7 rounded-full flex items-center justify-center text-white font-bold text-[10px]" style={{ background: getAvatarColor(senderName), marginBottom: 2 }}>
                             {getInitials(senderName)}
                           </div>
                         )}
                         {!showAvatar && !isSent && <div style={{ width: 28 }} />}
                         <div>
                           {showAvatar && !isSent && (
-                            <div style={{ fontSize: 11, fontWeight: 600, color: 'var(--kai-primary)', marginBottom: 2, paddingLeft: 4, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4 }}
+                            <div style={{ fontSize: 11, fontWeight: 600, color: '#7C3AED', marginBottom: 2, paddingLeft: 4, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4 }}
                               onClick={() => window.location.href = `/profile/${msg.senderId || msg.sender?.id}`}>
                               {senderName}
                               <VerifiedBadge verified={msg.sender?.verified} size={14} />
@@ -472,8 +472,8 @@ export default function Chat() {
                             style={{
                               padding: '8px 14px',
                               borderRadius: isSent ? '16px 16px 4px 16px' : '16px 16px 16px 4px',
-                              background: isSent ? 'var(--kai-primary)' : 'var(--kai-bg)',
-                              color: isSent ? '#fff' : 'var(--kai-text)',
+                              background: isSent ? '#7C3AED' : 'var(--bg-primary)',
+                              color: isSent ? '#fff' : 'var(--text-primary)',
                               fontSize: 13.5,
                               lineHeight: 1.5,
                               opacity: msg.pending ? 0.7 : 1,
@@ -489,7 +489,7 @@ export default function Chat() {
                                   <video src={msg.fileUrl} controls style={{ maxWidth: 320, maxHeight: 220, borderRadius: 8, marginBottom: 4 }} />
                                 ) : (
                                   <a href={msg.fileUrl} target="_blank" rel="noreferrer" style={{
-                                    display: 'flex', alignItems: 'center', gap: 8, padding: '8px 12px', background: isSent ? 'rgba(255,255,255,0.15)' : 'var(--kai-surface)', borderRadius: 8, textDecoration: 'none', color: 'inherit', marginBottom: 4,
+                                    display: 'flex', alignItems: 'center', gap: 8, padding: '8px 12px', background: isSent ? 'rgba(255,255,255,0.15)' : 'var(--bg-card)', borderRadius: 8, textDecoration: 'none', color: 'inherit', marginBottom: 4,
                                   }}>
                                     <span style={{ fontSize: 24 }}>
                                       {msg.fileType?.includes('pdf') ? '📄' : msg.fileType?.includes('sheet') || msg.fileType?.includes('excel') ? '📊' : msg.fileType?.includes('word') || msg.fileType?.includes('document') ? '📝' : msg.fileType?.includes('presentation') || msg.fileType?.includes('ppt') ? '📎' : msg.fileType?.includes('keynote') ? '🎬' : msg.fileType?.startsWith('video/') ? '🎥' : '📁'}
@@ -508,7 +508,7 @@ export default function Chat() {
                               renderMessageText(msg.text || msg.content || msg.message)
                             )}
                           </div>
-                          <div style={{ fontSize: 10, color: 'var(--kai-text-muted)', marginTop: 2, textAlign: isSent ? 'right' : 'left', paddingLeft: 4, paddingRight: 4 }}>
+                          <div style={{ fontSize: 10, color: 'var(--text-muted)', marginTop: 2, textAlign: isSent ? 'right' : 'left', paddingLeft: 4, paddingRight: 4 }}>
                             {formatMessageTime(msg.createdAt || msg.timestamp)}
                           </div>
                         </div>
@@ -521,14 +521,14 @@ export default function Chat() {
 
               {/* Attached file preview */}
               {attachedFile && (
-                <div style={{ padding: '8px 20px', borderTop: '1px solid var(--kai-border)', display: 'flex', alignItems: 'center', gap: 8, background: 'var(--kai-bg)', fontSize: 13 }}>
+                <div style={{ padding: '8px 20px', borderTop: '1px solid var(--border-default)', display: 'flex', alignItems: 'center', gap: 8, background: 'var(--bg-primary)', fontSize: 13 }}>
                   <span style={{ fontSize: 20 }}>
                     {attachedFile.type?.startsWith('image/') ? '🖼️' : attachedFile.type?.includes('pdf') ? '📄' : attachedFile.type?.includes('sheet') || attachedFile.type?.includes('excel') ? '📊' : attachedFile.type?.includes('word') ? '📝' : attachedFile.type?.includes('presentation') || attachedFile.type?.includes('ppt') ? '📎' : '📁'}
                   </span>
                   <span style={{ flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', fontWeight: 500 }}>{attachedFile.name}</span>
-                  <span style={{ color: 'var(--kai-text-muted)', fontSize: 12 }}>{(attachedFile.size / 1024).toFixed(0)} KB</span>
+                  <span style={{ color: 'var(--text-muted)', fontSize: 12 }}>{(attachedFile.size / 1024).toFixed(0)} KB</span>
                   <button type="button" onClick={() => { setAttachedFile(null); if (fileInputRef.current) fileInputRef.current.value = ''; }}
-                    style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--kai-danger)', padding: 4 }}>✕</button>
+                    style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#EF4444', padding: 4 }}>✕</button>
                 </div>
               )}
 
@@ -540,12 +540,12 @@ export default function Chat() {
 
                 if (isWatching) {
                   return (
-                    <div style={{ padding: '12px 20px', borderTop: '1px solid var(--kai-border)', display: 'flex', gap: 8, alignItems: 'center', flexShrink: 0, background: 'var(--kai-bg)' }}>
-                      <div style={{ flex: 1, display: 'flex', alignItems: 'center', gap: 8, fontSize: 13, color: 'var(--kai-text-muted)' }}>
+                    <div style={{ padding: '12px 20px', borderTop: '1px solid var(--border-default)', display: 'flex', gap: 8, alignItems: 'center', flexShrink: 0, background: 'var(--bg-primary)' }}>
+                      <div style={{ flex: 1, display: 'flex', alignItems: 'center', gap: 8, fontSize: 13, color: 'var(--text-muted)' }}>
                         <span style={{ fontSize: 16 }}>👁️</span>
                         <span>Watching silently — you are not a member of this chat</span>
                       </div>
-                      <button className="kai-btn kai-btn-outline kai-btn-sm" onClick={async () => {
+                      <button className="bg-transparent border border-[var(--border-default)] text-[var(--text-secondary)] rounded-lg px-2 py-1 text-[13px] hover:bg-[var(--bg-elevated)] transition-colors" onClick={async () => {
                         try {
                           await fetch('/api/chat', {
                             method: 'POST', credentials: 'include',
@@ -559,7 +559,7 @@ export default function Chat() {
                       }}>
                         Join Chat
                       </button>
-                      <button className="kai-btn kai-btn-primary kai-btn-sm" onClick={() => {
+                      <button className="bg-[#7C3AED] text-white rounded-lg px-2 py-1 text-[13px] font-semibold hover:bg-[#7C3AED]/90 transition-colors" onClick={() => {
                         // Send without joining
                         const msg = prompt('Send a message (you will remain as observer):');
                         if (msg?.trim()) {
@@ -582,23 +582,23 @@ export default function Chat() {
                 const isCLevel = ['CTO', 'CEO', 'ADMIN', 'BRAND_FACE'].includes(currentUser?.role);
                 return !isMember && isCLevel; // Only hide input for C-level watching silently (they have Send Message button above)
               })() && (
-                <form onSubmit={handleSendMessage} style={{ padding: '12px 20px', borderTop: attachedFile ? 'none' : '1px solid var(--kai-border)', display: 'flex', gap: 8, alignItems: 'center', flexShrink: 0 }}>
-                  <button type="button" className="kai-btn kai-btn-outline kai-btn-sm" onClick={() => fileInputRef.current?.click()} style={{ padding: 8 }} title="Attach file">
+                <form onSubmit={handleSendMessage} style={{ padding: '12px 20px', borderTop: attachedFile ? 'none' : '1px solid var(--border-default)', display: 'flex', gap: 8, alignItems: 'center', flexShrink: 0 }}>
+                  <button type="button" className="bg-transparent border border-[var(--border-default)] text-[var(--text-secondary)] rounded-lg px-2 py-1 text-[13px] hover:bg-[var(--bg-elevated)] transition-colors" onClick={() => fileInputRef.current?.click()} style={{ padding: 8 }} title="Attach file">
                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"/></svg>
                   </button>
                   <input type="file" ref={fileInputRef} style={{ display: 'none' }}
                     accept="image/*,video/*,.pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.key,.pages,.numbers,.mp4,.mov,.avi,.webm"
                     onChange={handleFileAttach} />
-                  <input className="kai-input" placeholder={attachedFile ? "Add a message (optional)..." : "Type a message..."} value={messageText} onChange={e => setMessageText(e.target.value)} style={{ flex: 1 }} />
-                  <button type="submit" className="kai-btn kai-btn-primary" disabled={(!messageText.trim() && !attachedFile) || uploading}>
+                  <input className="w-full bg-[var(--bg-elevated)] border border-[var(--border-default)] rounded-lg px-3 py-2 text-[var(--text-primary)] placeholder:text-[var(--text-muted)] focus:border-[#7C3AED] focus:ring-2 focus:ring-[#7C3AED]/20 outline-none text-[13px]" placeholder={attachedFile ? "Add a message (optional)..." : "Type a message..."} value={messageText} onChange={e => setMessageText(e.target.value)} style={{ flex: 1 }} />
+                  <button type="submit" className="bg-[#7C3AED] text-white rounded-lg px-4 py-2 text-[13px] font-semibold hover:bg-[#7C3AED]/90 transition-colors" disabled={(!messageText.trim() && !attachedFile) || uploading}>
                     {uploading ? 'Uploading...' : 'Send'}
                   </button>
                 </form>
               )}
             </>
           ) : (
-            <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', flexDirection: 'column', gap: 12, color: 'var(--kai-text-muted)' }}>
-              <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="var(--kai-border)" strokeWidth="1.5">
+            <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', flexDirection: 'column', gap: 12, color: 'var(--text-muted)' }}>
+              <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="var(--border-default)" strokeWidth="1.5">
                 <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
               </svg>
               <div style={{ fontSize: 16, fontWeight: 600 }}>Select a conversation</div>
@@ -609,30 +609,30 @@ export default function Chat() {
 
         {/* Info Panel */}
         {showInfoPanel && selectedRoom && (
-          <div style={{ width: 300, borderLeft: '1px solid var(--kai-border)', display: 'flex', flexDirection: 'column', flexShrink: 0, overflowY: 'auto', position: 'relative' }}>
+          <div style={{ width: 300, borderLeft: '1px solid var(--border-default)', display: 'flex', flexDirection: 'column', flexShrink: 0, overflowY: 'auto', position: 'relative' }}>
             {/* Close button */}
             <button onClick={() => setShowInfoPanel(false)} style={{
               position: 'absolute', top: 12, right: 12, zIndex: 2,
-              background: 'var(--kai-bg)', border: '1px solid var(--kai-border)', borderRadius: '50%',
+              background: 'var(--bg-primary)', border: '1px solid var(--border-default)', borderRadius: '50%',
               width: 28, height: 28, display: 'flex', alignItems: 'center', justifyContent: 'center',
-              cursor: 'pointer', color: 'var(--kai-text-muted)', fontSize: 16,
+              cursor: 'pointer', color: 'var(--text-muted)', fontSize: 16,
             }}>✕</button>
-            <div style={{ padding: 20, textAlign: 'center', borderBottom: '1px solid var(--kai-border)' }}>
-              <div className="kai-avatar kai-avatar-xl" style={{ background: getAvatarColor(selectedRoom.name), margin: '0 auto 12px' }}>
+            <div style={{ padding: 20, textAlign: 'center', borderBottom: '1px solid var(--border-default)' }}>
+              <div className="w-16 h-16 rounded-full flex items-center justify-center text-white font-bold text-[20px]" style={{ background: getAvatarColor(selectedRoom.name), margin: '0 auto 12px' }}>
                 {getInitials(selectedRoom.name)}
               </div>
               <div style={{ fontWeight: 700, fontSize: 16 }}>{selectedRoom.name || 'Direct Message'}</div>
-              <div className="kai-badge secondary" style={{ marginTop: 6, textTransform: 'capitalize' }}>{selectedRoom.type}</div>
-              {selectedRoom.projectId && <div style={{ fontSize: 12, color: 'var(--kai-primary)', marginTop: 4 }}>Project Channel</div>}
+              <div className="text-[10px] px-2 py-0.5 rounded-full font-medium bg-[var(--bg-elevated)] text-[var(--text-secondary)]" style={{ marginTop: 6, textTransform: 'capitalize' }}>{selectedRoom.type}</div>
+              {selectedRoom.projectId && <div style={{ fontSize: 12, color: '#7C3AED', marginTop: 4 }}>Project Channel</div>}
             </div>
 
             {/* Members List */}
             <div style={{ padding: 16 }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
-                <span style={{ fontSize: 11, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 1, color: 'var(--kai-text-muted)' }}>
+                <span style={{ fontSize: 11, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 1, color: 'var(--text-muted)' }}>
                   Members ({selectedRoom.members?.length || selectedRoom.memberCount || 0})
                 </span>
-                <button className="kai-btn kai-btn-primary kai-btn-sm" onClick={() => setShowAddMembers(true)} style={{ padding: '3px 8px', fontSize: 11 }}>
+                <button className="bg-[#7C3AED] text-white rounded-lg px-2 py-1 text-[13px] font-semibold hover:bg-[#7C3AED]/90 transition-colors" onClick={() => setShowAddMembers(true)} style={{ padding: '3px 8px', fontSize: 11 }}>
                   + Add
                 </button>
               </div>
@@ -644,29 +644,29 @@ export default function Chat() {
                 return (
                   <div key={memberId}
                     onClick={() => window.location.href = `/profile/${memberId}`}
-                    style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '8px 6px', cursor: 'pointer', borderRadius: 'var(--kai-radius)', transition: 'var(--kai-transition)' }}
-                    onMouseEnter={e => e.currentTarget.style.background = 'var(--kai-surface-hover)'}
+                    style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '8px 6px', cursor: 'pointer', borderRadius: '8px', transition: 'all 0.15s ease' }}
+                    onMouseEnter={e => e.currentTarget.style.background = 'var(--bg-elevated)'}
                     onMouseLeave={e => e.currentTarget.style.background = 'transparent'}>
-                    <div className="kai-avatar kai-avatar-sm" style={{ background: getAvatarColor(memberName) }}>
+                    <div className="w-7 h-7 rounded-full flex items-center justify-center text-white font-bold text-[10px]" style={{ background: getAvatarColor(memberName) }}>
                       {m.avatar ? <img src={m.avatar} alt="" style={{ width: '100%', height: '100%', borderRadius: '50%', objectFit: 'cover' }} /> : getInitials(memberName)}
                     </div>
                     <div style={{ flex: 1, minWidth: 0 }}>
-                      <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--kai-text)', display: 'flex', alignItems: 'center', gap: 4 }}>{memberName} <VerifiedBadge verified={m.verified} size={14} /></div>
-                      {memberRole && <div style={{ fontSize: 10, color: 'var(--kai-text-muted)' }}>{memberRole}</div>}
+                      <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: 4 }}>{memberName} <VerifiedBadge verified={m.verified} size={14} /></div>
+                      {memberRole && <div style={{ fontSize: 10, color: 'var(--text-muted)' }}>{memberRole}</div>}
                     </div>
                     {m.status === 'ONLINE' && <div style={{ width: 8, height: 8, borderRadius: '50%', background: '#16A34A', flexShrink: 0 }} />}
                   </div>
                 );
               })}
               {(!selectedRoom.members || selectedRoom.members.length === 0) && (
-                <div style={{ fontSize: 13, color: 'var(--kai-text-muted)', textAlign: 'center', padding: 12 }}>No members info</div>
+                <div style={{ fontSize: 13, color: 'var(--text-muted)', textAlign: 'center', padding: 12 }}>No members info</div>
               )}
             </div>
 
             {selectedRoom.description && (
               <div style={{ padding: '0 16px 16px' }}>
-                <div style={{ fontSize: 11, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 1, color: 'var(--kai-text-muted)', marginBottom: 8 }}>Description</div>
-                <div style={{ fontSize: 13, color: 'var(--kai-text-secondary)' }}>{selectedRoom.description}</div>
+                <div style={{ fontSize: 11, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 1, color: 'var(--text-muted)', marginBottom: 8 }}>Description</div>
+                <div style={{ fontSize: 13, color: 'var(--text-secondary)' }}>{selectedRoom.description}</div>
               </div>
             )}
           </div>
@@ -676,14 +676,14 @@ export default function Chat() {
         {showAddMembers && selectedRoom && (
           <div style={{ position: 'fixed', inset: 0, zIndex: 2000, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
             <div style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.5)' }} onClick={() => setShowAddMembers(false)} />
-            <div className="kai-card" style={{ position: 'relative', width: 420, maxWidth: '90vw', maxHeight: '70vh', overflow: 'auto', zIndex: 1 }}>
-              <div className="kai-card-header">
+            <div className="bg-[var(--bg-card)] border border-[var(--border-default)] rounded-xl" style={{ position: 'relative', width: 420, maxWidth: '90vw', maxHeight: '70vh', overflow: 'auto', zIndex: 1 }}>
+              <div className="flex items-center justify-between p-4 border-b border-[var(--border-subtle)]">
                 <h6 style={{ margin: 0 }}>Add Members to {selectedRoom.name || 'Chat'}</h6>
-                <button className="kai-btn kai-btn-outline kai-btn-sm" onClick={() => setShowAddMembers(false)}>✕</button>
+                <button className="bg-transparent border border-[var(--border-default)] text-[var(--text-secondary)] rounded-lg px-2 py-1 text-[13px] hover:bg-[var(--bg-elevated)] transition-colors" onClick={() => setShowAddMembers(false)}>✕</button>
               </div>
-              <div className="kai-card-body" style={{ padding: 0 }}>
-                <div style={{ padding: '12px 16px', borderBottom: '1px solid var(--kai-border)' }}>
-                  <input className="kai-input" placeholder="Search team members..." onChange={e => setRoomSearch(e.target.value)} style={{ width: '100%' }} />
+              <div className="p-4" style={{ padding: 0 }}>
+                <div style={{ padding: '12px 16px', borderBottom: '1px solid var(--border-default)' }}>
+                  <input className="w-full bg-[var(--bg-elevated)] border border-[var(--border-default)] rounded-lg px-3 py-2 text-[var(--text-primary)] placeholder:text-[var(--text-muted)] focus:border-[#7C3AED] focus:ring-2 focus:ring-[#7C3AED]/20 outline-none text-[13px]" placeholder="Search team members..." onChange={e => setRoomSearch(e.target.value)} style={{ width: '100%' }} />
                 </div>
                 <div style={{ maxHeight: 350, overflowY: 'auto' }}>
                   {users.filter(u => {
@@ -712,21 +712,21 @@ export default function Chat() {
                         style={{
                           display: 'flex', alignItems: 'center', gap: 12, padding: '10px 16px',
                           cursor: alreadyMember ? 'default' : 'pointer', opacity: alreadyMember ? 0.5 : 1,
-                          borderBottom: '1px solid var(--kai-border-light)', transition: 'var(--kai-transition)',
+                          borderBottom: '1px solid var(--border-default)', transition: 'all 0.15s ease',
                         }}
-                        onMouseEnter={e => { if (!alreadyMember) e.currentTarget.style.background = 'var(--kai-surface-hover)'; }}
+                        onMouseEnter={e => { if (!alreadyMember) e.currentTarget.style.background = 'var(--bg-elevated)'; }}
                         onMouseLeave={e => e.currentTarget.style.background = 'transparent'}>
-                        <div className="kai-avatar kai-avatar-sm" style={{ background: getAvatarColor(uName) }}>
+                        <div className="w-7 h-7 rounded-full flex items-center justify-center text-white font-bold text-[10px]" style={{ background: getAvatarColor(uName) }}>
                           {getInitials(uName)}
                         </div>
                         <div style={{ flex: 1 }}>
                           <div style={{ fontSize: 13, fontWeight: 600 }}>{uName}</div>
-                          <div style={{ fontSize: 11, color: 'var(--kai-text-muted)' }}>{u.role || u.designation || u.email}</div>
+                          <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>{u.role || u.designation || u.email}</div>
                         </div>
                         {alreadyMember ? (
-                          <span className="kai-badge success" style={{ fontSize: 10 }}>Member</span>
+                          <span className="text-[10px] px-2 py-0.5 rounded-full font-medium bg-[#16A34A]/10 text-[#16A34A]" style={{ fontSize: 10 }}>Member</span>
                         ) : (
-                          <span className="kai-badge primary" style={{ fontSize: 10, cursor: 'pointer' }}>+ Add</span>
+                          <span className="text-[10px] px-2 py-0.5 rounded-full font-medium bg-[#7C3AED]/10 text-[#7C3AED]" style={{ fontSize: 10, cursor: 'pointer' }}>+ Add</span>
                         )}
                       </div>
                     );
@@ -742,18 +742,18 @@ export default function Chat() {
       {showCreateRoom && (
         <div style={{ position: 'fixed', inset: 0, zIndex: 2000, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
           <div style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.5)' }} onClick={() => setShowCreateRoom(false)} />
-          <div className="kai-card" style={{ position: 'relative', width: 480, maxWidth: '90vw', maxHeight: '80vh', overflow: 'auto', zIndex: 1 }}>
-            <div className="kai-card-header">
+          <div className="bg-[var(--bg-card)] border border-[var(--border-default)] rounded-xl" style={{ position: 'relative', width: 480, maxWidth: '90vw', maxHeight: '80vh', overflow: 'auto', zIndex: 1 }}>
+            <div className="flex items-center justify-between p-4 border-b border-[var(--border-subtle)]">
               <h5>Create New Room</h5>
-              <button className="kai-btn kai-btn-outline kai-btn-sm" onClick={() => setShowCreateRoom(false)}>
+              <button className="bg-transparent border border-[var(--border-default)] text-[var(--text-secondary)] rounded-lg px-2 py-1 text-[13px] hover:bg-[var(--bg-elevated)] transition-colors" onClick={() => setShowCreateRoom(false)}>
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
               </button>
             </div>
             <form onSubmit={handleCreateRoom}>
-              <div className="kai-card-body" style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+              <div className="p-4" style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
                 <div>
-                  <label className="kai-label">Room Type</label>
-                  <select className="kai-input" value={newRoom.type} onChange={e => setNewRoom(p => ({ ...p, type: e.target.value }))}>
+                  <label className="block text-[11px] font-semibold text-[var(--text-muted)] uppercase tracking-wider mb-1.5">Room Type</label>
+                  <select className="w-full bg-[var(--bg-elevated)] border border-[var(--border-default)] rounded-lg px-3 py-2 text-[var(--text-primary)] placeholder:text-[var(--text-muted)] focus:border-[#7C3AED] focus:ring-2 focus:ring-[#7C3AED]/20 outline-none text-[13px]" value={newRoom.type} onChange={e => setNewRoom(p => ({ ...p, type: e.target.value }))}>
                     <option value="dm">Direct Message</option>
                     <option value="group">Group Chat</option>
                     <option value="project">Project Channel</option>
@@ -761,19 +761,19 @@ export default function Chat() {
                   </select>
                 </div>
                 <div>
-                  <label className="kai-label">Room Name</label>
+                  <label className="block text-[11px] font-semibold text-[var(--text-muted)] uppercase tracking-wider mb-1.5">Room Name</label>
                   <input
-                    className="kai-input"
+                    className="w-full bg-[var(--bg-elevated)] border border-[var(--border-default)] rounded-lg px-3 py-2 text-[var(--text-primary)] placeholder:text-[var(--text-muted)] focus:border-[#7C3AED] focus:ring-2 focus:ring-[#7C3AED]/20 outline-none text-[13px]"
                     placeholder="e.g., Design Team, Project Alpha..."
                     value={newRoom.name}
                     onChange={e => setNewRoom(p => ({ ...p, name: e.target.value }))}
                   />
                 </div>
                 <div>
-                  <label className="kai-label">Add Members</label>
-                  <div style={{ maxHeight: 200, overflowY: 'auto', border: '1px solid var(--kai-border)', borderRadius: 'var(--kai-radius)', padding: 4 }}>
+                  <label className="block text-[11px] font-semibold text-[var(--text-muted)] uppercase tracking-wider mb-1.5">Add Members</label>
+                  <div style={{ maxHeight: 200, overflowY: 'auto', border: '1px solid var(--border-default)', borderRadius: '8px', padding: 4 }}>
                     {users.length === 0 && (
-                      <div style={{ padding: 12, textAlign: 'center', color: 'var(--kai-text-muted)', fontSize: 13 }}>No users available</div>
+                      <div style={{ padding: 12, textAlign: 'center', color: 'var(--text-muted)', fontSize: 13 }}>No users available</div>
                     )}
                     {users.map(u => {
                       const uid = u._id || u.id;
@@ -788,39 +788,39 @@ export default function Chat() {
                             gap: 10,
                             padding: '8px 10px',
                             cursor: 'pointer',
-                            borderRadius: 'var(--kai-radius-sm)',
-                            background: selected ? 'rgba(20,109,247,0.08)' : 'transparent',
+                            borderRadius: '6px',
+                            background: selected ? 'rgba(124, 58, 237, 0.1)' : 'transparent',
                           }}
                         >
                           <div style={{
                             width: 18, height: 18, borderRadius: 4,
-                            border: selected ? 'none' : '2px solid var(--kai-border)',
-                            background: selected ? 'var(--kai-primary)' : 'transparent',
+                            border: selected ? 'none' : '2px solid var(--border-default)',
+                            background: selected ? '#7C3AED' : 'transparent',
                             display: 'flex', alignItems: 'center', justifyContent: 'center',
                           }}>
                             {selected && (
                               <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="3"><polyline points="20 6 9 17 4 12"/></svg>
                             )}
                           </div>
-                          <div className="kai-avatar kai-avatar-sm" style={{ background: getAvatarColor(u.name || u.firstName || '') }}>
+                          <div className="w-7 h-7 rounded-full flex items-center justify-center text-white font-bold text-[10px]" style={{ background: getAvatarColor(u.name || u.firstName || '') }}>
                             {getInitials(u.name || (u.firstName ? `${u.firstName} ${u.lastName || ''}` : 'U'))}
                           </div>
                           <div>
                             <div style={{ fontSize: 13, fontWeight: 500 }}>{u.name || (u.firstName ? `${u.firstName} ${u.lastName || ''}`.trim() : 'Unknown')}</div>
-                            <div style={{ fontSize: 11, color: 'var(--kai-text-muted)' }}>{u.email || u.role || ''}</div>
+                            <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>{u.email || u.role || ''}</div>
                           </div>
                         </div>
                       );
                     })}
                   </div>
                   {newRoom.members.length > 0 && (
-                    <div style={{ fontSize: 12, color: 'var(--kai-text-muted)', marginTop: 6 }}>{newRoom.members.length} member(s) selected</div>
+                    <div style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 6 }}>{newRoom.members.length} member(s) selected</div>
                   )}
                 </div>
               </div>
-              <div className="kai-card-footer" style={{ display: 'flex', justifyContent: 'flex-end', gap: 8 }}>
-                <button type="button" className="kai-btn kai-btn-outline" onClick={() => setShowCreateRoom(false)}>Cancel</button>
-                <button type="submit" className="kai-btn kai-btn-primary">Create Room</button>
+              <div className="p-4 border-t border-[var(--border-subtle)]" style={{ display: 'flex', justifyContent: 'flex-end', gap: 8 }}>
+                <button type="button" className="bg-transparent border border-[var(--border-default)] text-[var(--text-secondary)] rounded-lg px-4 py-2 text-[13px] font-semibold hover:bg-[var(--bg-elevated)] transition-colors" onClick={() => setShowCreateRoom(false)}>Cancel</button>
+                <button type="submit" className="bg-[#7C3AED] text-white rounded-lg px-4 py-2 text-[13px] font-semibold hover:bg-[#7C3AED]/90 transition-colors">Create Room</button>
               </div>
             </form>
           </div>

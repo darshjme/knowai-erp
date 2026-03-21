@@ -1,5 +1,4 @@
 import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
-import { Container, Row, Col, Card, Button, Badge, Modal, Offcanvas, Form, Tab, Nav, ProgressBar, Spinner, Alert, OverlayTrigger, Tooltip, Dropdown, InputGroup } from 'react-bootstrap';
 import { useSelector, useDispatch } from 'react-redux';
 import { toast } from 'react-toastify';
 import {
@@ -12,7 +11,7 @@ import {
 } from 'lucide-react';
 import { videoReviewsApi, projectsApi, teamApi } from '../services/api';
 
-const BRAND = '#146DF7';
+const BRAND = '#7C3AED';
 
 const STATUS_CONFIG = {
   PENDING_REVIEW: { label: 'Pending Review', bg: '#FEF3C7', color: '#92400E', border: '#FDE68A' },
@@ -339,16 +338,15 @@ export default function VideoReviews() {
   return (
     <div>
       {/* Header */}
-      <div className="page-header">
+      <div className="flex items-center justify-between mb-6">
         <div>
-          <h1 style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+          <h1 className="text-[22px] font-bold text-[var(--text-primary)] m-0 flex items-center gap-2.5">
             <Film size={28} style={{ color: BRAND }} /> Video Reviews
           </h1>
-          <p style={{ color: '#5B6B76', margin: 0 }}>Review, comment, and approve video content</p>
+          <p className="text-[13px] text-[var(--text-secondary)] mt-1">Review, comment, and approve video content</p>
         </div>
-        <div style={{ display: 'flex', gap: 10 }}>
-          <button className="kai-btn kai-btn-primary" onClick={() => setShowUploadModal(true)}
-            style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+        <div className="flex gap-2.5">
+          <button data-testid="upload-video" className="bg-[#7C3AED] text-white rounded-lg px-4 py-2 text-[13px] font-semibold hover:bg-[#7C3AED]/90 flex items-center gap-1.5" onClick={() => setShowUploadModal(true)}>
             <Upload size={16} /> Upload Video
           </button>
         </div>
@@ -538,12 +536,10 @@ function VideoGrid({ videos, onOpen, onDelete, getApprovalProgress, getCommentCo
                 <span>{formatTimeAgo(video.updatedAt || video.createdAt)}</span>
               </div>
               {progress.total > 0 && (
-                <div style={{ marginTop: 10 }}>
-                  <ProgressBar
-                    now={(progress.approved / progress.total) * 100}
-                    style={{ height: 4, borderRadius: 2, background: '#E8EBED' }}
-                    variant={progress.approved === progress.total ? 'success' : undefined}
-                  />
+                <div className="mt-2.5">
+                  <div className="h-1 rounded-sm bg-[var(--border-default)] overflow-hidden">
+                    <div className="h-full rounded-sm transition-all" style={{ width: `${(progress.approved / progress.total) * 100}%`, background: progress.approved === progress.total ? '#16A34A' : BRAND }} />
+                  </div>
                 </div>
               )}
             </div>
@@ -664,38 +660,42 @@ function UploadModal({ show, onHide, form, setForm, projects, teamMembers, uploa
     }));
   };
 
+  if (!show) return null;
+  const inputCls = "w-full bg-[var(--bg-elevated)] border border-[var(--border-default)] rounded-lg px-3 py-2 text-[var(--text-primary)] placeholder:text-[var(--text-muted)] focus:border-[#7C3AED] focus:ring-2 focus:ring-[#7C3AED]/20 outline-none text-[13px]";
+
   return (
-    <Modal show={show} onHide={onHide} centered size="lg">
-      <Modal.Header closeButton style={{ borderBottom: '1px solid #E8EBED' }}>
-        <Modal.Title style={{ fontSize: 18, fontWeight: 600 }}>
-          <Upload size={20} style={{ marginRight: 8, color: BRAND }} />
-          Upload Video for Review
-        </Modal.Title>
-      </Modal.Header>
-      <Modal.Body style={{ padding: 24 }}>
-        <Form.Group className="mb-3">
-          <Form.Label style={{ fontWeight: 500, fontSize: 13 }}>Title *</Form.Label>
-          <Form.Control type="text" placeholder="Enter video title"
+    <div className="fixed inset-0 bg-black/50 z-[1060] flex items-center justify-center" onClick={onHide}>
+      <div className="bg-[var(--bg-card)] border border-[var(--border-default)] rounded-xl w-[700px] max-w-[95vw] max-h-[90vh] overflow-auto shadow-2xl" onClick={e => e.stopPropagation()}>
+      <div className="px-6 py-4 border-b border-[var(--border-default)] flex items-center justify-between">
+        <h5 className="m-0 text-[18px] font-semibold text-[var(--text-primary)] flex items-center gap-2">
+          <Upload size={20} style={{ color: BRAND }} /> Upload Video for Review
+        </h5>
+        <button className="text-[var(--text-secondary)] bg-transparent border-none cursor-pointer" onClick={onHide}><X size={18} /></button>
+      </div>
+      <div className="p-6">
+        <div className="mb-3">
+          <label className="block text-[13px] font-medium text-[var(--text-secondary)] mb-1">Title *</label>
+          <input className={inputCls} type="text" placeholder="Enter video title"
             value={form.title} onChange={e => setForm(prev => ({ ...prev, title: e.target.value }))} />
-        </Form.Group>
-        <Form.Group className="mb-3">
-          <Form.Label style={{ fontWeight: 500, fontSize: 13 }}>Description</Form.Label>
-          <Form.Control as="textarea" rows={3} placeholder="Describe the video and what to review..."
+        </div>
+        <div className="mb-3">
+          <label className="block text-[13px] font-medium text-[var(--text-secondary)] mb-1">Description</label>
+          <textarea className={`${inputCls} resize-y`} rows={3} placeholder="Describe the video and what to review..."
             value={form.description} onChange={e => setForm(prev => ({ ...prev, description: e.target.value }))} />
-        </Form.Group>
-        <Form.Group className="mb-3">
-          <Form.Label style={{ fontWeight: 500, fontSize: 13 }}>Project</Form.Label>
-          <Form.Select value={form.projectId} onChange={e => setForm(prev => ({ ...prev, projectId: e.target.value }))}>
+        </div>
+        <div className="mb-3">
+          <label className="block text-[13px] font-medium text-[var(--text-secondary)] mb-1">Project</label>
+          <select className={inputCls} value={form.projectId} onChange={e => setForm(prev => ({ ...prev, projectId: e.target.value }))}>
             <option value="">Select a project</option>
             {projects.map(p => (
               <option key={p._id || p.id} value={p._id || p.id}>{p.name}</option>
             ))}
-          </Form.Select>
-        </Form.Group>
+          </select>
+        </div>
 
         {/* File Drop Zone */}
-        <Form.Group className="mb-3">
-          <Form.Label style={{ fontWeight: 500, fontSize: 13 }}>Video File *</Form.Label>
+        <div className="mb-3">
+          <label className="block text-[13px] font-medium text-[var(--text-secondary)] mb-1">Video File *</label>
           <div
             onDrop={handleDrop}
             onDragOver={e => { e.preventDefault(); setDragOver(true); }}
@@ -732,11 +732,11 @@ function UploadModal({ show, onHide, form, setForm, projects, teamMembers, uploa
           </div>
           <input ref={fileInputRef} type="file" accept="video/*" hidden
             onChange={e => { if (e.target.files?.[0]) setForm(prev => ({ ...prev, file: e.target.files[0] })); }} />
-        </Form.Group>
+        </div>
 
         {/* Reviewer Selection */}
-        <Form.Group className="mb-0">
-          <Form.Label style={{ fontWeight: 500, fontSize: 13 }}>Assign Reviewers</Form.Label>
+        <div className="mb-0">
+          <label className="block text-[13px] font-medium text-[var(--text-secondary)] mb-1">Assign Reviewers</label>
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, maxHeight: 150, overflowY: 'auto', padding: 4 }}>
             {teamMembers.length > 0 ? teamMembers.map(member => {
               const id = member._id || member.id;
@@ -759,16 +759,16 @@ function UploadModal({ show, onHide, form, setForm, projects, teamMembers, uploa
               <span style={{ fontSize: 12, color: '#9CA3AF' }}>No team members loaded</span>
             )}
           </div>
-        </Form.Group>
-      </Modal.Body>
-      <Modal.Footer style={{ borderTop: '1px solid #E8EBED' }}>
-        <Button variant="light" onClick={onHide}>Cancel</Button>
-        <Button variant="primary" onClick={onSubmit} disabled={uploading || !form.title.trim()}
-          style={{ background: BRAND, borderColor: BRAND, display: 'flex', alignItems: 'center', gap: 6 }}>
-          {uploading ? <><Spinner size="sm" animation="border" /> Uploading...</> : <><Upload size={16} /> Upload</>}
-        </Button>
-      </Modal.Footer>
-    </Modal>
+        </div>
+      </div>
+      <div className="px-6 py-4 border-t border-[var(--border-default)] flex justify-end gap-2">
+        <button className="bg-transparent border border-[var(--border-default)] text-[var(--text-secondary)] rounded-lg px-4 py-2 text-[13px] font-medium" onClick={onHide}>Cancel</button>
+        <button className="bg-[#7C3AED] text-white rounded-lg px-4 py-2 text-[13px] font-semibold hover:bg-[#7C3AED]/90 disabled:opacity-50 flex items-center gap-1.5" onClick={onSubmit} disabled={uploading || !form.title.trim()}>
+          {uploading ? <><Loader2 size={14} className="animate-spin" /> Uploading...</> : <><Upload size={16} /> Upload</>}
+        </button>
+      </div>
+      </div>
+    </div>
   );
 }
 
@@ -1050,9 +1050,8 @@ function VideoPlayerPanel({ video, onClose, user, onUpdate, teamMembers }) {
                 </div>
                 {/* Comment markers */}
                 {commentMarkers.map(marker => (
-                  <OverlayTrigger key={marker.id} placement="top"
-                    overlay={<Tooltip>{formatTimestamp(marker.timestamp)} - {marker.text?.slice(0, 50)}</Tooltip>}>
-                    <div
+                    <div key={marker.id}
+                      title={`${formatTimestamp(marker.timestamp)} - ${marker.text?.slice(0, 50)}`}
                       onClick={e => { e.stopPropagation(); seekTo(marker.timestamp); }}
                       style={{
                         position: 'absolute', top: -3, left: `${marker.position}%`,
@@ -1061,7 +1060,6 @@ function VideoPlayerPanel({ video, onClose, user, onUpdate, teamMembers }) {
                         zIndex: 2, boxShadow: '0 1px 3px rgba(0,0,0,0.4)',
                       }}
                     />
-                  </OverlayTrigger>
                 ))}
               </div>
 
@@ -1224,12 +1222,10 @@ function VideoPlayerPanel({ video, onClose, user, onUpdate, teamMembers }) {
                   {/* Add comment */}
                   <div style={{ padding: 16, borderTop: '1px solid #E8EBED', flexShrink: 0, background: '#FAFAFA' }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
-                      <Form.Check type="switch" id="pin-time" checked={pinToTime}
-                        onChange={e => setPinToTime(e.target.checked)}
-                        label={<span style={{ fontSize: 12, color: '#5B6B76' }}>
-                          Pin to {formatTimestamp(currentTime)}
-                        </span>}
-                      />
+                      <label className="flex items-center gap-2 cursor-pointer text-[12px] text-[var(--text-secondary)]">
+                        <input type="checkbox" checked={pinToTime} onChange={e => setPinToTime(e.target.checked)} className="accent-[#7C3AED]" />
+                        Pin to {formatTimestamp(currentTime)}
+                      </label>
                     </div>
                     <div style={{ display: 'flex', gap: 8 }}>
                       <input className="kai-input" placeholder="Add a comment..." value={newComment}
@@ -1258,12 +1254,11 @@ function VideoPlayerPanel({ video, onClose, user, onUpdate, teamMembers }) {
                           {approvalProgress.approved}/{approvalProgress.total} approved
                         </span>
                       </div>
-                      <ProgressBar
-                        now={approvalProgress.pct}
-                        style={{ height: 8, borderRadius: 4, background: '#E8EBED' }}
-                        variant={approvalProgress.pct === 100 ? 'success' : approvalProgress.pct > 0 ? 'primary' : undefined}
-                        label={approvalProgress.pct > 20 ? `${approvalProgress.pct}%` : ''}
-                      />
+                      <div className="h-2 rounded bg-[var(--border-default)] overflow-hidden">
+                        <div className="h-full rounded transition-all text-[9px] text-white text-center leading-[8px] font-bold" style={{ width: `${approvalProgress.pct}%`, background: approvalProgress.pct === 100 ? '#16A34A' : approvalProgress.pct > 0 ? BRAND : 'transparent' }}>
+                          {approvalProgress.pct > 20 ? `${approvalProgress.pct}%` : ''}
+                        </div>
+                      </div>
                     </div>
 
                     {/* Reviewers list */}

@@ -12,10 +12,12 @@
     "test:e2e:ui": "playwright test --ui"
   },
   "dependencies": {
+    "@headlessui/react": "^2.2.9",
     "@hello-pangea/dnd": "^17.0.0",
     "apexcharts": "^4.5.0",
     "axios": "^1.9.0",
     "bootstrap": "^5.3.6",
+    "framer-motion": "^12.38.0",
     "lucide-react": "^0.500.0",
     "react": "^19.2.4",
     "react-apexcharts": "^1.7.0",
@@ -35,14 +37,17 @@
   "devDependencies": {
     "@eslint/js": "^9.39.4",
     "@playwright/test": "^1.58.2",
+    "@tailwindcss/vite": "^4.2.2",
     "@types/react": "^19.2.14",
     "@types/react-dom": "^19.2.3",
     "@vitejs/plugin-react": "^6.0.0",
+    "autoprefixer": "^10.4.27",
     "eslint": "^9.39.4",
     "eslint-plugin-react-hooks": "^7.0.1",
     "eslint-plugin-react-refresh": "^0.5.2",
     "globals": "^17.4.0",
     "sass": "^1.89.0",
+    "tailwindcss": "^4.2.2",
     "typescript": "^5.9.3",
     "vite": "^8.0.0"
   }

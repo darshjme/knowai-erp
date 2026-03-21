@@ -4,7 +4,7 @@ import { toast } from 'react-toastify';
 import { calendarApi, tasksApi } from '../services/api';
 
 const EVENT_CATEGORIES = [
-  { key: 'meeting', label: 'Meeting', color: '#146DF7' },
+  { key: 'meeting', label: 'Meeting', color: '#111827' },
   { key: 'deadline', label: 'Deadline', color: '#CB3939' },
   { key: 'followup', label: 'Follow-up', color: '#16A34A' },
   { key: 'personal', label: 'Personal', color: '#8B3FE9' },
@@ -210,15 +210,12 @@ export default function Calendar() {
     const daysInPrev = new Date(year, month, 0).getDate();
 
     const days = [];
-    // Previous month
     for (let i = firstDay - 1; i >= 0; i--) {
       days.push({ date: new Date(year, month - 1, daysInPrev - i), isCurrentMonth: false });
     }
-    // Current month
     for (let i = 1; i <= daysInMonth; i++) {
       days.push({ date: new Date(year, month, i), isCurrentMonth: true });
     }
-    // Next month fill
     const remaining = 42 - days.length;
     for (let i = 1; i <= remaining; i++) {
       days.push({ date: new Date(year, month + 1, i), isCurrentMonth: false });
@@ -283,32 +280,12 @@ export default function Calendar() {
             setDragEvent(null);
           }
         }}
-        style={{
-          minHeight: view === 'month' ? 100 : 120,
-          padding: 4,
-          border: '1px solid var(--kai-border-light)',
-          background: isToday ? 'rgba(20,109,247,0.04)' : 'transparent',
-          opacity: isCurrentMonth ? 1 : 0.4,
-          cursor: 'pointer',
-          position: 'relative',
-        }}
+        className={`min-h-[100px] p-1 border border-[var(--border-default)] cursor-pointer relative ${isToday ? 'bg-[#7C3AED]/5' : 'bg-transparent'} ${!isCurrentMonth ? 'opacity-40' : ''}`}
       >
-        <div style={{
-          fontSize: 12,
-          fontWeight: isToday ? 700 : 500,
-          color: isToday ? '#fff' : 'var(--kai-text)',
-          background: isToday ? 'var(--kai-primary)' : 'transparent',
-          width: 24,
-          height: 24,
-          borderRadius: '50%',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          marginBottom: 2,
-        }}>
+        <div className={`text-[12px] w-6 h-6 rounded-full flex items-center justify-center mb-0.5 ${isToday ? 'font-bold text-white bg-[#7C3AED]' : 'font-medium text-[var(--text-primary)]'}`}>
           {date.getDate()}
         </div>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+        <div className="flex flex-col gap-px">
           {dayEvents.slice(0, 3).map((evt) => {
             const cat = getCategory(evt);
             return (
@@ -317,16 +294,10 @@ export default function Calendar() {
                 draggable={!evt.isTask}
                 onDragStart={() => setDragEvent(evt)}
                 onClick={e => { e.stopPropagation(); handleEditEvent(evt); }}
+                className="text-[11px] px-1 py-px rounded-[3px] font-medium overflow-hidden text-ellipsis whitespace-nowrap"
                 style={{
-                  fontSize: 11,
-                  padding: '1px 4px',
-                  borderRadius: 3,
                   background: cat.color + '20',
                   color: cat.color,
-                  fontWeight: 500,
-                  overflow: 'hidden',
-                  textOverflow: 'ellipsis',
-                  whiteSpace: 'nowrap',
                   cursor: evt.isTask ? 'default' : 'grab',
                   borderLeft: `2px solid ${cat.color}`,
                 }}
@@ -338,7 +309,7 @@ export default function Calendar() {
           {dayEvents.length > 3 && (
             <div
               onClick={e => { e.stopPropagation(); setSelectedDayEvents({ date, events: dayEvents }); }}
-              style={{ fontSize: 10, color: 'var(--kai-primary)', fontWeight: 600, cursor: 'pointer', paddingLeft: 4 }}
+              className="text-[10px] text-[#7C3AED] font-semibold cursor-pointer pl-1"
             >
               +{dayEvents.length - 3} more
             </div>
@@ -353,11 +324,11 @@ export default function Calendar() {
     const hours = Array.from({ length: 24 }, (_, i) => i);
 
     return (
-      <div style={{ display: 'flex', flex: 1, overflowY: 'auto' }}>
+      <div className="flex flex-1 overflow-y-auto">
         {/* Time labels */}
-        <div style={{ width: 60, flexShrink: 0 }}>
+        <div className="w-[60px] flex-shrink-0">
           {hours.map(h => (
-            <div key={h} style={{ height: 48, fontSize: 11, color: 'var(--kai-text-muted)', textAlign: 'right', paddingRight: 8, paddingTop: 2 }}>
+            <div key={h} className="h-12 text-[11px] text-[var(--text-muted)] text-right pr-2 pt-0.5">
               {h === 0 ? '' : `${h % 12 || 12} ${h < 12 ? 'AM' : 'PM'}`}
             </div>
           ))}
@@ -369,7 +340,7 @@ export default function Calendar() {
           return (
             <div
               key={dayObj.date.toISOString()}
-              style={{ flex: 1, borderLeft: '1px solid var(--kai-border-light)', position: 'relative' }}
+              className="flex-1 border-l border-[var(--border-default)] relative"
               onClick={() => handleAddEvent(dayObj.date)}
               onDragOver={e => e.preventDefault()}
               onDrop={e => {
@@ -378,7 +349,7 @@ export default function Calendar() {
               }}
             >
               {hours.map(h => (
-                <div key={h} style={{ height: 48, borderBottom: '1px solid var(--kai-border-light)', background: isToday && h === today.getHours() ? 'rgba(20,109,247,0.04)' : 'transparent' }} />
+                <div key={h} className={`h-12 border-b border-[var(--border-default)] ${isToday && h === today.getHours() ? 'bg-[#7C3AED]/5' : ''}`} />
               ))}
               {/* Events overlay */}
               {dayEvents.map(evt => {
@@ -393,26 +364,21 @@ export default function Calendar() {
                     draggable={!evt.isTask}
                     onDragStart={() => setDragEvent(evt)}
                     onClick={e => { e.stopPropagation(); handleEditEvent(evt); }}
+                    className="absolute left-0.5 right-0.5 rounded overflow-hidden z-[1]"
                     style={{
-                      position: 'absolute',
                       top,
-                      left: 2,
-                      right: 2,
                       height,
                       background: cat.color + '20',
                       borderLeft: `3px solid ${cat.color}`,
-                      borderRadius: 4,
                       padding: '2px 6px',
                       fontSize: 11,
                       fontWeight: 500,
                       color: cat.color,
-                      overflow: 'hidden',
                       cursor: evt.isTask ? 'default' : 'grab',
-                      zIndex: 1,
                     }}
                   >
-                    <div style={{ fontWeight: 600 }}>{evt.title}</div>
-                    <div style={{ fontSize: 10, opacity: 0.8 }}>{formatTime(evt.start)}</div>
+                    <div className="font-semibold">{evt.title}</div>
+                    <div className="text-[10px] opacity-80">{formatTime(evt.start)}</div>
                   </div>
                 );
               })}
@@ -425,42 +391,46 @@ export default function Calendar() {
 
   return (
     <div>
-      <div className="page-header">
+      <div className="flex items-center justify-between mb-6 flex-wrap gap-4">
         <div>
-          <h1>Calendar</h1>
-          <p>Schedule and manage events</p>
+          <h1 className="text-[24px] font-bold text-[var(--text-primary)] tracking-tight font-[Manrope]">Calendar</h1>
+          <p className="text-[13px] text-[var(--text-secondary)] mt-1">Schedule and manage events</p>
         </div>
-        <div className="page-actions">
-          <button className="kai-btn kai-btn-primary" onClick={() => handleAddEvent()}>
+        <div className="flex items-center gap-2">
+          <button
+            data-testid="add-event-btn"
+            className="bg-[#7C3AED] text-white rounded-lg px-4 py-2 text-[13px] font-semibold hover:bg-[#7C3AED]/90 transition-colors flex items-center gap-2"
+            onClick={() => handleAddEvent()}
+          >
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
             Add Event
           </button>
         </div>
       </div>
 
-      <div style={{ display: 'flex', gap: 20, flexWrap: 'wrap', maxWidth: '100%', overflow: 'hidden' }}>
+      <div className="flex gap-5 flex-wrap max-w-full overflow-hidden">
         {/* Main Calendar */}
-        <div style={{ flex: '1 1 500px', minWidth: 0, overflow: 'hidden' }}>
-          <div className="kai-card">
+        <div className="flex-[1_1_500px] min-w-0 overflow-hidden">
+          <div className="bg-[var(--bg-card)] border border-[var(--border-default)] rounded-xl">
             {/* Calendar Toolbar */}
-            <div className="kai-card-header" style={{ flexWrap: 'wrap', gap: 12 }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                <button className="kai-btn kai-btn-outline kai-btn-sm" onClick={() => navigate(-1)}>
+            <div className="flex items-center justify-between p-4 border-b border-[var(--border-subtle)] flex-wrap gap-3">
+              <div className="flex items-center gap-2">
+                <button data-testid="nav-prev" className="bg-transparent border border-[var(--border-default)] text-[var(--text-secondary)] rounded-lg px-2 py-1.5 text-[13px] hover:bg-[var(--bg-elevated)] transition-colors" onClick={() => navigate(-1)}>
                   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="15 18 9 12 15 6"/></svg>
                 </button>
-                <button className="kai-btn kai-btn-outline kai-btn-sm" onClick={goToday}>Today</button>
-                <button className="kai-btn kai-btn-outline kai-btn-sm" onClick={() => navigate(1)}>
+                <button data-testid="nav-today" className="bg-transparent border border-[var(--border-default)] text-[var(--text-secondary)] rounded-lg px-3 py-1.5 text-[13px] font-semibold hover:bg-[var(--bg-elevated)] transition-colors" onClick={goToday}>Today</button>
+                <button data-testid="nav-next" className="bg-transparent border border-[var(--border-default)] text-[var(--text-secondary)] rounded-lg px-2 py-1.5 text-[13px] hover:bg-[var(--bg-elevated)] transition-colors" onClick={() => navigate(1)}>
                   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="9 18 15 12 9 6"/></svg>
                 </button>
-                <h6 style={{ margin: '0 0 0 8px', fontSize: 16, fontWeight: 700 }}>{headerText}</h6>
+                <h6 className="ml-2 text-[16px] font-bold text-[var(--text-primary)] m-0">{headerText}</h6>
               </div>
-              <div style={{ display: 'flex', gap: 4, background: 'var(--kai-bg)', padding: 3, borderRadius: 'var(--kai-radius)' }}>
+              <div className="flex gap-1 bg-[var(--bg-elevated)] p-0.5 rounded-lg">
                 {VIEWS.map(v => (
                   <button
                     key={v}
-                    className={`kai-btn kai-btn-sm ${view === v ? 'kai-btn-primary' : 'kai-btn-outline'}`}
+                    data-testid={`view-${v}`}
+                    className={`rounded-lg px-3 py-1.5 text-[13px] font-semibold capitalize transition-colors border-transparent ${view === v ? 'bg-[#7C3AED] text-white' : 'bg-transparent text-[var(--text-secondary)] hover:bg-[var(--bg-elevated)]'}`}
                     onClick={() => setView(v)}
-                    style={{ textTransform: 'capitalize', borderColor: 'transparent' }}
                   >
                     {v}
                   </button>
@@ -468,21 +438,21 @@ export default function Calendar() {
               </div>
             </div>
 
-            <div className="kai-card-body" style={{ padding: 0, overflow: 'hidden', width: '100%' }}>
+            <div className="p-0 overflow-hidden w-full">
               {loading ? (
-                <div style={{ padding: 60, textAlign: 'center', color: 'var(--kai-text-muted)' }}>Loading calendar...</div>
+                <div className="py-16 text-center text-[var(--text-muted)]">Loading calendar...</div>
               ) : view === 'month' ? (
                 <>
                   {/* Weekday header */}
-                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', borderBottom: '1px solid var(--kai-border)' }}>
+                  <div className="grid grid-cols-7 border-b border-[var(--border-default)]">
                     {WEEKDAYS.map(d => (
-                      <div key={d} style={{ padding: '8px 4px', fontSize: 11, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.8, color: 'var(--kai-text-muted)', textAlign: 'center' }}>
+                      <div key={d} className="py-2 px-1 text-[11px] font-bold uppercase tracking-wider text-[var(--text-muted)] text-center">
                         {d}
                       </div>
                     ))}
                   </div>
                   {/* Days grid */}
-                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', width: '100%', tableLayout: 'fixed' }}>
+                  <div className="grid grid-cols-7 w-full">
                     {getMonthDays().map(renderDayCell)}
                   </div>
                 </>
@@ -490,20 +460,16 @@ export default function Calendar() {
                 <>
                   {/* Week/Day header */}
                   {view === 'week' && (
-                    <div style={{ display: 'flex', borderBottom: '1px solid var(--kai-border)' }}>
-                      <div style={{ width: 60 }} />
+                    <div className="flex border-b border-[var(--border-default)]">
+                      <div className="w-[60px]" />
                       {getWeekDays().map(dayObj => {
                         const isToday = isSameDay(dayObj.date, today);
                         return (
-                          <div key={dayObj.date.toISOString()} style={{ flex: 1, textAlign: 'center', padding: '8px 4px', borderLeft: '1px solid var(--kai-border-light)' }}>
-                            <div style={{ fontSize: 11, fontWeight: 600, color: 'var(--kai-text-muted)', textTransform: 'uppercase' }}>
+                          <div key={dayObj.date.toISOString()} className="flex-1 text-center py-2 px-1 border-l border-[var(--border-default)]">
+                            <div className="text-[11px] font-semibold text-[var(--text-muted)] uppercase">
                               {WEEKDAYS[dayObj.date.getDay()]}
                             </div>
-                            <div style={{
-                              fontSize: 18, fontWeight: 700, color: isToday ? '#fff' : 'var(--kai-text)',
-                              background: isToday ? 'var(--kai-primary)' : 'transparent',
-                              width: 32, height: 32, borderRadius: '50%', display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
-                            }}>
+                            <div className={`text-[18px] font-bold inline-flex items-center justify-center w-8 h-8 rounded-full ${isToday ? 'text-white bg-[#7C3AED]' : 'text-[var(--text-primary)]'}`}>
                               {dayObj.date.getDate()}
                             </div>
                           </div>
@@ -511,7 +477,7 @@ export default function Calendar() {
                       })}
                     </div>
                   )}
-                  <div style={{ height: 500, overflowY: 'auto' }}>
+                  <div className="h-[500px] overflow-y-auto">
                     {renderWeekTimeGrid()}
                   </div>
                 </>
@@ -520,10 +486,10 @@ export default function Calendar() {
           </div>
 
           {/* Legend */}
-          <div style={{ display: 'flex', gap: 16, marginTop: 12, flexWrap: 'wrap' }}>
+          <div className="flex gap-4 mt-3 flex-wrap">
             {EVENT_CATEGORIES.map(cat => (
-              <div key={cat.key} style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 12, color: 'var(--kai-text-muted)' }}>
-                <div style={{ width: 10, height: 10, borderRadius: 2, background: cat.color }} />
+              <div key={cat.key} className="flex items-center gap-1.5 text-[12px] text-[var(--text-muted)]">
+                <div className="w-2.5 h-2.5 rounded-sm" style={{ background: cat.color }} />
                 {cat.label}
               </div>
             ))}
@@ -531,14 +497,14 @@ export default function Calendar() {
         </div>
 
         {/* Upcoming Events Side Panel */}
-        <div style={{ width: 300, flex: '0 1 300px', minWidth: 0 }}>
-          <div className="kai-card">
-            <div className="kai-card-header">
-              <h6 style={{ margin: 0 }}>Upcoming Events</h6>
+        <div className="w-[300px] flex-[0_1_300px] min-w-0">
+          <div className="bg-[var(--bg-card)] border border-[var(--border-default)] rounded-xl">
+            <div className="flex items-center justify-between p-4 border-b border-[var(--border-subtle)]">
+              <h6 className="text-[14px] font-semibold text-[var(--text-primary)] m-0">Upcoming Events</h6>
             </div>
-            <div className="kai-card-body" style={{ padding: 0, maxHeight: 500, overflowY: 'auto' }}>
+            <div className="max-h-[500px] overflow-y-auto">
               {upcomingEvents.length === 0 ? (
-                <div style={{ padding: 24, textAlign: 'center', color: 'var(--kai-text-muted)', fontSize: 13 }}>No upcoming events</div>
+                <div className="py-6 text-center text-[var(--text-muted)] text-[13px]">No upcoming events</div>
               ) : (
                 upcomingEvents.map(evt => {
                   const cat = getCategory(evt);
@@ -546,27 +512,18 @@ export default function Calendar() {
                     <div
                       key={evt._id || evt.id}
                       onClick={() => handleEditEvent(evt)}
-                      style={{
-                        display: 'flex',
-                        gap: 12,
-                        padding: '12px 16px',
-                        borderBottom: '1px solid var(--kai-border-light)',
-                        cursor: evt.isTask ? 'default' : 'pointer',
-                        transition: 'var(--kai-transition)',
-                      }}
-                      onMouseEnter={e => e.currentTarget.style.background = 'var(--kai-surface-hover)'}
-                      onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
+                      className={`flex gap-3 px-4 py-3 border-b border-[var(--border-subtle)] transition-colors hover:bg-[var(--bg-elevated)] ${evt.isTask ? 'cursor-default' : 'cursor-pointer'}`}
                     >
-                      <div style={{ width: 4, borderRadius: 2, background: cat.color, flexShrink: 0 }} />
-                      <div style={{ flex: 1, minWidth: 0 }}>
-                        <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--kai-text)', marginBottom: 2 }} className="truncate">
+                      <div className="w-1 rounded-sm flex-shrink-0" style={{ background: cat.color }} />
+                      <div className="flex-1 min-w-0">
+                        <div className="text-[13px] font-semibold text-[var(--text-primary)] mb-0.5 truncate">
                           {evt.title}
                         </div>
-                        <div style={{ fontSize: 11, color: 'var(--kai-text-muted)', display: 'flex', alignItems: 'center', gap: 4 }}>
+                        <div className="text-[11px] text-[var(--text-muted)] flex items-center gap-1">
                           <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
                           {formatDate(evt.start || evt.date)} {formatTime(evt.start || evt.date)}
                         </div>
-                        <span className="kai-badge" style={{ marginTop: 4, fontSize: 10, background: cat.color + '20', color: cat.color }}>
+                        <span className="inline-block mt-1 text-[10px] px-2 py-0.5 rounded-full font-medium" style={{ background: cat.color + '20', color: cat.color }}>
                           {cat.label}
                         </span>
                       </div>
@@ -581,84 +538,75 @@ export default function Calendar() {
 
       {/* Add/Edit Event Modal */}
       {showEventModal && (
-        <div style={{ position: 'fixed', inset: 0, zIndex: 2000, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-          <div style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.5)' }} onClick={() => setShowEventModal(false)} />
-          <div className="kai-card" style={{ position: 'relative', width: 480, maxWidth: '90vw', zIndex: 1 }}>
-            <div className="kai-card-header">
-              <h5>{editingEvent ? 'Edit Event' : 'Add Event'}</h5>
-              <button className="kai-btn kai-btn-outline kai-btn-sm" onClick={() => setShowEventModal(false)}>
+        <div className="fixed inset-0 z-[2000] flex items-center justify-center">
+          <div className="absolute inset-0 bg-black/50" onClick={() => setShowEventModal(false)} />
+          <div className="relative w-[480px] max-w-[90vw] z-[1] bg-[var(--bg-card)] border border-[var(--border-default)] rounded-xl">
+            <div className="flex items-center justify-between p-4 border-b border-[var(--border-subtle)]">
+              <h5 className="text-[16px] font-bold text-[var(--text-primary)] m-0">{editingEvent ? 'Edit Event' : 'Add Event'}</h5>
+              <button data-testid="close-event-modal" className="bg-transparent border border-[var(--border-default)] text-[var(--text-secondary)] rounded-lg px-2 py-1.5 hover:bg-[var(--bg-elevated)] transition-colors" onClick={() => setShowEventModal(false)}>
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
               </button>
             </div>
             <form onSubmit={handleSaveEvent}>
-              <div className="kai-card-body" style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+              <div className="p-4 flex flex-col gap-3.5">
                 <div>
-                  <label className="kai-label">Title</label>
-                  <input className="kai-input" placeholder="Event title" value={newEvent.title} onChange={e => setNewEvent(p => ({ ...p, title: e.target.value }))} />
+                  <label className="block text-[11px] font-semibold text-[var(--text-muted)] uppercase tracking-wider mb-1.5">Title</label>
+                  <input data-testid="event-title" className="w-full bg-[var(--bg-elevated)] border border-[var(--border-default)] rounded-lg px-3 py-2 text-[var(--text-primary)] placeholder:text-[var(--text-muted)] focus:border-[#7C3AED] focus:ring-2 focus:ring-[#7C3AED]/20 outline-none text-[13px]" placeholder="Event title" value={newEvent.title} onChange={e => setNewEvent(p => ({ ...p, title: e.target.value }))} />
                 </div>
-                <div style={{ display: 'flex', gap: 12 }}>
-                  <div style={{ flex: 1 }}>
-                    <label className="kai-label">Start</label>
-                    <input className="kai-input" type="datetime-local" value={newEvent.start} onChange={e => setNewEvent(p => ({ ...p, start: e.target.value }))} />
+                <div className="flex gap-3">
+                  <div className="flex-1">
+                    <label className="block text-[11px] font-semibold text-[var(--text-muted)] uppercase tracking-wider mb-1.5">Start</label>
+                    <input className="w-full bg-[var(--bg-elevated)] border border-[var(--border-default)] rounded-lg px-3 py-2 text-[var(--text-primary)] placeholder:text-[var(--text-muted)] focus:border-[#7C3AED] focus:ring-2 focus:ring-[#7C3AED]/20 outline-none text-[13px]" type="datetime-local" value={newEvent.start} onChange={e => setNewEvent(p => ({ ...p, start: e.target.value }))} />
                   </div>
-                  <div style={{ flex: 1 }}>
-                    <label className="kai-label">End</label>
-                    <input className="kai-input" type="datetime-local" value={newEvent.end} onChange={e => setNewEvent(p => ({ ...p, end: e.target.value }))} />
+                  <div className="flex-1">
+                    <label className="block text-[11px] font-semibold text-[var(--text-muted)] uppercase tracking-wider mb-1.5">End</label>
+                    <input className="w-full bg-[var(--bg-elevated)] border border-[var(--border-default)] rounded-lg px-3 py-2 text-[var(--text-primary)] placeholder:text-[var(--text-muted)] focus:border-[#7C3AED] focus:ring-2 focus:ring-[#7C3AED]/20 outline-none text-[13px]" type="datetime-local" value={newEvent.end} onChange={e => setNewEvent(p => ({ ...p, end: e.target.value }))} />
                   </div>
                 </div>
                 <div>
-                  <label className="kai-label">Category</label>
-                  <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+                  <label className="block text-[11px] font-semibold text-[var(--text-muted)] uppercase tracking-wider mb-1.5">Category</label>
+                  <div className="flex gap-2 flex-wrap">
                     {EVENT_CATEGORIES.filter(c => c.key !== 'task').map(cat => (
                       <button
                         key={cat.key}
                         type="button"
                         onClick={() => setNewEvent(p => ({ ...p, category: cat.key }))}
+                        className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[12px] font-semibold cursor-pointer transition-colors"
                         style={{
-                          display: 'flex',
-                          alignItems: 'center',
-                          gap: 6,
-                          padding: '6px 12px',
-                          borderRadius: 'var(--kai-radius-pill)',
-                          border: newEvent.category === cat.key ? `2px solid ${cat.color}` : '2px solid var(--kai-border)',
+                          border: newEvent.category === cat.key ? `2px solid ${cat.color}` : '2px solid var(--border-default)',
                           background: newEvent.category === cat.key ? cat.color + '15' : 'transparent',
-                          color: newEvent.category === cat.key ? cat.color : 'var(--kai-text-muted)',
-                          fontSize: 12,
-                          fontWeight: 600,
-                          cursor: 'pointer',
-                          transition: 'var(--kai-transition)',
+                          color: newEvent.category === cat.key ? cat.color : 'var(--text-muted)',
                         }}
                       >
-                        <div style={{ width: 8, height: 8, borderRadius: '50%', background: cat.color }} />
+                        <div className="w-2 h-2 rounded-full" style={{ background: cat.color }} />
                         {cat.label}
                       </button>
                     ))}
                   </div>
                 </div>
                 <div>
-                  <label className="kai-label">Description</label>
+                  <label className="block text-[11px] font-semibold text-[var(--text-muted)] uppercase tracking-wider mb-1.5">Description</label>
                   <textarea
-                    className="kai-input"
+                    className="w-full bg-[var(--bg-elevated)] border border-[var(--border-default)] rounded-lg px-3 py-2 text-[var(--text-primary)] placeholder:text-[var(--text-muted)] focus:border-[#7C3AED] focus:ring-2 focus:ring-[#7C3AED]/20 outline-none text-[13px] resize-y"
                     rows={3}
                     placeholder="Optional description..."
                     value={newEvent.description}
                     onChange={e => setNewEvent(p => ({ ...p, description: e.target.value }))}
-                    style={{ resize: 'vertical' }}
                   />
                 </div>
               </div>
-              <div className="kai-card-footer" style={{ display: 'flex', justifyContent: 'space-between' }}>
+              <div className="flex justify-between p-4 border-t border-[var(--border-subtle)]">
                 <div>
                   {editingEvent && (
-                    <button type="button" className="kai-btn kai-btn-danger kai-btn-sm" onClick={handleDeleteEvent}>
+                    <button type="button" data-testid="delete-event" className="bg-[#CB3939] text-white rounded-lg px-3 py-1.5 text-[13px] font-semibold hover:bg-[#CB3939]/90 transition-colors flex items-center gap-1.5" onClick={handleDeleteEvent}>
                       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
                       Delete
                     </button>
                   )}
                 </div>
-                <div style={{ display: 'flex', gap: 8 }}>
-                  <button type="button" className="kai-btn kai-btn-outline" onClick={() => setShowEventModal(false)}>Cancel</button>
-                  <button type="submit" className="kai-btn kai-btn-primary">
+                <div className="flex gap-2">
+                  <button type="button" className="bg-transparent border border-[var(--border-default)] text-[var(--text-secondary)] rounded-lg px-4 py-2 text-[13px] font-semibold hover:bg-[var(--bg-elevated)] transition-colors" onClick={() => setShowEventModal(false)}>Cancel</button>
+                  <button type="submit" data-testid="save-event" className="bg-[#7C3AED] text-white rounded-lg px-4 py-2 text-[13px] font-semibold hover:bg-[#7C3AED]/90 transition-colors">
                     {editingEvent ? 'Update' : 'Create'} Event
                   </button>
                 </div>
@@ -670,29 +618,29 @@ export default function Calendar() {
 
       {/* Day Events Popup */}
       {selectedDayEvents && (
-        <div style={{ position: 'fixed', inset: 0, zIndex: 2000, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-          <div style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.3)' }} onClick={() => setSelectedDayEvents(null)} />
-          <div className="kai-card" style={{ position: 'relative', width: 380, maxWidth: '90vw', zIndex: 1 }}>
-            <div className="kai-card-header">
-              <h5>{formatDate(selectedDayEvents.date)}</h5>
-              <button className="kai-btn kai-btn-outline kai-btn-sm" onClick={() => setSelectedDayEvents(null)}>
+        <div className="fixed inset-0 z-[2000] flex items-center justify-center">
+          <div className="absolute inset-0 bg-black/30" onClick={() => setSelectedDayEvents(null)} />
+          <div className="relative w-[380px] max-w-[90vw] z-[1] bg-[var(--bg-card)] border border-[var(--border-default)] rounded-xl">
+            <div className="flex items-center justify-between p-4 border-b border-[var(--border-subtle)]">
+              <h5 className="text-[16px] font-bold text-[var(--text-primary)] m-0">{formatDate(selectedDayEvents.date)}</h5>
+              <button className="bg-transparent border border-[var(--border-default)] text-[var(--text-secondary)] rounded-lg px-2 py-1.5 hover:bg-[var(--bg-elevated)] transition-colors" onClick={() => setSelectedDayEvents(null)}>
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
               </button>
             </div>
-            <div className="kai-card-body" style={{ padding: 0, maxHeight: 400, overflowY: 'auto' }}>
+            <div className="max-h-[400px] overflow-y-auto">
               {selectedDayEvents.events.map(evt => {
                 const cat = getCategory(evt);
                 return (
                   <div
                     key={evt._id || evt.id}
                     onClick={() => { setSelectedDayEvents(null); handleEditEvent(evt); }}
-                    style={{ display: 'flex', gap: 10, padding: '10px 16px', borderBottom: '1px solid var(--kai-border-light)', cursor: 'pointer' }}
+                    className="flex gap-2.5 px-4 py-2.5 border-b border-[var(--border-subtle)] cursor-pointer hover:bg-[var(--bg-elevated)] transition-colors"
                   >
-                    <div style={{ width: 4, borderRadius: 2, background: cat.color, flexShrink: 0 }} />
+                    <div className="w-1 rounded-sm flex-shrink-0" style={{ background: cat.color }} />
                     <div>
-                      <div style={{ fontSize: 13, fontWeight: 600 }}>{evt.title}</div>
-                      <div style={{ fontSize: 11, color: 'var(--kai-text-muted)' }}>{formatTime(evt.start)} {evt.end ? `- ${formatTime(evt.end)}` : ''}</div>
-                      <span className="kai-badge" style={{ marginTop: 4, fontSize: 10, background: cat.color + '20', color: cat.color }}>{cat.label}</span>
+                      <div className="text-[13px] font-semibold text-[var(--text-primary)]">{evt.title}</div>
+                      <div className="text-[11px] text-[var(--text-muted)]">{formatTime(evt.start)} {evt.end ? `- ${formatTime(evt.end)}` : ''}</div>
+                      <span className="inline-block mt-1 text-[10px] px-2 py-0.5 rounded-full font-medium" style={{ background: cat.color + '20', color: cat.color }}>{cat.label}</span>
                     </div>
                   </div>
                 );

@@ -1,14 +1,16 @@
 import { useMemo } from 'react';
 import { NavLink, useLocation } from 'react-router-dom';
 import { useSelector, useDispatch } from 'react-redux';
+import { motion, AnimatePresence } from 'framer-motion';
 import {
   LayoutDashboard, FolderKanban, ListChecks, Users, DollarSign,
   CalendarDays, Receipt, Briefcase, UserPlus, FileText, MessageCircle,
   Mail, BarChart3, Settings, Shield, Clock, Target, FileSearch,
   AlertTriangle, TrendingUp, CreditCard, ChevronLeft, X, HelpCircle, Brain,
-  Lock, Send, GitPullRequest, Film, Layers
+  Lock, Send, GitPullRequest, Film, Layers, Menu
 } from 'lucide-react';
 import { ROLE_SIDEBAR_ACCESS, ROLE_LABELS, ROLE_COLORS } from '../../utils/roleConfig';
+import type { RootState } from '../../store/store';
 
 const NAV_SECTIONS = [
   {
@@ -84,8 +86,8 @@ const NAV_SECTIONS = [
 
 export default function Sidebar() {
   const dispatch = useDispatch();
-  const { sidebarCollapsed, sidebarMobileOpen } = useSelector(s => s.ui);
-  const { user } = useSelector(s => s.auth);
+  const { sidebarCollapsed, sidebarMobileOpen } = useSelector((s: RootState) => s.ui);
+  const { user } = useSelector((s: RootState) => s.auth);
   const location = useLocation();
 
   const userRole = user?.role || 'GUY';
@@ -95,19 +97,15 @@ export default function Sidebar() {
 
   const isAdminRole = ['CTO', 'CEO', 'ADMIN'].includes(userRole);
 
-  // Filter nav sections based on role access
   const filteredSections = useMemo(() => {
-    // null means full access (e.g. ADMIN, CTO, CEO)
     if (roleAccess === null || roleAccess === undefined) {
       return NAV_SECTIONS;
     }
-
     return NAV_SECTIONS.map(section => ({
       ...section,
       items: section.items.filter(item => {
-        // Admin-only items are only visible to CTO/CEO/ADMIN
-        if (item.adminOnly) return isAdminRole;
-        const key = item.path.replace(/^\//, ''); // strip leading slash
+        if ((item as any).adminOnly) return isAdminRole;
+        const key = item.path.replace(/^\//, '');
         return roleAccess.includes(key);
       }),
     })).filter(section => section.items.length > 0);
@@ -118,23 +116,77 @@ export default function Sidebar() {
 
   return (
     <>
-      <div className={`app-sidebar-overlay ${sidebarMobileOpen ? 'show' : ''}`} onClick={closeMobile} />
-      <aside className={`app-sidebar ${sidebarCollapsed ? 'collapsed' : ''} ${sidebarMobileOpen ? 'mobile-open' : ''}`}>
-        <div className="sidebar-brand">
-          <div className="sidebar-logo">K</div>
-          <span className="sidebar-logo-text">Know<span>AI</span></span>
-          <button className="d-none d-lg-flex" onClick={toggleCollapse} style={{ marginLeft: 'auto', background: 'none', border: 'none', color: 'var(--kai-sidebar-text)', cursor: 'pointer', padding: 4 }}>
-            <ChevronLeft size={16} style={{ transform: sidebarCollapsed ? 'rotate(180deg)' : 'none', transition: 'transform 0.2s' }} />
-          </button>
-          <button className="d-lg-none" onClick={closeMobile} style={{ marginLeft: 'auto', background: 'none', border: 'none', color: 'var(--kai-sidebar-text)', cursor: 'pointer', padding: 4 }}>
+      {/* Mobile overlay */}
+      <AnimatePresence>
+        {sidebarMobileOpen && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.2 }}
+            className="fixed inset-0 bg-[var(--bg-primary)]/60 z-[999] lg:hidden"
+            onClick={closeMobile}
+          />
+        )}
+      </AnimatePresence>
+
+      {/* Sidebar */}
+      <aside
+        data-testid="sidebar"
+        className={`
+          flex flex-col h-screen bg-[var(--bg-card)] border-r border-[var(--border-default)]
+          transition-all duration-250 ease-out z-[1000] shrink-0
+          ${sidebarCollapsed ? 'w-16' : 'w-[240px]'}
+          ${sidebarMobileOpen ? 'fixed left-0 top-0 w-[240px]' : 'hidden lg:flex'}
+          lg:relative lg:flex
+        `}
+      >
+        {/* Brand */}
+        <div className="flex items-center h-16 px-4 shrink-0">
+          <div className="w-8 h-8 rounded-lg bg-[#7C3AED] flex items-center justify-center text-white font-bold text-sm shrink-0">
+            K
+          </div>
+          {!sidebarCollapsed && (
+            <span className="ml-3 text-[16px] font-semibold text-[var(--text-primary)]">
+              Know<span className="text-[#D5FC0F]">AI</span>
+            </span>
+          )}
+          {/* Collapse button (desktop) */}
+          {!sidebarCollapsed && (
+            <button
+              onClick={toggleCollapse}
+              className="ml-auto hidden lg:flex items-center justify-center w-6 h-6 rounded text-[var(--text-muted)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-elevated)] transition-colors"
+              data-testid="sidebar-collapse"
+            >
+              <ChevronLeft size={16} />
+            </button>
+          )}
+          {sidebarCollapsed && (
+            <button
+              onClick={toggleCollapse}
+              className="hidden lg:flex items-center justify-center w-6 h-6 rounded text-[var(--text-muted)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-elevated)] transition-colors absolute left-[52px]"
+            >
+              <ChevronLeft size={16} className="rotate-180" />
+            </button>
+          )}
+          {/* Close button (mobile) */}
+          <button
+            onClick={closeMobile}
+            className="ml-auto lg:hidden flex items-center justify-center w-6 h-6 rounded text-[var(--text-muted)] hover:text-[var(--text-primary)]"
+          >
             <X size={18} />
           </button>
         </div>
 
-        <nav className="sidebar-nav">
+        {/* Navigation */}
+        <nav className="flex-1 overflow-y-auto px-3 py-2" data-testid="sidebar-nav">
           {filteredSections.map(section => (
-            <div key={section.title}>
-              <div className="sidebar-section-title">{section.title}</div>
+            <div key={section.title} className="mb-1">
+              {!sidebarCollapsed && (
+                <div className="text-[10px] uppercase tracking-[0.08em] text-[var(--text-muted)] px-3 pt-4 pb-1 font-medium">
+                  {section.title}
+                </div>
+              )}
               {section.items.map(item => {
                 const Icon = item.icon;
                 const isActive = location.pathname === item.path || location.pathname.startsWith(item.path + '/');
@@ -142,12 +194,22 @@ export default function Sidebar() {
                   <NavLink
                     key={item.path}
                     to={item.path}
-                    className={`sidebar-nav-item ${isActive ? 'active' : ''}`}
                     onClick={closeMobile}
+                    data-testid={`nav-${item.path.replace(/\//g, '')}`}
+                    className={`
+                      flex items-center gap-2.5 h-9 rounded-lg px-3 text-[13px] font-medium transition-colors
+                      ${isActive
+                        ? 'bg-[#7C3AED]/15 text-[#7C3AED]'
+                        : 'text-[var(--text-secondary)] hover:bg-[var(--bg-elevated)] hover:text-[var(--text-primary)]'
+                      }
+                      ${sidebarCollapsed ? 'justify-center px-0' : ''}
+                    `}
+                    title={sidebarCollapsed ? item.label : undefined}
                   >
-                    <Icon size={20} />
-                    <span className="nav-text">{item.label}</span>
-                    {item.badge && <span className="nav-badge">{item.badge}</span>}
+                    <Icon size={18} className="shrink-0" />
+                    {!sidebarCollapsed && (
+                      <span className="truncate">{item.label}</span>
+                    )}
                   </NavLink>
                 );
               })}
@@ -155,60 +217,42 @@ export default function Sidebar() {
           ))}
         </nav>
 
-        <div style={{ padding: '8px 12px', borderTop: '1px solid rgba(255,255,255,0.06)', marginTop: 'auto' }}>
-          <button
-            className="sidebar-nav-item sidebar-help-btn"
-            onClick={() => {
-              if (window.__knowaiRestartTour) {
-                window.__knowaiRestartTour();
-              }
-            }}
-            style={{
-              width: '100%',
-              background: 'none',
-              border: 'none',
-              cursor: 'pointer',
-              color: 'inherit',
-              padding: '10px 12px',
-              borderRadius: 8,
-              display: 'flex',
-              alignItems: 'center',
-              gap: 12,
-              fontSize: 14,
-              transition: 'background 0.15s',
-            }}
-            onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(255,255,255,0.08)'; }}
-            onMouseLeave={(e) => { e.currentTarget.style.background = 'none'; }}
-            title="Help & Guide"
-          >
-            <HelpCircle size={20} style={{ opacity: 0.85 }} />
-            <span className="nav-text" style={{ fontWeight: 500 }}>Help & Guide</span>
-          </button>
-        </div>
+        {/* Help button */}
+        {!sidebarCollapsed && (
+          <div className="px-3 py-2 border-t border-[var(--border-default)]">
+            <button
+              onClick={() => { if ((window as any).__knowaiRestartTour) (window as any).__knowaiRestartTour(); }}
+              className="flex items-center gap-2.5 w-full h-9 rounded-lg px-3 text-[13px] font-medium text-[var(--text-secondary)] hover:bg-[var(--bg-elevated)] hover:text-[var(--text-primary)] transition-colors"
+              title="Help & Guide"
+            >
+              <HelpCircle size={18} className="opacity-85" />
+              <span>Help & Guide</span>
+            </button>
+          </div>
+        )}
 
-        <div style={{ padding: '8px 12px 16px', borderTop: '1px solid rgba(255,255,255,0.06)' }}>
-          <div className="sidebar-nav-item" style={{ opacity: 0.7 }}>
-            <div className="kai-avatar kai-avatar-sm" style={{ background: '#146DF7' }}>
+        {/* User section */}
+        <div className="px-3 py-3 border-t border-[var(--border-default)]">
+          <div className={`flex items-center gap-2.5 ${sidebarCollapsed ? 'justify-center' : ''}`}>
+            <div
+              className="w-8 h-8 rounded-full flex items-center justify-center text-white text-sm font-semibold shrink-0"
+              style={{ background: '#111827' }}
+            >
               {user?.firstName?.[0] || 'U'}
             </div>
-            <span className="nav-text" style={{ fontSize: 13, display: 'flex', flexDirection: 'column', gap: 2 }}>
-              <span>{user?.firstName || 'User'} {user?.lastName?.[0] || ''}</span>
-              <span
-                style={{
-                  fontSize: 10,
-                  fontWeight: 600,
-                  color: roleColor,
-                  background: `${roleColor}20`,
-                  padding: '1px 6px',
-                  borderRadius: 4,
-                  lineHeight: '16px',
-                  display: 'inline-block',
-                  width: 'fit-content',
-                }}
-              >
-                {roleLabel}
-              </span>
-            </span>
+            {!sidebarCollapsed && (
+              <div className="flex flex-col min-w-0">
+                <span className="text-[13px] text-[var(--text-primary)] truncate">
+                  {user?.firstName || 'User'} {user?.lastName?.[0] || ''}
+                </span>
+                <span
+                  className="text-[10px] font-semibold px-1.5 py-0.5 rounded w-fit mt-0.5"
+                  style={{ color: roleColor, background: `${roleColor}20` }}
+                >
+                  {roleLabel}
+                </span>
+              </div>
+            )}
           </div>
         </div>
       </aside>

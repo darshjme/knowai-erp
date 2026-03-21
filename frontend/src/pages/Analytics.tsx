@@ -1,6 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useDispatch } from 'react-redux';
-import { Row, Col, Spinner, Alert } from 'react-bootstrap';
 import Chart from 'react-apexcharts';
 import DatePicker from 'react-datepicker';
 import {
@@ -18,10 +17,10 @@ import {
 import { reportsApi } from '../services/api';
 
 const KPI_CONFIG = [
-  { key: 'totalRevenue', label: 'Total Revenue', icon: DollarSign, color: '#16A34A', bg: '#E8F9EF', format: 'currency' },
-  { key: 'clientGrowth', label: 'Client Growth', icon: Users, color: '#146DF7', bg: '#EBF3FF', format: 'percent' },
-  { key: 'taskCompletionRate', label: 'Task Completion Rate', icon: CheckCircle2, color: '#8B3FE9', bg: '#F3EAFF', format: 'percent' },
-  { key: 'avgProjectDuration', label: 'Avg Project Duration', icon: Clock, color: '#EA580C', bg: '#FFF4ED', format: 'days' },
+  { key: 'totalRevenue', label: 'Total Revenue', icon: DollarSign, color: '#10B981', bg: 'bg-[#10B981]/15', format: 'currency' as const },
+  { key: 'clientGrowth', label: 'Client Growth', icon: Users, color: '#3B82F6', bg: 'bg-[#3B82F6]/15', format: 'percent' as const },
+  { key: 'taskCompletionRate', label: 'Task Completion Rate', icon: CheckCircle2, color: '#7C3AED', bg: 'bg-[#7C3AED]/15', format: 'percent' as const },
+  { key: 'avgProjectDuration', label: 'Avg Project Duration', icon: Clock, color: '#F59E0B', bg: 'bg-[#F59E0B]/15', format: 'days' as const },
 ];
 
 function formatKpiValue(value, format) {
@@ -38,11 +37,22 @@ function formatKpiValue(value, format) {
   }
 }
 
+const DARK_CHART_DEFAULTS = {
+  theme: { mode: 'dark' as const },
+  chart: { background: 'transparent' },
+  grid: { borderColor: 'var(--border-subtle)', strokeDashArray: 4 },
+  tooltip: {
+    theme: 'dark',
+    style: { fontSize: '12px' },
+  },
+};
+
 export default function Analytics() {
   const dispatch = useDispatch();
 
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [periodTab, setPeriodTab] = useState<'monthly' | 'quarterly' | 'yearly'>('monthly');
   const [startDate, setStartDate] = useState(() => {
     const d = new Date();
     d.setFullYear(d.getFullYear() - 1);
@@ -123,23 +133,27 @@ export default function Analytics() {
 
   // Revenue trend area chart
   const revenueTrendOptions = {
-    chart: { type: 'area', toolbar: { show: false }, fontFamily: 'inherit', zoom: { enabled: false } },
-    colors: ['#146DF7'],
+    ...DARK_CHART_DEFAULTS,
+    chart: { ...DARK_CHART_DEFAULTS.chart, type: 'area' as const, toolbar: { show: false }, fontFamily: "'Inter', sans-serif", zoom: { enabled: false } },
+    colors: ['#3B82F6'],
     fill: { type: 'gradient', gradient: { shadeIntensity: 1, opacityFrom: 0.4, opacityTo: 0.05, stops: [0, 100] } },
     dataLabels: { enabled: false },
-    stroke: { curve: 'smooth', width: 2.5 },
+    stroke: { curve: 'smooth' as const, width: 2.5 },
     xaxis: {
       categories: revenueTrend.map((r) => r.month || r.label || r.name || ''),
-      labels: { style: { colors: '#5B6B76', fontSize: '12px' } },
+      labels: { style: { colors: 'var(--text-muted)', fontSize: '12px' } },
+      axisBorder: { color: 'var(--border-subtle)' },
+      axisTicks: { color: 'var(--border-subtle)' },
     },
     yaxis: {
       labels: {
-        style: { colors: '#5B6B76', fontSize: '12px' },
+        style: { colors: 'var(--text-muted)', fontSize: '12px' },
         formatter: (v) => `$${(v / 1000).toFixed(0)}k`,
       },
     },
-    grid: { borderColor: '#E7E7E8', strokeDashArray: 4 },
+    grid: { ...DARK_CHART_DEFAULTS.grid },
     tooltip: {
+      ...DARK_CHART_DEFAULTS.tooltip,
       y: { formatter: (v) => new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(v) },
     },
   };
@@ -152,21 +166,27 @@ export default function Analytics() {
   // Tasks by status bar chart
   const taskStatusLabels = tasksByStatus.map((t) => t.status || t.label || t.name || '');
   const taskStatusValues = tasksByStatus.map((t) => t.count || t.value || 0);
-  const taskStatusColors = ['#EA580C', '#146DF7', '#8B3FE9', '#16A34A', '#2563EB', '#CB3939'];
+  const taskStatusColors = ['#F59E0B', '#3B82F6', '#7C3AED', '#10B981', '#2563EB', '#EF4444'];
 
   const taskBarOptions = {
-    chart: { type: 'bar', toolbar: { show: false }, fontFamily: 'inherit' },
+    ...DARK_CHART_DEFAULTS,
+    chart: { ...DARK_CHART_DEFAULTS.chart, type: 'bar' as const, toolbar: { show: false }, fontFamily: "'Inter', sans-serif" },
     colors: taskStatusColors.slice(0, taskStatusLabels.length),
     plotOptions: { bar: { borderRadius: 6, columnWidth: '55%', distributed: true } },
-    dataLabels: { enabled: true, style: { fontSize: '12px', fontWeight: 600 } },
+    dataLabels: { enabled: true, style: { fontSize: '12px', fontWeight: 600, colors: ['#F9FAFB'] } },
     xaxis: {
       categories: taskStatusLabels,
-      labels: { style: { colors: '#5B6B76', fontSize: '12px' } },
+      labels: { style: { colors: 'var(--text-muted)', fontSize: '12px' } },
+      axisBorder: { color: 'var(--border-subtle)' },
+      axisTicks: { color: 'var(--border-subtle)' },
     },
-    yaxis: { labels: { style: { colors: '#5B6B76', fontSize: '12px' } } },
-    grid: { borderColor: '#E7E7E8', strokeDashArray: 4 },
+    yaxis: { labels: { style: { colors: 'var(--text-muted)', fontSize: '12px' } } },
+    grid: { ...DARK_CHART_DEFAULTS.grid },
     legend: { show: false },
-    tooltip: { y: { formatter: (v) => `${v} tasks` } },
+    tooltip: {
+      ...DARK_CHART_DEFAULTS.tooltip,
+      y: { formatter: (v) => `${v} tasks` },
+    },
   };
 
   const taskBarSeries = [{ name: 'Tasks', data: taskStatusValues }];
@@ -174,51 +194,69 @@ export default function Analytics() {
   // Expenses pie chart
   const expenseLabels = expensesByCategory.map((e) => e.category || e.label || e.name || '');
   const expenseValues = expensesByCategory.map((e) => e.amount || e.value || e.total || 0);
-  const expensePieColors = ['#146DF7', '#8B3FE9', '#16A34A', '#EA580C', '#CB3939', '#2563EB', '#5B6B76'];
+  const expensePieColors = ['#3B82F6', '#7C3AED', '#10B981', '#F59E0B', '#EF4444', '#2563EB', '#8B95A5'];
 
   const expensePieOptions = {
-    chart: { type: 'pie', fontFamily: 'inherit' },
+    ...DARK_CHART_DEFAULTS,
+    chart: { ...DARK_CHART_DEFAULTS.chart, type: 'pie' as const, fontFamily: "'Inter', sans-serif" },
     colors: expensePieColors.slice(0, expenseLabels.length),
     labels: expenseLabels,
-    legend: { position: 'bottom', fontSize: '13px', labels: { colors: '#5B6B76' } },
-    dataLabels: { enabled: true, formatter: (val) => `${val.toFixed(1)}%` },
-    stroke: { width: 2, colors: ['#fff'] },
+    legend: { position: 'bottom' as const, fontSize: '13px', labels: { colors: 'var(--text-secondary)' } },
+    dataLabels: { enabled: true, formatter: (val) => `${val.toFixed(1)}%`, style: { colors: ['#F9FAFB'] } },
+    stroke: { width: 2, colors: ['var(--bg-card)'] },
     tooltip: {
+      ...DARK_CHART_DEFAULTS.tooltip,
       y: { formatter: (v) => new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(v) },
     },
   };
 
+  const periodTabs = [
+    { key: 'monthly' as const, label: 'Monthly' },
+    { key: 'quarterly' as const, label: 'Quarterly' },
+    { key: 'yearly' as const, label: 'Yearly' },
+  ];
+
   if (loading) {
     return (
-      <div className="flex-center" style={{ minHeight: 400 }}>
-        <Spinner animation="border" style={{ color: 'var(--kai-primary)' }} />
+      <div className="flex items-center justify-center min-h-[400px]" data-testid="analytics-loading">
+        <div className="w-8 h-8 border-2 border-[var(--text-muted)] border-t-[#7C3AED] rounded-full animate-spin" />
       </div>
     );
   }
 
   return (
-    <div>
+    <div data-testid="analytics-page">
       {/* Page Header */}
-      <div className="page-header">
+      <div className="flex items-center justify-between mb-4" data-testid="analytics-header">
         <div>
-          <h1>Analytics</h1>
-          <p>Business insights and performance metrics</p>
+          <h1 className="text-[18px] font-semibold text-[var(--text-primary)] font-[Manrope] tracking-[-0.4px]">Analytics</h1>
+          <p className="text-[13px] text-[var(--text-secondary)] mt-0.5">Business insights and performance metrics</p>
         </div>
-        <div className="page-actions">
-          <button className="kai-btn kai-btn-outline kai-btn-sm" onClick={handleExportCSV}>
-            <Table2 size={14} /> CSV
+        <div className="flex items-center gap-2">
+          <button
+            className="flex items-center gap-1.5 px-3 py-1.5 text-[13px] font-semibold text-[var(--text-secondary)] bg-[var(--bg-elevated)] border border-[var(--border-default)] rounded-lg hover:text-[var(--text-primary)] transition-colors"
+            onClick={handleExportCSV}
+            data-testid="export-csv-btn"
+          >
+            <Table2 size={14} />
+            <span>CSV</span>
           </button>
-          <button className="kai-btn kai-btn-outline kai-btn-sm" onClick={handleExportPDF}>
-            <FileText size={14} /> PDF
+          <button
+            className="flex items-center gap-1.5 px-3 py-1.5 text-[13px] font-semibold text-[var(--text-secondary)] bg-[var(--bg-elevated)] border border-[var(--border-default)] rounded-lg hover:text-[var(--text-primary)] transition-colors"
+            onClick={handleExportPDF}
+            data-testid="export-pdf-btn"
+          >
+            <FileText size={14} />
+            <span>PDF</span>
           </button>
         </div>
       </div>
 
       {/* Date Range Picker */}
-      <div className="kai-card mb-4">
-        <div className="kai-card-body" style={{ display: 'flex', alignItems: 'center', gap: 16, flexWrap: 'wrap' }}>
-          <CalendarRange size={18} style={{ color: 'var(--kai-primary)' }} />
-          <span style={{ fontSize: 13, fontWeight: 600, color: 'var(--kai-text-secondary)' }}>Date Range:</span>
+      <div className="bg-[var(--bg-card)] border border-[var(--border-default)] rounded-xl p-4 mb-4" data-testid="date-range-picker">
+        <div className="flex items-center gap-4 flex-wrap">
+          <CalendarRange size={18} className="text-[#7C3AED]" />
+          <span className="text-[13px] font-semibold text-[var(--text-secondary)]">Date Range:</span>
           <DatePicker
             selected={startDate}
             onChange={(date) => setStartDate(date)}
@@ -226,11 +264,10 @@ export default function Analytics() {
             startDate={startDate}
             endDate={endDate}
             maxDate={endDate}
-            className="kai-input"
+            className="bg-[var(--bg-elevated)] border border-[var(--border-default)] rounded-lg px-3 py-1.5 text-[13px] text-[var(--text-primary)] outline-none focus:border-[#7C3AED] w-[160px]"
             dateFormat="MMM d, yyyy"
-            style={{ width: 160 }}
           />
-          <span style={{ color: 'var(--kai-text-muted)', fontSize: 13 }}>to</span>
+          <span className="text-[13px] text-[var(--text-muted)]">to</span>
           <DatePicker
             selected={endDate}
             onChange={(date) => setEndDate(date)}
@@ -239,118 +276,158 @@ export default function Analytics() {
             endDate={endDate}
             minDate={startDate}
             maxDate={new Date()}
-            className="kai-input"
+            className="bg-[var(--bg-elevated)] border border-[var(--border-default)] rounded-lg px-3 py-1.5 text-[13px] text-[var(--text-primary)] outline-none focus:border-[#7C3AED] w-[160px]"
             dateFormat="MMM d, yyyy"
-            style={{ width: 160 }}
           />
-          <button className="kai-btn kai-btn-primary kai-btn-sm" onClick={fetchAnalytics}>
+          <button
+            className="px-4 py-1.5 text-[13px] font-semibold text-white bg-[#7C3AED] rounded-lg hover:bg-[#6D28D9] transition-colors"
+            onClick={fetchAnalytics}
+            data-testid="apply-date-btn"
+          >
             Apply
           </button>
         </div>
       </div>
 
+      {/* Error Alert */}
       {error && (
-        <Alert variant="danger" className="d-flex align-items-center gap-2 mb-4">
-          <AlertCircle size={18} />
-          <div>
+        <div className="flex items-center gap-2 p-4 mb-4 bg-[#EF4444]/10 border border-[#EF4444]/30 rounded-xl text-[var(--text-primary)]" data-testid="analytics-error">
+          <AlertCircle size={18} className="text-[#EF4444] shrink-0" />
+          <div className="flex-1 text-[13px]">
             <strong>Error loading analytics.</strong> {error}
-            <button className="kai-btn kai-btn-outline kai-btn-sm ms-3" onClick={fetchAnalytics}>Retry</button>
           </div>
-        </Alert>
+          <button
+            className="px-3 py-1 text-[12px] font-semibold text-[var(--text-secondary)] bg-[var(--bg-elevated)] border border-[var(--border-default)] rounded-lg hover:text-[var(--text-primary)] transition-colors"
+            onClick={fetchAnalytics}
+          >
+            Retry
+          </button>
+        </div>
       )}
 
       {/* KPI Cards */}
-      <Row className="g-3 mb-4">
+      <div className="grid grid-cols-4 gap-3 max-md:grid-cols-2 max-sm:grid-cols-1" data-testid="kpi-row">
         {KPI_CONFIG.map((cfg) => {
           const Icon = cfg.icon;
           const value = kpis[cfg.key];
           const delta = kpis[`${cfg.key}Delta`];
           const isUp = delta >= 0;
           return (
-            <Col key={cfg.key} xs={12} sm={6} xl={3}>
-              <div className="stat-card">
-                <div className="flex-between" style={{ marginBottom: 16 }}>
-                  <div className="stat-icon" style={{ background: cfg.bg, color: cfg.color }}>
-                    <Icon />
-                  </div>
-                  {delta !== undefined && delta !== null && (
-                    <span className={`stat-delta ${isUp ? 'up' : 'down'}`}>
-                      {isUp ? <TrendingUp size={14} /> : <TrendingDown size={14} />}
-                      {isUp ? '+' : ''}{delta}%
-                    </span>
-                  )}
+            <div
+              key={cfg.key}
+              className="bg-[var(--bg-card)] border border-[var(--border-default)] rounded-xl p-4"
+              data-testid={`kpi-card-${cfg.key}`}
+            >
+              <div className="flex items-center gap-3 mb-3">
+                <div
+                  className={`w-[20px] h-[20px] rounded-full flex items-center justify-center ${cfg.bg}`}
+                  style={{ width: 32, height: 32 }}
+                >
+                  <Icon size={16} style={{ color: cfg.color }} />
                 </div>
-                <div className="stat-value">{formatKpiValue(value, cfg.format)}</div>
-                <div className="stat-label">{cfg.label}</div>
               </div>
-            </Col>
+              <div className="text-[22px] font-bold text-[var(--text-primary)] truncate" title={String(formatKpiValue(value, cfg.format))}>
+                {formatKpiValue(value, cfg.format)}
+              </div>
+              {delta !== undefined && delta !== null && (
+                <div className={`flex items-center gap-1 text-[10px] mt-1 ${isUp ? 'text-[#10B981]' : 'text-[#EF4444]'}`}>
+                  {isUp ? <TrendingUp size={12} /> : <TrendingDown size={12} />}
+                  <span>{isUp ? '+' : ''}{delta}%</span>
+                </div>
+              )}
+              <div className="text-[10px] text-[var(--text-muted)] mt-1 truncate uppercase tracking-[0.08em]" title={cfg.label}>
+                {cfg.label}
+              </div>
+            </div>
           );
         })}
-      </Row>
+      </div>
 
-      {/* Revenue Trend Chart */}
-      <div className="kai-card mb-4">
-        <div className="kai-card-header">
-          <h6>Revenue Trend</h6>
-          <span className="kai-badge primary">12 Months</span>
+      {/* Revenue Trend — Main Chart */}
+      <div className="bg-[var(--bg-card)] border border-[var(--border-default)] rounded-xl overflow-hidden mt-3" data-testid="revenue-trend-chart">
+        <div className="px-4 py-3 border-b border-[var(--border-subtle)] flex justify-between items-center">
+          <h2 className="text-[13px] font-medium text-[var(--text-primary)]">Revenue Trend</h2>
+          <div className="flex items-center gap-1" data-testid="period-toggle">
+            {periodTabs.map((tab) => (
+              <button
+                key={tab.key}
+                onClick={() => setPeriodTab(tab.key)}
+                className={`text-[12px] px-3 py-1 rounded-full transition-colors ${
+                  periodTab === tab.key
+                    ? 'bg-[#3B82F6]/20 text-[#3B82F6]'
+                    : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)]'
+                }`}
+                data-testid={`period-${tab.key}`}
+              >
+                {tab.label}
+              </button>
+            ))}
+          </div>
         </div>
-        <div className="kai-card-body">
+        <div className="min-h-[140px] p-4">
           {revenueTrendSeries[0].data.length > 0 ? (
             <Chart options={revenueTrendOptions} series={revenueTrendSeries} type="area" height={360} />
           ) : (
-            <div className="flex-center text-muted" style={{ height: 360 }}>No revenue trend data available</div>
+            <div className="flex items-center justify-center text-[var(--text-muted)] text-[13px] h-[360px]">
+              No revenue trend data available
+            </div>
           )}
         </div>
       </div>
 
-      {/* Task Status + Expense Breakdown */}
-      <Row className="g-3 mb-4">
-        <Col xs={12} lg={7}>
-          <div className="kai-card" style={{ height: '100%' }}>
-            <div className="kai-card-header">
-              <h6>Tasks by Status</h6>
-            </div>
-            <div className="kai-card-body">
-              {taskStatusValues.length > 0 && taskStatusValues.some((v) => v > 0) ? (
-                <Chart options={taskBarOptions} series={taskBarSeries} type="bar" height={320} />
-              ) : (
-                <div className="flex-center text-muted" style={{ height: 320 }}>No task status data available</div>
-              )}
-            </div>
+      {/* Bottom Row — Task Completion Rate + Expense Breakdown */}
+      <div className="flex gap-3 mt-3 max-md:flex-col" data-testid="bottom-charts-row">
+        {/* Task Completion Rate */}
+        <div className="flex-1 bg-[var(--bg-card)] border border-[var(--border-default)] rounded-xl overflow-hidden" data-testid="task-completion-chart">
+          <div className="px-4 py-3 border-b border-[var(--border-subtle)] flex justify-between items-center">
+            <h2 className="text-[13px] font-medium text-[var(--text-primary)]">Task Completion Rate</h2>
           </div>
-        </Col>
-        <Col xs={12} lg={5}>
-          <div className="kai-card" style={{ height: '100%' }}>
-            <div className="kai-card-header">
-              <h6>Expenses by Category</h6>
-            </div>
-            <div className="kai-card-body">
-              {expenseValues.length > 0 && expenseValues.some((v) => v > 0) ? (
-                <Chart options={expensePieOptions} series={expenseValues} type="pie" height={320} />
-              ) : (
-                <div className="flex-center text-muted" style={{ height: 320 }}>No expense data available</div>
-              )}
-            </div>
+          <div className="min-h-[140px] p-4">
+            {taskStatusValues.length > 0 && taskStatusValues.some((v) => v > 0) ? (
+              <Chart options={taskBarOptions} series={taskBarSeries} type="bar" height={320} />
+            ) : (
+              <div className="flex items-center justify-center text-[var(--text-muted)] text-[13px] h-[320px]">
+                No task status data available
+              </div>
+            )}
           </div>
-        </Col>
-      </Row>
+        </div>
+
+        {/* Expense Breakdown */}
+        <div className="flex-1 bg-[var(--bg-card)] border border-[var(--border-default)] rounded-xl overflow-hidden" data-testid="expense-breakdown-chart">
+          <div className="px-4 py-3 border-b border-[var(--border-subtle)] flex justify-between items-center">
+            <h2 className="text-[13px] font-medium text-[var(--text-primary)]">Expense Breakdown</h2>
+          </div>
+          <div className="min-h-[140px] p-4">
+            {expenseValues.length > 0 && expenseValues.some((v) => v > 0) ? (
+              <Chart options={expensePieOptions} series={expenseValues} type="pie" height={320} />
+            ) : (
+              <div className="flex items-center justify-center text-[var(--text-muted)] text-[13px] h-[320px]">
+                No expense data available
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
 
       {/* Team Performance Table */}
-      <div className="kai-card">
-        <div className="kai-card-header">
-          <h6>Team Performance</h6>
-          <span className="kai-badge secondary">{teamPerformance.length} members</span>
+      <div className="bg-[var(--bg-card)] border border-[var(--border-default)] rounded-xl overflow-hidden mt-3" data-testid="team-performance-table">
+        <div className="px-4 py-3 border-b border-[var(--border-subtle)] flex justify-between items-center">
+          <h2 className="text-[13px] font-medium text-[var(--text-primary)]">Team Performance</h2>
+          <span className="text-[11px] text-[var(--text-muted)] bg-[var(--bg-elevated)] px-2 py-0.5 rounded-full">
+            {teamPerformance.length} members
+          </span>
         </div>
-        <div className="kai-card-body" style={{ padding: 0 }}>
+        <div>
           {teamPerformance.length > 0 ? (
-            <div style={{ overflowX: 'auto' }}>
-              <table className="kai-table">
+            <div className="overflow-x-auto">
+              <table className="w-full text-[13px]" data-testid="team-table">
                 <thead>
-                  <tr>
-                    <th>Agent</th>
-                    <th>Tasks Completed</th>
-                    <th>Hours Logged</th>
-                    <th>Efficiency Score</th>
+                  <tr className="border-b border-[var(--border-subtle)]">
+                    <th className="text-left px-4 py-3 text-[11px] font-medium text-[var(--text-muted)] uppercase tracking-[0.08em]">Agent</th>
+                    <th className="text-left px-4 py-3 text-[11px] font-medium text-[var(--text-muted)] uppercase tracking-[0.08em]">Tasks Completed</th>
+                    <th className="text-left px-4 py-3 text-[11px] font-medium text-[var(--text-muted)] uppercase tracking-[0.08em]">Hours Logged</th>
+                    <th className="text-left px-4 py-3 text-[11px] font-medium text-[var(--text-muted)] uppercase tracking-[0.08em]">Efficiency Score</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -360,33 +437,39 @@ export default function Analytics() {
                     const hours = member.hoursLogged ?? member.hours ?? 0;
                     const efficiency = member.efficiencyScore ?? member.efficiency ?? 0;
                     const initials = name.split(' ').map((n) => n[0]).join('').slice(0, 2).toUpperCase();
-                    const avatarColors = ['#146DF7', '#8B3FE9', '#16A34A', '#EA580C', '#2563EB', '#CB3939'];
+                    const avatarColors = ['#111827', '#7C3AED', '#10B981', '#F59E0B', '#3B82F6', '#EF4444'];
                     const avatarColor = avatarColors[idx % avatarColors.length];
 
-                    let effBadgeClass = 'secondary';
-                    if (efficiency >= 90) effBadgeClass = 'success';
-                    else if (efficiency >= 70) effBadgeClass = 'primary';
-                    else if (efficiency >= 50) effBadgeClass = 'warning';
-                    else if (efficiency > 0) effBadgeClass = 'danger';
+                    let effColor = 'text-[var(--text-muted)]';
+                    let effBg = 'bg-[var(--bg-elevated)]';
+                    if (efficiency >= 90) { effColor = 'text-[#10B981]'; effBg = 'bg-[#10B981]/15'; }
+                    else if (efficiency >= 70) { effColor = 'text-[#3B82F6]'; effBg = 'bg-[#3B82F6]/15'; }
+                    else if (efficiency >= 50) { effColor = 'text-[#F59E0B]'; effBg = 'bg-[#F59E0B]/15'; }
+                    else if (efficiency > 0) { effColor = 'text-[#EF4444]'; effBg = 'bg-[#EF4444]/15'; }
 
                     return (
-                      <tr key={member.id || idx}>
-                        <td>
-                          <div className="flex-gap-8">
-                            <div className="kai-avatar" style={{ background: avatarColor, width: 32, height: 32, fontSize: 12 }}>
+                      <tr key={member.id || idx} className="border-b border-[var(--border-subtle)] last:border-b-0 hover:bg-[var(--bg-elevated)] transition-colors">
+                        <td className="px-4 py-3">
+                          <div className="flex items-center gap-2">
+                            <div
+                              className="w-8 h-8 rounded-full flex items-center justify-center text-[12px] font-semibold text-white shrink-0"
+                              style={{ backgroundColor: avatarColor }}
+                            >
                               {initials}
                             </div>
-                            <span style={{ fontWeight: 600 }}>{name}</span>
+                            <span className="font-semibold text-[var(--text-primary)] truncate" title={name}>{name}</span>
                           </div>
                         </td>
-                        <td>
-                          <span style={{ fontWeight: 600 }}>{tasks}</span>
+                        <td className="px-4 py-3">
+                          <span className="font-semibold text-[var(--text-primary)] tabular-nums">{tasks}</span>
                         </td>
-                        <td>
-                          <span style={{ fontWeight: 500 }}>{hours}h</span>
+                        <td className="px-4 py-3">
+                          <span className="font-medium text-[var(--text-secondary)] tabular-nums">{hours}h</span>
                         </td>
-                        <td>
-                          <span className={`kai-badge ${effBadgeClass}`}>{efficiency}%</span>
+                        <td className="px-4 py-3">
+                          <span className={`inline-flex px-2 py-0.5 rounded-full text-[11px] font-semibold ${effColor} ${effBg}`}>
+                            {efficiency}%
+                          </span>
                         </td>
                       </tr>
                     );
@@ -395,7 +478,7 @@ export default function Analytics() {
               </table>
             </div>
           ) : (
-            <div className="text-muted flex-center" style={{ padding: 40 }}>
+            <div className="flex items-center justify-center text-[var(--text-muted)] text-[13px] py-10">
               No team performance data available
             </div>
           )}

@@ -1,14 +1,21 @@
 import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
-import 'bootstrap/dist/css/bootstrap.min.css';
-import './index.css';
+import './styles/globals.css';
+import './assets/scss/main.scss';
 import App from './App.jsx';
 
-// Apply saved theme from localStorage before render to prevent flash
-const savedTheme = localStorage.getItem('theme') || 'light';
+// Apply saved theme before render to prevent FOUC
+// Dark is default; 'light' class enables light mode
+const savedTheme = localStorage.getItem('knowai-theme') || 'dark';
+if (savedTheme === 'light') {
+  document.documentElement.classList.add('light');
+} else {
+  document.documentElement.classList.remove('light');
+}
+// Legacy support: also set data-theme for any remaining old styles
 document.documentElement.setAttribute('data-theme', savedTheme);
 
-createRoot(document.getElementById('root')).render(
+createRoot(document.getElementById('root')!).render(
   <StrictMode>
     <App />
   </StrictMode>,

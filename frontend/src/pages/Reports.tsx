@@ -9,9 +9,12 @@ import {
 const REPORT_TYPES = [
   { key: 'financial', label: 'Financial', icon: DollarSign, color: '#10B981' },
   { key: 'team', label: 'Team', icon: Users, color: '#8B5CF6' },
-  { key: 'project', label: 'Project', icon: Briefcase, color: '#146DF7' },
+  { key: 'project', label: 'Project', icon: Briefcase, color: '#111827' },
   { key: 'client', label: 'Client', icon: TrendingUp, color: '#F59E0B' },
 ];
+
+const inputClass = 'w-full bg-[var(--bg-elevated)] border border-[var(--border-default)] rounded-lg px-3 py-2 text-[var(--text-primary)] placeholder:text-[var(--text-muted)] focus:border-[#7C3AED] focus:ring-2 focus:ring-[#7C3AED]/20 outline-none text-[13px]';
+const labelClass = 'block text-[11px] font-semibold text-[var(--text-muted)] uppercase tracking-wide mb-1.5';
 
 export default function Reports() {
   const dispatch = useDispatch();
@@ -54,7 +57,6 @@ export default function Reports() {
   };
 
   const exportPDF = () => {
-    // Create a printable HTML version for PDF export
     if (!report) return;
     const rows = report.rows || report.data || [];
     const summary = report.summary || {};
@@ -95,33 +97,29 @@ export default function Reports() {
 
   return (
     <div>
-      <div className="page-header">
+      <div className="flex items-center justify-between flex-wrap gap-4 mb-6">
         <div>
-          <h1>Reports</h1>
-          <p>Generate and export detailed business reports</p>
+          <h1 className="text-[18px] font-semibold text-[var(--text-primary)] font-[Manrope]">Reports</h1>
+          <p className="text-[13px] text-[var(--text-secondary)]">Generate and export detailed business reports</p>
         </div>
       </div>
 
       {/* Report Type Selector */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 16, marginBottom: 24 }}>
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6" data-testid="report-type-selector">
         {REPORT_TYPES.map(rt => {
           const Icon = rt.icon;
           const active = reportType === rt.key;
           return (
-            <button key={rt.key} onClick={() => setReportType(rt.key)} className="kai-card" style={{
-              cursor: 'pointer', border: `2px solid ${active ? '#146DF7' : 'transparent'}`,
-              background: active ? '#EBF3FE' : '#fff', transition: 'all 0.15s', textAlign: 'left',
-            }}>
-              <div className="kai-card-body" style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
-                <div style={{
-                  width: 44, height: 44, borderRadius: 12,
-                  background: `${rt.color}15`, display: 'flex', alignItems: 'center', justifyContent: 'center',
-                }}>
+            <button key={rt.key} onClick={() => setReportType(rt.key)}
+              className={`bg-[var(--bg-card)] border rounded-xl text-left transition-all cursor-pointer ${active ? 'border-[#7C3AED] ring-2 ring-[#7C3AED]/20' : 'border-[var(--border-default)]'}`}
+              data-testid={`report-type-${rt.key}`}>
+              <div className="p-4 flex items-center gap-3.5">
+                <div className="w-11 h-11 rounded-xl flex items-center justify-center" style={{ background: `${rt.color}15` }}>
                   <Icon size={22} style={{ color: rt.color }} />
                 </div>
                 <div>
-                  <div style={{ fontWeight: 600, fontSize: 15, color: '#10222F' }}>{rt.label}</div>
-                  <div style={{ fontSize: 12, color: '#5B6B76' }}>Report</div>
+                  <div className="font-semibold text-[15px] text-[var(--text-primary)]">{rt.label}</div>
+                  <div className="text-[12px] text-[var(--text-muted)]">Report</div>
                 </div>
               </div>
             </button>
@@ -130,27 +128,28 @@ export default function Reports() {
       </div>
 
       {/* Date Range + Generate */}
-      <div className="kai-card" style={{ marginBottom: 24 }}>
-        <div className="kai-card-body" style={{ display: 'flex', alignItems: 'flex-end', gap: 16, flexWrap: 'wrap' }}>
-          <div style={{ minWidth: 180 }}>
-            <label className="kai-label">From Date</label>
-            <input className="kai-input" type="date" value={dateFrom} onChange={e => setDateFrom(e.target.value)} />
+      <div className="bg-[var(--bg-card)] border border-[var(--border-default)] rounded-xl mb-6">
+        <div className="p-4 flex items-end gap-4 flex-wrap">
+          <div className="min-w-[180px]">
+            <label className={labelClass}>From Date</label>
+            <input className={inputClass} type="date" value={dateFrom} onChange={e => setDateFrom(e.target.value)} data-testid="date-from" />
           </div>
-          <div style={{ minWidth: 180 }}>
-            <label className="kai-label">To Date</label>
-            <input className="kai-input" type="date" value={dateTo} onChange={e => setDateTo(e.target.value)} />
+          <div className="min-w-[180px]">
+            <label className={labelClass}>To Date</label>
+            <input className={inputClass} type="date" value={dateTo} onChange={e => setDateTo(e.target.value)} data-testid="date-to" />
           </div>
-          <button onClick={generateReport} className="kai-btn kai-btn-primary" disabled={loading}
-            style={{ display: 'flex', alignItems: 'center', gap: 6, height: 38 }}>
-            {loading ? <Loader2 size={16} style={{ animation: 'spin 1s linear infinite' }} /> : <BarChart3 size={16} />}
+          <button onClick={generateReport}
+            className="bg-[#7C3AED] text-white rounded-lg px-4 py-2 text-[13px] font-semibold hover:bg-[#7C3AED]/90 transition-colors disabled:opacity-50 flex items-center gap-1.5 h-[38px]"
+            disabled={loading} data-testid="generate-report-btn">
+            {loading ? <Loader2 size={16} className="animate-spin" /> : <BarChart3 size={16} />}
             {loading ? 'Generating...' : 'Generate Report'}
           </button>
           {report && (
-            <div style={{ display: 'flex', gap: 8, marginLeft: 'auto' }}>
-              <button onClick={exportCSV} className="kai-btn" style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+            <div className="flex gap-2 ml-auto">
+              <button onClick={exportCSV} className="bg-transparent border border-[var(--border-default)] text-[var(--text-secondary)] rounded-lg px-4 py-2 text-[13px] font-semibold hover:bg-[var(--bg-elevated)] transition-colors flex items-center gap-1.5" data-testid="export-csv">
                 <Download size={16} /> CSV
               </button>
-              <button onClick={exportPDF} className="kai-btn" style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+              <button onClick={exportPDF} className="bg-transparent border border-[var(--border-default)] text-[var(--text-secondary)] rounded-lg px-4 py-2 text-[13px] font-semibold hover:bg-[var(--bg-elevated)] transition-colors flex items-center gap-1.5" data-testid="export-pdf">
                 <FileText size={16} /> PDF
               </button>
             </div>
@@ -160,7 +159,7 @@ export default function Reports() {
 
       {/* Error */}
       {error && (
-        <div style={{ padding: '12px 16px', borderRadius: 8, marginBottom: 20, fontSize: 13, background: '#FEE2E2', color: '#991B1B', display: 'flex', alignItems: 'center', gap: 8 }}>
+        <div className="bg-red-500/10 text-red-400 px-4 py-3 rounded-lg mb-5 text-[13px] flex items-center gap-2">
           <AlertCircle size={16} /> {error}
         </div>
       )}
@@ -170,14 +169,14 @@ export default function Reports() {
         <>
           {/* Summary Cards */}
           {Object.keys(summaryCards).length > 0 && (
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 16, marginBottom: 24 }}>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
               {Object.entries(summaryCards).map(([key, value]) => (
-                <div key={key} className="kai-card">
-                  <div className="kai-card-body" style={{ textAlign: 'center' }}>
-                    <div style={{ fontSize: 12, color: '#5B6B76', textTransform: 'capitalize', marginBottom: 6 }}>
+                <div key={key} className="bg-[var(--bg-card)] border border-[var(--border-default)] rounded-xl">
+                  <div className="p-4 text-center">
+                    <div className="text-[12px] text-[var(--text-muted)] capitalize mb-1.5">
                       {key.replace(/([A-Z])/g, ' $1').replace(/_/g, ' ')}
                     </div>
-                    <div style={{ fontSize: 26, fontWeight: 700, color: '#10222F' }}>
+                    <div className="text-[26px] font-bold text-[var(--text-primary)]">
                       {typeof value === 'number' ? value.toLocaleString() : value}
                     </div>
                   </div>
@@ -188,21 +187,19 @@ export default function Reports() {
 
           {/* Chart */}
           {chartData.length > 0 && (
-            <div className="kai-card" style={{ marginBottom: 24 }}>
-              <div className="kai-card-body">
-                <h3 style={{ fontSize: 16, fontWeight: 600, color: '#10222F', marginBottom: 20 }}>Overview</h3>
-                <div style={{ display: 'flex', alignItems: 'flex-end', gap: 8, height: 200, padding: '0 8px' }}>
+            <div className="bg-[var(--bg-card)] border border-[var(--border-default)] rounded-xl mb-6">
+              <div className="p-4">
+                <h3 className="text-[16px] font-semibold text-[var(--text-primary)] mb-5">Overview</h3>
+                <div className="flex items-end gap-2 h-[200px] px-2">
                   {chartData.map((d, i) => {
                     const val = d.value || d.amount || 0;
                     const height = maxChartValue > 0 ? (val / maxChartValue) * 160 : 0;
                     return (
-                      <div key={i} style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6 }}>
-                        <span style={{ fontSize: 11, color: '#5B6B76', fontWeight: 500 }}>{val.toLocaleString()}</span>
-                        <div style={{
-                          width: '100%', maxWidth: 48, height: Math.max(height, 4), borderRadius: '6px 6px 0 0',
-                          background: `linear-gradient(180deg, #146DF7 0%, #0148A7 100%)`, transition: 'height 0.3s',
-                        }} />
-                        <span style={{ fontSize: 10, color: '#5B6B76', textAlign: 'center', lineHeight: 1.2 }}>
+                      <div key={i} className="flex-1 flex flex-col items-center gap-1.5">
+                        <span className="text-[11px] text-[var(--text-muted)] font-medium">{val.toLocaleString()}</span>
+                        <div className="w-full max-w-[48px] rounded-t-md transition-all duration-300"
+                          style={{ height: Math.max(height, 4), background: 'linear-gradient(180deg, #7C3AED 0%, #5B21B6 100%)' }} />
+                        <span className="text-[10px] text-[var(--text-muted)] text-center leading-tight">
                           {d.label || d.name || d.month || `#${i + 1}`}
                         </span>
                       </div>
@@ -215,17 +212,13 @@ export default function Reports() {
 
           {/* Data Table */}
           {rows.length > 0 && (
-            <div className="kai-card">
-              <div className="kai-card-body" style={{ padding: 0, overflowX: 'auto' }}>
-                <table className="kai-table" style={{ width: '100%', borderCollapse: 'collapse' }}>
+            <div className="bg-[var(--bg-card)] border border-[var(--border-default)] rounded-xl overflow-hidden">
+              <div className="overflow-x-auto">
+                <table className="w-full border-collapse">
                   <thead>
                     <tr>
                       {Object.keys(rows[0]).map(key => (
-                        <th key={key} style={{
-                          padding: '12px 16px', textAlign: 'left', fontSize: 12, fontWeight: 600,
-                          color: '#5B6B76', textTransform: 'uppercase', letterSpacing: 0.5,
-                          background: '#F8F9FA', borderBottom: '2px solid #E8EBED',
-                        }}>
+                        <th key={key} className="px-4 py-3 text-left text-[12px] font-semibold text-[var(--text-muted)] uppercase tracking-wide bg-[var(--bg-elevated)] border-b-2 border-[var(--border-default)]">
                           {key.replace(/([A-Z])/g, ' $1').replace(/_/g, ' ')}
                         </th>
                       ))}
@@ -233,9 +226,9 @@ export default function Reports() {
                   </thead>
                   <tbody>
                     {rows.map((row, i) => (
-                      <tr key={i} style={{ borderBottom: '1px solid #F0F2F4' }}>
+                      <tr key={i} className="border-b border-[var(--border-default)] hover:bg-[var(--bg-elevated)] transition-colors">
                         {Object.values(row).map((val, j) => (
-                          <td key={j} style={{ padding: '10px 16px', fontSize: 13, color: '#4C5963' }}>
+                          <td key={j} className="px-4 py-2.5 text-[13px] text-[var(--text-secondary)]">
                             {typeof val === 'number' ? val.toLocaleString() : String(val ?? '-')}
                           </td>
                         ))}
@@ -249,11 +242,11 @@ export default function Reports() {
 
           {/* No data in report */}
           {rows.length === 0 && chartData.length === 0 && Object.keys(summaryCards).length === 0 && (
-            <div className="kai-card">
-              <div className="kai-card-body" style={{ textAlign: 'center', padding: 60, color: '#5B6B76' }}>
-                <BarChart3 size={40} style={{ marginBottom: 12, opacity: 0.4 }} />
-                <p style={{ fontSize: 15, fontWeight: 500 }}>No data available for this report</p>
-                <p style={{ fontSize: 13 }}>Try adjusting the date range or report type</p>
+            <div className="bg-[var(--bg-card)] border border-[var(--border-default)] rounded-xl">
+              <div className="text-center py-16 text-[var(--text-muted)]">
+                <BarChart3 size={40} className="mx-auto mb-3 opacity-40" />
+                <p className="text-[15px] font-medium">No data available for this report</p>
+                <p className="text-[13px]">Try adjusting the date range or report type</p>
               </div>
             </div>
           )}
@@ -262,11 +255,11 @@ export default function Reports() {
 
       {/* Initial state */}
       {!report && !loading && !error && (
-        <div className="kai-card">
-          <div className="kai-card-body" style={{ textAlign: 'center', padding: 80, color: '#5B6B76' }}>
-            <BarChart3 size={48} style={{ marginBottom: 16, opacity: 0.3, color: '#146DF7' }} />
-            <p style={{ fontSize: 17, fontWeight: 600, color: '#10222F', marginBottom: 6 }}>Select a report type and generate</p>
-            <p style={{ fontSize: 14 }}>Choose a report type above, set your date range, and click Generate Report</p>
+        <div className="bg-[var(--bg-card)] border border-[var(--border-default)] rounded-xl">
+          <div className="text-center py-20 text-[var(--text-muted)]">
+            <BarChart3 size={48} className="mx-auto mb-4 opacity-30 text-[var(--text-primary)]" />
+            <p className="text-[17px] font-semibold text-[var(--text-primary)] mb-1.5">Select a report type and generate</p>
+            <p className="text-[14px]">Choose a report type above, set your date range, and click Generate Report</p>
           </div>
         </div>
       )}

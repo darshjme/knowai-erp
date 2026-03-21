@@ -386,24 +386,24 @@ export default function Settings() {
   const SectionHeader = ({ icon: Icon, title, subtitle, optional }) => (
     <div style={{ marginBottom: 20, marginTop: 8 }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
-        <Icon size={18} style={{ color: '#146DF7' }} />
-        <h4 style={{ fontSize: 15, fontWeight: 600, color: 'var(--kai-text)', margin: 0 }}>{title}</h4>
-        {optional && <span style={{ fontSize: 11, color: 'var(--kai-text-muted)', fontWeight: 500, background: 'var(--kai-bg)', padding: '2px 8px', borderRadius: 8 }}>Optional</span>}
+        <Icon size={18} style={{ color: '#3B82F6' }} />
+        <h4 style={{ fontSize: 15, fontWeight: 600, color: 'var(--text-primary)', margin: 0 }}>{title}</h4>
+        {optional && <span style={{ fontSize: 11, color: 'var(--text-muted)', fontWeight: 500, background: 'var(--bg-elevated)', padding: '2px 8px', borderRadius: 8 }}>Optional</span>}
       </div>
-      {subtitle && <p style={{ fontSize: 12, color: 'var(--kai-text-muted)', margin: '0 0 0 26px' }}>{subtitle}</p>}
+      {subtitle && <p style={{ fontSize: 12, color: 'var(--text-muted)', margin: '0 0 0 26px' }}>{subtitle}</p>}
     </div>
   );
 
   const ToggleSwitch = ({ checked, onChange, label }) => (
     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '14px 0', borderBottom: '1px solid #E8EBED' }}>
-      <span style={{ fontSize: 14, color: 'var(--kai-text)', fontWeight: 500 }}>{label}</span>
+      <span style={{ fontSize: 14, color: 'var(--text-primary)', fontWeight: 500 }}>{label}</span>
       <button type="button" onClick={onChange} style={{
         width: 44, height: 24, borderRadius: 12, border: 'none', cursor: 'pointer',
-        background: checked ? '#146DF7' : '#CBD5E0', position: 'relative', transition: 'background 0.2s',
+        background: checked ? '#111827' : '#CBD5E0', position: 'relative', transition: 'background 0.2s',
       }}>
         <span style={{
           position: 'absolute', top: 2, left: checked ? 22 : 2,
-          width: 20, height: 20, borderRadius: '50%', background: 'var(--kai-surface-solid)',
+          width: 20, height: 20, borderRadius: '50%', background: 'var(--bg-card)',
           transition: 'left 0.2s', boxShadow: '0 1px 3px rgba(0,0,0,0.15)',
         }} />
       </button>
@@ -415,7 +415,7 @@ export default function Settings() {
       <label className="kai-label">{label}</label>
       <input className="kai-input" type={showPasswords[field] ? 'text' : 'password'} value={value} onChange={onChange} required style={{ paddingRight: 42 }} />
       <button type="button" onClick={() => setShowPasswords(p => ({ ...p, [field]: !p[field] }))}
-        style={{ position: 'absolute', right: 12, top: 32, background: 'none', border: 'none', cursor: 'pointer', color: 'var(--kai-text-muted)' }}>
+        style={{ position: 'absolute', right: 12, top: 32, background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-muted)' }}>
         {showPasswords[field] ? <EyeOff size={16} /> : <Eye size={16} />}
       </button>
     </div>
@@ -424,17 +424,17 @@ export default function Settings() {
   if (loading) {
     return (
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: 400 }}>
-        <Loader2 size={32} style={{ animation: 'spin 1s linear infinite', color: '#146DF7' }} />
+        <Loader2 size={32} style={{ animation: 'spin 1s linear infinite', color: '#111827' }} />
       </div>
     );
   }
 
   return (
-    <div>
-      <div className="page-header">
+    <div data-testid="settings-page">
+      <div className="flex items-center justify-between mb-6">
         <div>
-          <h1>Settings</h1>
-          <p>Manage your account preferences and configuration</p>
+          <h1 className="text-[22px] font-bold text-[var(--text-primary)] m-0">Settings</h1>
+          <p className="text-[13px] text-[var(--text-secondary)] mt-1">Manage your account preferences and configuration</p>
         </div>
       </div>
 
@@ -459,8 +459,8 @@ export default function Settings() {
                 <button key={tab.key} onClick={() => setActiveTab(tab.key)} style={{
                   display: 'flex', alignItems: 'center', gap: 10, width: '100%',
                   padding: '10px 14px', border: 'none', borderRadius: 8, cursor: 'pointer',
-                  background: active ? 'rgba(20,109,247,0.1)' : 'transparent',
-                  color: active ? '#146DF7' : 'var(--kai-text-secondary)',
+                  background: active ? 'rgba(124,58,237,0.08)' : 'transparent',
+                  color: active ? '#111827' : 'var(--text-secondary)',
                   fontWeight: active ? 600 : 400, fontSize: 14, textAlign: 'left', marginBottom: 2,
                 }}>
                   <Icon size={18} />
@@ -516,33 +516,33 @@ export default function Settings() {
                   </div>
                 </div>
 
-                <h3 style={{ fontSize: 18, fontWeight: 600, color: 'var(--kai-text)', marginBottom: 4 }}>Profile Information</h3>
-                <p style={{ color: 'var(--kai-text-muted)', fontSize: 13, marginBottom: 24 }}>Update your personal details and contact information. Fields marked with <span style={{ color: '#DC2626' }}>*</span> are mandatory.</p>
+                <h3 style={{ fontSize: 18, fontWeight: 600, color: 'var(--text-primary)', marginBottom: 4 }}>Profile Information</h3>
+                <p style={{ color: 'var(--text-muted)', fontSize: 13, marginBottom: 24 }}>Update your personal details and contact information. Fields marked with <span style={{ color: '#DC2626' }}>*</span> are mandatory.</p>
 
                 {/* Profile Picture */}
-                <div style={{ display: 'flex', alignItems: 'center', gap: 20, marginBottom: 28, padding: 20, background: 'var(--kai-bg)', borderRadius: 12 }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 20, marginBottom: 28, padding: 20, background: 'var(--bg-elevated)', borderRadius: 12 }}>
                   <div style={{ position: 'relative' }}>
                     {avatarUrl ? (
-                      <img src={avatarUrl} alt="Profile" style={{ width: 80, height: 80, borderRadius: '50%', objectFit: 'cover', border: '3px solid var(--kai-primary)' }} />
+                      <img src={avatarUrl} alt="Profile" style={{ width: 80, height: 80, borderRadius: '50%', objectFit: 'cover', border: '3px solid #7C3AED' }} />
                     ) : (
-                      <div style={{ width: 80, height: 80, borderRadius: '50%', background: 'var(--kai-primary)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontSize: 28, fontWeight: 700, border: '3px solid var(--kai-primary)' }}>
+                      <div style={{ width: 80, height: 80, borderRadius: '50%', background: '#7C3AED', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontSize: 28, fontWeight: 700, border: '3px solid #7C3AED' }}>
                         {(profile.firstName?.[0] || 'U').toUpperCase()}
                       </div>
                     )}
                     <label htmlFor="avatar-upload" style={{
                       position: 'absolute', bottom: -2, right: -2, width: 28, height: 28, borderRadius: '50%',
-                      background: 'var(--kai-primary)', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center',
-                      cursor: 'pointer', border: '2px solid var(--kai-surface)', fontSize: 12,
+                      background: '#7C3AED', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center',
+                      cursor: 'pointer', border: '2px solid var(--bg-card)', fontSize: 12,
                     }}>
                       {avatarUploading ? <Loader2 size={14} style={{ animation: 'spin 1s linear infinite' }} /> : <span style={{ fontSize: 14 }}>&#9998;</span>}
                     </label>
                     <input id="avatar-upload" type="file" accept="image/*" hidden onChange={handleAvatarUpload} />
                   </div>
                   <div>
-                    <div style={{ fontWeight: 600, fontSize: 16, color: 'var(--kai-text)' }}>{profile.firstName} {profile.lastName}</div>
-                    <div style={{ fontSize: 13, color: 'var(--kai-text-muted)' }}>{profile.companyEmail || profile.email}</div>
+                    <div style={{ fontWeight: 600, fontSize: 16, color: 'var(--text-primary)' }}>{profile.firstName} {profile.lastName}</div>
+                    <div style={{ fontSize: 13, color: 'var(--text-muted)' }}>{profile.companyEmail || profile.email}</div>
                     <button type="button" onClick={() => document.getElementById('avatar-upload')?.click()}
-                      style={{ marginTop: 8, padding: '4px 12px', borderRadius: 6, border: '1px solid var(--kai-border)', background: 'var(--kai-surface)', color: 'var(--kai-text)', fontSize: 12, cursor: 'pointer', fontWeight: 500 }}>
+                      style={{ marginTop: 8, padding: '4px 12px', borderRadius: 6, border: '1px solid var(--border-default)', background: 'var(--bg-card)', color: 'var(--text-primary)', fontSize: 12, cursor: 'pointer', fontWeight: 500 }}>
                       Change Photo
                     </button>
                   </div>
@@ -562,13 +562,13 @@ export default function Settings() {
                     </div>
                     <div>
                       <label className="kai-label">Company Email</label>
-                      <input className="kai-input" type="email" value={profile.companyEmail || profile.email} disabled style={{ background: 'var(--kai-bg)', color: 'var(--kai-text-muted)', cursor: 'not-allowed' }} />
-                      <span style={{ fontSize: 11, color: 'var(--kai-text-muted)' }}>Auto-generated @knowai.biz email</span>
+                      <input className="kai-input" type="email" value={profile.companyEmail || profile.email} disabled style={{ background: 'var(--bg-elevated)', color: 'var(--text-muted)', cursor: 'not-allowed' }} />
+                      <span style={{ fontSize: 11, color: 'var(--text-muted)' }}>Auto-generated @knowai.biz email</span>
                     </div>
                     <div>
                       <label className="kai-label">Alternate Email<RequiredMark /></label>
                       <input className="kai-input" type="email" value={profile.alternateEmail} onChange={e => setProfile(p => ({ ...p, alternateEmail: e.target.value }))} placeholder="personal@example.com" required />
-                      <span style={{ fontSize: 11, color: 'var(--kai-text-muted)' }}>Personal email for account recovery</span>
+                      <span style={{ fontSize: 11, color: 'var(--text-muted)' }}>Personal email for account recovery</span>
                     </div>
                     <div>
                       <label className="kai-label">Phone Number<RequiredMark /></label>
@@ -686,8 +686,8 @@ export default function Settings() {
               {/* Password Change Section */}
               <div className="kai-card">
                 <div className="kai-card-body">
-                  <h3 style={{ fontSize: 18, fontWeight: 600, color: 'var(--kai-text)', marginBottom: 4 }}>Change Password</h3>
-                  <p style={{ color: 'var(--kai-text-muted)', fontSize: 13, marginBottom: 24 }}>Ensure your account is using a strong, unique password</p>
+                  <h3 style={{ fontSize: 18, fontWeight: 600, color: 'var(--text-primary)', marginBottom: 4 }}>Change Password</h3>
+                  <p style={{ color: 'var(--text-muted)', fontSize: 13, marginBottom: 24 }}>Ensure your account is using a strong, unique password</p>
                   <form onSubmit={handleChangePassword} style={{ maxWidth: 420 }}>
                     <PasswordField label="Current Password" value={passwords.current} onChange={e => setPasswords(p => ({ ...p, current: e.target.value }))} field="current" />
                     <PasswordField label="New Password (min 8 characters)" value={passwords.newPass} onChange={e => setPasswords(p => ({ ...p, newPass: e.target.value }))} field="newPass" />
@@ -695,7 +695,7 @@ export default function Settings() {
                       const strength = getPasswordStrength(passwords.newPass);
                       return (
                         <div style={{ marginTop: -12, marginBottom: 20 }}>
-                          <div style={{ height: 4, borderRadius: 2, background: 'var(--kai-border)', overflow: 'hidden', marginBottom: 4 }}>
+                          <div style={{ height: 4, borderRadius: 2, background: 'var(--border-default)', overflow: 'hidden', marginBottom: 4 }}>
                             <div style={{ width: `${strength.percent}%`, height: '100%', borderRadius: 2, background: strength.color, transition: 'width 0.3s ease' }} />
                           </div>
                           <span style={{ fontSize: 11, fontWeight: 500, color: strength.color }}>Password strength: {strength.label}</span>
@@ -716,25 +716,25 @@ export default function Settings() {
               {/* Two-Factor Authentication Section */}
               <div className="kai-card">
                 <div className="kai-card-body">
-                  <h3 style={{ fontSize: 18, fontWeight: 600, color: 'var(--kai-text)', marginBottom: 4 }}>Two-Factor Authentication</h3>
-                  <p style={{ color: 'var(--kai-text-muted)', fontSize: 13, marginBottom: 20 }}>Add an extra layer of security to your account</p>
+                  <h3 style={{ fontSize: 18, fontWeight: 600, color: 'var(--text-primary)', marginBottom: 4 }}>Two-Factor Authentication</h3>
+                  <p style={{ color: 'var(--text-muted)', fontSize: 13, marginBottom: 20 }}>Add an extra layer of security to your account</p>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
-                    <div style={{ width: 48, height: 48, borderRadius: 12, display: 'flex', alignItems: 'center', justifyContent: 'center', background: twoFactorEnabled ? 'rgba(22,163,74,0.1)' : 'var(--kai-bg)' }}>
-                      <Shield size={24} style={{ color: twoFactorEnabled ? '#16A34A' : 'var(--kai-text-muted)' }} />
+                    <div style={{ width: 48, height: 48, borderRadius: 12, display: 'flex', alignItems: 'center', justifyContent: 'center', background: twoFactorEnabled ? 'rgba(22,163,74,0.1)' : 'var(--bg-elevated)' }}>
+                      <Shield size={24} style={{ color: twoFactorEnabled ? '#16A34A' : 'var(--text-muted)' }} />
                     </div>
                     <div style={{ flex: 1 }}>
                       <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 2 }}>
-                        <span style={{ fontWeight: 600, fontSize: 14, color: 'var(--kai-text)' }}>Two-Factor Authentication</span>
+                        <span style={{ fontWeight: 600, fontSize: 14, color: 'var(--text-primary)' }}>Two-Factor Authentication</span>
                         <span className="kai-badge" style={{
                           fontSize: 11, padding: '2px 8px', borderRadius: 8,
-                          background: twoFactorEnabled ? 'rgba(22,163,74,0.1)' : 'var(--kai-bg)',
-                          color: twoFactorEnabled ? '#16A34A' : 'var(--kai-text-muted)',
+                          background: twoFactorEnabled ? 'rgba(22,163,74,0.1)' : 'var(--bg-elevated)',
+                          color: twoFactorEnabled ? '#16A34A' : 'var(--text-muted)',
                           fontWeight: 600,
                         }}>
                           {twoFactorEnabled ? 'Enabled' : 'Disabled'}
                         </span>
                       </div>
-                      <div style={{ fontSize: 13, color: 'var(--kai-text-muted)' }}>
+                      <div style={{ fontSize: 13, color: 'var(--text-muted)' }}>
                         {twoFactorEnabled ? 'Your account is secured with 2FA' : 'Enable 2FA for enhanced security'}
                       </div>
                     </div>
@@ -759,17 +759,17 @@ export default function Settings() {
                     <div className="kai-card-body" style={{ padding: 28 }}>
                       <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 16 }}>
                         <Shield size={20} style={{ color: '#16A34A' }} />
-                        <h3 style={{ fontSize: 18, fontWeight: 600, color: 'var(--kai-text)', margin: 0 }}>Save Your Backup Codes</h3>
+                        <h3 style={{ fontSize: 18, fontWeight: 600, color: 'var(--text-primary)', margin: 0 }}>Save Your Backup Codes</h3>
                       </div>
-                      <p style={{ color: 'var(--kai-text-muted)', fontSize: 13, marginBottom: 20, lineHeight: 1.5 }}>
+                      <p style={{ color: 'var(--text-muted)', fontSize: 13, marginBottom: 20, lineHeight: 1.5 }}>
                         Store these backup codes in a safe place. You can use them to access your account if you lose your two-factor authentication device. Each code can only be used once.
                       </p>
                       <div style={{
-                        background: 'var(--kai-bg)', border: '1px solid var(--kai-border)', borderRadius: 10, padding: 16,
+                        background: 'var(--bg-elevated)', border: '1px solid var(--border-default)', borderRadius: 10, padding: 16,
                         display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, marginBottom: 20,
                       }}>
                         {backupCodes.map((code, i) => (
-                          <div key={i} style={{ fontFamily: 'monospace', fontSize: 14, fontWeight: 600, color: 'var(--kai-text)', padding: '4px 0', textAlign: 'center' }}>
+                          <div key={i} style={{ fontFamily: 'monospace', fontSize: 14, fontWeight: 600, color: 'var(--text-primary)', padding: '4px 0', textAlign: 'center' }}>
                             {code}
                           </div>
                         ))}
@@ -781,7 +781,7 @@ export default function Settings() {
                             const text = backupCodes.join('\n');
                             navigator.clipboard.writeText(text).then(() => showMessage('success', 'Backup codes copied to clipboard'));
                           }}
-                          style={{ border: '1px solid var(--kai-border)', background: 'var(--kai-surface)', color: 'var(--kai-text)' }}
+                          style={{ border: '1px solid var(--border-default)', background: 'var(--bg-card)', color: 'var(--text-primary)' }}
                         >
                           Copy Codes
                         </button>
@@ -797,18 +797,18 @@ export default function Settings() {
               {/* Identity Verification Section */}
               <div className="kai-card">
                 <div className="kai-card-body">
-                  <h3 style={{ fontSize: 18, fontWeight: 600, color: 'var(--kai-text)', marginBottom: 4 }}>Identity Verification</h3>
-                  <p style={{ color: 'var(--kai-text-muted)', fontSize: 13, marginBottom: 20 }}>Verify your identity by uploading official documents</p>
+                  <h3 style={{ fontSize: 18, fontWeight: 600, color: 'var(--text-primary)', marginBottom: 4 }}>Identity Verification</h3>
+                  <p style={{ color: 'var(--text-muted)', fontSize: 13, marginBottom: 20 }}>Verify your identity by uploading official documents</p>
 
                   {/* Verification Status */}
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 24, padding: '12px 16px', borderRadius: 10, background: 'var(--kai-bg)' }}>
-                    <span style={{ fontSize: 14, fontWeight: 500, color: 'var(--kai-text)' }}>Verification Status:</span>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 24, padding: '12px 16px', borderRadius: 10, background: 'var(--bg-elevated)' }}>
+                    <span style={{ fontSize: 14, fontWeight: 500, color: 'var(--text-primary)' }}>Verification Status:</span>
                     {verificationDocs.length > 0 && verificationDocs.every(d => d.status === 'Approved') ? (
                       <span className="kai-badge" style={{ background: 'rgba(22,163,74,0.1)', color: '#16A34A', padding: '4px 12px', borderRadius: 8, fontSize: 12, fontWeight: 600, display: 'flex', alignItems: 'center', gap: 4 }}>
                         <Check size={14} /> Verified
                       </span>
                     ) : (
-                      <span className="kai-badge" style={{ background: 'var(--kai-surface)', color: 'var(--kai-text-muted)', padding: '4px 12px', borderRadius: 8, fontSize: 12, fontWeight: 600 }}>
+                      <span className="kai-badge" style={{ background: 'var(--bg-card)', color: 'var(--text-muted)', padding: '4px 12px', borderRadius: 8, fontSize: 12, fontWeight: 600 }}>
                         Not verified
                       </span>
                     )}
@@ -843,12 +843,12 @@ export default function Settings() {
 
                     return (
                       <div key={doc.type} style={{
-                        border: '1px solid var(--kai-border)', borderRadius: 12, padding: 20, marginBottom: 16,
+                        border: '1px solid var(--border-default)', borderRadius: 12, padding: 20, marginBottom: 16,
                       }}>
                         <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap' }}>
                           <div style={{ flex: 1, minWidth: 200 }}>
                             <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
-                              <span style={{ fontWeight: 600, fontSize: 14, color: 'var(--kai-text)' }}>{doc.label || doc.type}</span>
+                              <span style={{ fontWeight: 600, fontSize: 14, color: 'var(--text-primary)' }}>{doc.label || doc.type}</span>
                               {existingDoc && (
                                 <span className="kai-badge" style={{
                                   background: (statusColors[existingDoc.status] || statusColors.Pending).bg,
@@ -859,9 +859,9 @@ export default function Settings() {
                                 </span>
                               )}
                             </div>
-                            <p style={{ fontSize: 12, color: 'var(--kai-text-muted)', margin: 0, marginBottom: 8 }}>{doc.description}</p>
+                            <p style={{ fontSize: 12, color: 'var(--text-muted)', margin: 0, marginBottom: 8 }}>{doc.description}</p>
                             {existingDoc?.fileName && (
-                              <p style={{ fontSize: 12, color: 'var(--kai-text-muted)', margin: '4px 0 0 0' }}>
+                              <p style={{ fontSize: 12, color: 'var(--text-muted)', margin: '4px 0 0 0' }}>
                                 Uploaded: {existingDoc.fileName}
                               </p>
                             )}
@@ -885,7 +885,7 @@ export default function Settings() {
                               />
                               <span className="kai-btn" style={{
                                 display: 'inline-flex', alignItems: 'center', gap: 6,
-                                border: '1px solid var(--kai-border)', background: 'var(--kai-surface)', color: 'var(--kai-text)',
+                                border: '1px solid var(--border-default)', background: 'var(--bg-card)', color: 'var(--text-primary)',
                                 pointerEvents: isUploading ? 'none' : 'auto', opacity: isUploading ? 0.6 : 1,
                                 padding: '8px 16px', borderRadius: 8, fontSize: 13, fontWeight: 500, cursor: 'pointer',
                               }}>
@@ -908,8 +908,8 @@ export default function Settings() {
           {activeTab === 'notifications' && (
             <div className="kai-card">
               <div className="kai-card-body">
-                <h3 style={{ fontSize: 18, fontWeight: 600, color: 'var(--kai-text)', marginBottom: 4 }}>Notification Preferences</h3>
-                <p style={{ color: 'var(--kai-text-muted)', fontSize: 13, marginBottom: 24 }}>Choose how and when you want to be notified</p>
+                <h3 style={{ fontSize: 18, fontWeight: 600, color: 'var(--text-primary)', marginBottom: 4 }}>Notification Preferences</h3>
+                <p style={{ color: 'var(--text-muted)', fontSize: 13, marginBottom: 24 }}>Choose how and when you want to be notified</p>
                 <div style={{ maxWidth: 480 }}>
                   <ToggleSwitch label="Email Notifications" checked={notifications.emailNotifications}
                     onChange={() => setNotifications(n => ({ ...n, emailNotifications: !n.emailNotifications }))} />
@@ -931,8 +931,8 @@ export default function Settings() {
             <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
               <div className="kai-card">
                 <div className="kai-card-body">
-                  <h3 style={{ fontSize: 18, fontWeight: 600, color: 'var(--kai-text)', marginBottom: 4 }}>Theme</h3>
-                  <p style={{ color: 'var(--kai-text-muted)', fontSize: 13, marginBottom: 24 }}>Select your preferred color scheme</p>
+                  <h3 style={{ fontSize: 18, fontWeight: 600, color: 'var(--text-primary)', marginBottom: 4 }}>Theme</h3>
+                  <p style={{ color: 'var(--text-muted)', fontSize: 13, marginBottom: 24 }}>Select your preferred color scheme</p>
                   <div style={{ display: 'flex', gap: 16 }}>
                     {[
                       { key: 'light', label: 'Light', icon: Sun },
@@ -944,12 +944,12 @@ export default function Settings() {
                       return (
                         <button key={opt.key} onClick={() => handleSaveAppearance(opt.key, null)} style={{
                           flex: 1, padding: '20px 16px', borderRadius: 12, cursor: 'pointer',
-                          border: `2px solid ${active ? '#146DF7' : 'var(--kai-border)'}`,
-                          background: active ? 'rgba(20,109,247,0.1)' : 'var(--kai-surface)',
+                          border: `2px solid ${active ? '#111827' : 'var(--border-default)'}`,
+                          background: active ? 'rgba(124,58,237,0.08)' : 'var(--bg-card)',
                           display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8,
                         }}>
-                          <Icon size={24} style={{ color: active ? 'var(--kai-primary)' : 'var(--kai-text-secondary)' }} />
-                          <span style={{ fontSize: 14, fontWeight: active ? 600 : 400, color: active ? '#146DF7' : 'var(--kai-text-secondary)' }}>{opt.label}</span>
+                          <Icon size={24} style={{ color: active ? '#7C3AED' : 'var(--text-secondary)' }} />
+                          <span style={{ fontSize: 14, fontWeight: active ? 600 : 400, color: active ? '#111827' : 'var(--text-secondary)' }}>{opt.label}</span>
                         </button>
                       );
                     })}
@@ -958,8 +958,8 @@ export default function Settings() {
               </div>
               <div className="kai-card">
                 <div className="kai-card-body">
-                  <h3 style={{ fontSize: 18, fontWeight: 600, color: 'var(--kai-text)', marginBottom: 4 }}>Sidebar Style</h3>
-                  <p style={{ color: 'var(--kai-text-muted)', fontSize: 13, marginBottom: 24 }}>Choose your sidebar layout preference</p>
+                  <h3 style={{ fontSize: 18, fontWeight: 600, color: 'var(--text-primary)', marginBottom: 4 }}>Sidebar Style</h3>
+                  <p style={{ color: 'var(--text-muted)', fontSize: 13, marginBottom: 24 }}>Choose your sidebar layout preference</p>
                   <div style={{ display: 'flex', gap: 16 }}>
                     {[
                       { key: 'expanded', label: 'Expanded', icon: PanelLeft },
@@ -970,12 +970,12 @@ export default function Settings() {
                       return (
                         <button key={opt.key} onClick={() => handleSaveAppearance(null, opt.key)} style={{
                           flex: 1, maxWidth: 200, padding: '20px 16px', borderRadius: 12, cursor: 'pointer',
-                          border: `2px solid ${active ? '#146DF7' : 'var(--kai-border)'}`,
-                          background: active ? 'rgba(20,109,247,0.1)' : 'var(--kai-surface)',
+                          border: `2px solid ${active ? '#111827' : 'var(--border-default)'}`,
+                          background: active ? 'rgba(124,58,237,0.08)' : 'var(--bg-card)',
                           display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8,
                         }}>
-                          <Icon size={24} style={{ color: active ? 'var(--kai-primary)' : 'var(--kai-text-secondary)' }} />
-                          <span style={{ fontSize: 14, fontWeight: active ? 600 : 400, color: active ? '#146DF7' : 'var(--kai-text-secondary)' }}>{opt.label}</span>
+                          <Icon size={24} style={{ color: active ? '#7C3AED' : 'var(--text-secondary)' }} />
+                          <span style={{ fontSize: 14, fontWeight: active ? 600 : 400, color: active ? '#111827' : 'var(--text-secondary)' }}>{opt.label}</span>
                         </button>
                       );
                     })}

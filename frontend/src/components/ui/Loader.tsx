@@ -1,9 +1,9 @@
+import { Loader2 } from 'lucide-react';
+
 export default function Loader() {
   return (
-    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100vh', background: 'var(--kai-bg)' }}>
-      <div className="spinner-border text-primary" role="status">
-        <span className="visually-hidden">Loading...</span>
-      </div>
+    <div className="flex items-center justify-center h-screen bg-[var(--bg-primary)]">
+      <Loader2 size={32} className="animate-spin text-[#7C3AED]" />
     </div>
   );
 }

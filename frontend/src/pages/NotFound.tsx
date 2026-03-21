@@ -4,92 +4,26 @@ export default function NotFound() {
   const navigate = useNavigate();
 
   return (
-    <div
-      style={{
-        display: 'flex',
-        flexDirection: 'column',
-        alignItems: 'center',
-        justifyContent: 'center',
-        minHeight: '100vh',
-        background: '#F5F5F7',
-        color: '#1D1D1F',
-        padding: '2rem',
-        fontFamily:
-          "-apple-system, BlinkMacSystemFont, 'SF Pro Display', 'SF Pro Text', 'Geist', 'Helvetica Neue', sans-serif",
-      }}
-    >
+    <div className="flex flex-col items-center justify-center min-h-screen bg-[var(--bg-primary)] text-[var(--text-primary)] p-8">
       {/* Glass card */}
-      <div
-        style={{
-          background: 'rgba(255, 255, 255, 0.72)',
-          backdropFilter: 'blur(20px) saturate(180%)',
-          WebkitBackdropFilter: 'blur(20px) saturate(180%)',
-          border: '1px solid rgba(255, 255, 255, 0.18)',
-          borderRadius: 16,
-          padding: 48,
-          maxWidth: 480,
-          width: '100%',
-          textAlign: 'center',
-        }}
-      >
+      <div className="bg-[var(--bg-card)] backdrop-blur-xl border border-[var(--border-default)] rounded-2xl p-12 max-w-[480px] w-full text-center shadow-lg">
         {/* 404 display */}
-        <div
-          style={{
-            fontSize: 64,
-            fontWeight: 700,
-            letterSpacing: '-2px',
-            lineHeight: 1.1,
-            color: '#AEAEB2',
-            marginBottom: 16,
-          }}
-        >
+        <div className="text-[64px] font-bold tracking-[-2px] leading-none text-[var(--text-muted)] mb-4">
           404
         </div>
 
-        <h1
-          style={{
-            fontSize: 28,
-            fontWeight: 700,
-            margin: '0 0 8px',
-            letterSpacing: '-0.5px',
-            lineHeight: 1.3,
-            color: '#1D1D1F',
-          }}
-        >
+        <h1 className="text-[28px] font-bold mb-2 tracking-[-0.5px] leading-tight text-[var(--text-primary)]">
           Page not found
         </h1>
 
-        <p
-          style={{
-            color: '#86868B',
-            margin: '0 0 32px',
-            fontSize: 15,
-            lineHeight: 1.5,
-          }}
-        >
+        <p className="text-[var(--text-muted)] mb-8 text-[15px] leading-relaxed">
           The page you're looking for doesn't exist or has been moved.
         </p>
 
         <button
+          data-testid="go-to-dashboard"
           onClick={() => navigate('/dashboard')}
-          style={{
-            background: '#007AFF',
-            color: '#fff',
-            border: 'none',
-            borderRadius: 8,
-            padding: '12px 32px',
-            fontSize: 15,
-            fontWeight: 600,
-            cursor: 'pointer',
-            transition: 'background 0.15s ease',
-            minHeight: 44,
-          }}
-          onMouseOver={(e) => {
-            (e.currentTarget as HTMLButtonElement).style.background = '#0066D6';
-          }}
-          onMouseOut={(e) => {
-            (e.currentTarget as HTMLButtonElement).style.background = '#007AFF';
-          }}
+          className="bg-[#7C3AED] text-white rounded-lg px-8 py-3 text-[15px] font-semibold hover:bg-[#7C3AED]/90 transition-colors min-h-[44px] cursor-pointer border-none"
         >
           Go to Dashboard
         </button>

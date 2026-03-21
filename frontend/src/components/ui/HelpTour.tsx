@@ -343,7 +343,7 @@ function TourTooltip({
       {/* Header bar */}
       <div
         style={{
-          background: '#146DF7',
+          background: '#111827',
           padding: '14px 20px',
           display: 'flex',
           alignItems: 'center',
@@ -364,7 +364,7 @@ function TourTooltip({
           style={{
             height: '100%',
             width: `${((index + 1) / size) * 100}%`,
-            background: '#146DF7',
+            background: '#111827',
             transition: 'width 0.3s ease',
             borderRadius: '0 2px 2px 0',
           }}
@@ -405,7 +405,7 @@ function TourTooltip({
                 type="checkbox"
                 checked={dontShowAgain}
                 onChange={onDontShowToggle}
-                style={{ accentColor: '#146DF7', width: 14, height: 14 }}
+                style={{ accentColor: '#111827', width: 14, height: 14 }}
               />
               Don't show again
             </label>
@@ -449,7 +449,7 @@ function TourTooltip({
             <button
               {...primaryProps}
               style={{
-                background: '#146DF7',
+                background: '#111827',
                 border: 'none',
                 borderRadius: 8,
                 padding: '7px 20px',
@@ -466,7 +466,7 @@ function TourTooltip({
             <button
               {...closeProps}
               style={{
-                background: '#146DF7',
+                background: '#111827',
                 border: 'none',
                 borderRadius: 8,
                 padding: '7px 20px',
@@ -502,23 +502,23 @@ export function HelpFloatingButton({ onClick }) {
         width: 48,
         height: 48,
         borderRadius: '50%',
-        background: '#146DF7',
+        background: '#111827',
         border: 'none',
         color: '#fff',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
         cursor: 'pointer',
-        boxShadow: '0 4px 16px rgba(20,109,247,0.35)',
+        boxShadow: '0 4px 16px rgba(17,24,39,0.25)',
         transition: 'transform 0.2s, box-shadow 0.2s',
       }}
       onMouseEnter={(e) => {
         e.currentTarget.style.transform = 'scale(1.1)';
-        e.currentTarget.style.boxShadow = '0 6px 24px rgba(20,109,247,0.45)';
+        e.currentTarget.style.boxShadow = '0 6px 24px rgba(17,24,39,0.35)';
       }}
       onMouseLeave={(e) => {
         e.currentTarget.style.transform = 'scale(1)';
-        e.currentTarget.style.boxShadow = '0 4px 16px rgba(20,109,247,0.35)';
+        e.currentTarget.style.boxShadow = '0 4px 16px rgba(17,24,39,0.25)';
       }}
     >
       <span style={{ fontSize: 22, fontWeight: 700, lineHeight: 1 }}>?</span>

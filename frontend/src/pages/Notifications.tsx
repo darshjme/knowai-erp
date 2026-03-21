@@ -5,50 +5,47 @@ import { toast } from 'react-toastify';
 import { notificationsApi } from '../services/api';
 
 const FILTER_TABS = [
-  { key: 'all', label: 'All', icon: 'bi-bell' },
-  { key: 'unread', label: 'Unread', icon: 'bi-envelope' },
-  { key: 'tasks', label: 'Tasks', icon: 'bi-check2-square' },
-  { key: 'projects', label: 'Projects', icon: 'bi-folder' },
-  { key: 'system', label: 'System', icon: 'bi-gear' },
-  { key: 'announcements', label: 'Announcements', icon: 'bi-megaphone' },
+  { key: 'all', label: 'All' },
+  { key: 'unread', label: 'Unread' },
+  { key: 'tasks', label: 'Tasks' },
+  { key: 'projects', label: 'Projects' },
+  { key: 'system', label: 'System' },
+  { key: 'announcements', label: 'Announcements' },
 ];
 
 const TYPE_CONFIG = {
-  task: { icon: 'bi-check2-square', color: '#146DF7', bg: 'rgba(20, 109, 247, 0.1)' },
-  task_assigned: { icon: 'bi-person-check', color: '#146DF7', bg: 'rgba(20, 109, 247, 0.1)' },
-  TASK_ASSIGNED: { icon: 'bi-person-check', color: '#146DF7', bg: 'rgba(20, 109, 247, 0.1)' },
-  task_completed: { icon: 'bi-check-circle', color: '#16A34A', bg: 'rgba(22, 163, 74, 0.1)' },
-  TASK_COMPLETED: { icon: 'bi-check-circle', color: '#16A34A', bg: 'rgba(22, 163, 74, 0.1)' },
-  task_overdue: { icon: 'bi-exclamation-triangle', color: '#CB3939', bg: 'rgba(203, 57, 57, 0.1)' },
-  TASK_OVERDUE: { icon: 'bi-exclamation-triangle', color: '#CB3939', bg: 'rgba(203, 57, 57, 0.1)' },
-  TASK_COMMENT: { icon: 'bi-chat-dots', color: '#146DF7', bg: 'rgba(20, 109, 247, 0.1)' },
-  hr: { icon: 'bi-people', color: '#8B3FE9', bg: 'rgba(139, 63, 233, 0.1)' },
-  leave: { icon: 'bi-calendar-event', color: '#EA580C', bg: 'rgba(234, 88, 12, 0.1)' },
-  LEAVE_APPROVED: { icon: 'bi-calendar-check', color: '#16A34A', bg: 'rgba(22, 163, 74, 0.1)' },
-  LEAVE_REJECTED: { icon: 'bi-calendar-x', color: '#CB3939', bg: 'rgba(203, 57, 57, 0.1)' },
-  payroll: { icon: 'bi-currency-dollar', color: '#16A34A', bg: 'rgba(22, 163, 74, 0.1)' },
-  system: { icon: 'bi-gear', color: '#5B6B76', bg: 'rgba(91, 107, 118, 0.1)' },
-  SYSTEM: { icon: 'bi-gear', color: '#5B6B76', bg: 'rgba(91, 107, 118, 0.1)' },
-  CHAT_MENTION: { icon: 'bi-at', color: '#2563EB', bg: 'rgba(37, 99, 235, 0.1)' },
-  mention: { icon: 'bi-at', color: '#2563EB', bg: 'rgba(37, 99, 235, 0.1)' },
-  comment: { icon: 'bi-chat-dots', color: '#146DF7', bg: 'rgba(20, 109, 247, 0.1)' },
-  project: { icon: 'bi-folder', color: '#EA580C', bg: 'rgba(234, 88, 12, 0.1)' },
-  LEAD_ASSIGNED: { icon: 'bi-person-lines-fill', color: '#7C3AED', bg: 'rgba(124, 58, 237, 0.1)' },
-  DOCUMENT_VERIFIED: { icon: 'bi-file-earmark-check', color: '#16A34A', bg: 'rgba(22, 163, 74, 0.1)' },
-  COMPLAINT_FILED: { icon: 'bi-flag', color: '#CB3939', bg: 'rgba(203, 57, 57, 0.1)' },
-  COMPLAINT_RESOLVED: { icon: 'bi-flag-fill', color: '#16A34A', bg: 'rgba(22, 163, 74, 0.1)' },
-  ANNOUNCEMENT: { icon: 'bi-megaphone', color: '#D97706', bg: 'rgba(217, 119, 6, 0.1)' },
+  task: { color: '#3B82F6', bg: 'bg-blue-500/10' },
+  task_assigned: { color: '#3B82F6', bg: 'bg-blue-500/10' },
+  TASK_ASSIGNED: { color: '#3B82F6', bg: 'bg-blue-500/10' },
+  task_completed: { color: '#16A34A', bg: 'bg-green-500/10' },
+  TASK_COMPLETED: { color: '#16A34A', bg: 'bg-green-500/10' },
+  task_overdue: { color: '#CB3939', bg: 'bg-red-500/10' },
+  TASK_OVERDUE: { color: '#CB3939', bg: 'bg-red-500/10' },
+  TASK_COMMENT: { color: '#3B82F6', bg: 'bg-blue-500/10' },
+  hr: { color: '#8B3FE9', bg: 'bg-purple-500/10' },
+  leave: { color: '#EA580C', bg: 'bg-orange-500/10' },
+  LEAVE_APPROVED: { color: '#16A34A', bg: 'bg-green-500/10' },
+  LEAVE_REJECTED: { color: '#CB3939', bg: 'bg-red-500/10' },
+  payroll: { color: '#16A34A', bg: 'bg-green-500/10' },
+  system: { color: '#5B6B76', bg: 'bg-gray-500/10' },
+  SYSTEM: { color: '#5B6B76', bg: 'bg-gray-500/10' },
+  CHAT_MENTION: { color: '#2563EB', bg: 'bg-blue-500/10' },
+  mention: { color: '#2563EB', bg: 'bg-blue-500/10' },
+  comment: { color: '#3B82F6', bg: 'bg-blue-500/10' },
+  project: { color: '#EA580C', bg: 'bg-orange-500/10' },
+  LEAD_ASSIGNED: { color: '#7C3AED', bg: 'bg-purple-500/10' },
+  DOCUMENT_VERIFIED: { color: '#16A34A', bg: 'bg-green-500/10' },
+  COMPLAINT_FILED: { color: '#CB3939', bg: 'bg-red-500/10' },
+  COMPLAINT_RESOLVED: { color: '#16A34A', bg: 'bg-green-500/10' },
+  ANNOUNCEMENT: { color: '#D97706', bg: 'bg-amber-500/10' },
 };
 
-function getTypeConfig(type) {
-  return TYPE_CONFIG[type] || TYPE_CONFIG.system;
-}
+function getTypeConfig(type) { return TYPE_CONFIG[type] || TYPE_CONFIG.system; }
 
 function getTypeCategory(type) {
   if (['task', 'task_assigned', 'task_completed', 'task_overdue', 'TASK_ASSIGNED', 'TASK_COMPLETED', 'TASK_OVERDUE', 'TASK_COMMENT'].includes(type)) return 'tasks';
   if (['project', 'LEAD_ASSIGNED'].includes(type)) return 'projects';
-  if (['hr', 'leave', 'payroll', 'LEAVE_APPROVED', 'LEAVE_REJECTED'].includes(type)) return 'system';
-  if (['system', 'SYSTEM', 'CHAT_MENTION', 'DOCUMENT_VERIFIED', 'COMPLAINT_FILED', 'COMPLAINT_RESOLVED'].includes(type)) return 'system';
+  if (['hr', 'leave', 'payroll', 'LEAVE_APPROVED', 'LEAVE_REJECTED', 'system', 'SYSTEM', 'CHAT_MENTION', 'DOCUMENT_VERIFIED', 'COMPLAINT_FILED', 'COMPLAINT_RESOLVED'].includes(type)) return 'system';
   if (['ANNOUNCEMENT'].includes(type)) return 'announcements';
   return 'all';
 }
@@ -56,13 +53,9 @@ function getTypeCategory(type) {
 function groupByDate(notifications) {
   const now = new Date();
   const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-  const yesterday = new Date(today);
-  yesterday.setDate(yesterday.getDate() - 1);
-  const weekAgo = new Date(today);
-  weekAgo.setDate(weekAgo.getDate() - 7);
-
+  const yesterday = new Date(today); yesterday.setDate(yesterday.getDate() - 1);
+  const weekAgo = new Date(today); weekAgo.setDate(weekAgo.getDate() - 7);
   const groups = { Today: [], Yesterday: [], 'This Week': [], Older: [] };
-
   notifications.forEach(n => {
     const d = new Date(n.createdAt || n.date || n.timestamp);
     if (d >= today) groups.Today.push(n);
@@ -70,7 +63,6 @@ function groupByDate(notifications) {
     else if (d >= weekAgo) groups['This Week'].push(n);
     else groups.Older.push(n);
   });
-
   return Object.entries(groups).filter(([, items]) => items.length > 0);
 }
 
@@ -91,12 +83,9 @@ function playNotificationSound() {
     const ctx = new (window.AudioContext || window.webkitAudioContext)();
     const osc = ctx.createOscillator();
     const gain = ctx.createGain();
-    osc.connect(gain);
-    gain.connect(ctx.destination);
-    osc.frequency.value = 800;
-    gain.gain.value = 0.1;
-    osc.start();
-    osc.stop(ctx.currentTime + 0.15);
+    osc.connect(gain); gain.connect(ctx.destination);
+    osc.frequency.value = 800; gain.gain.value = 0.1;
+    osc.start(); osc.stop(ctx.currentTime + 0.15);
   } catch {}
 }
 
@@ -105,7 +94,6 @@ const PAGE_SIZE = 20;
 export default function Notifications() {
   const dispatch = useDispatch();
   const navigate = useNavigate();
-
   const [notifications, setNotifications] = useState([]);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('all');
@@ -119,11 +107,8 @@ export default function Notifications() {
     fetchNotifications(1, true);
   }, []);
 
-  useEffect(() => {
-    fetchNotifications(1, true);
-  }, [activeTab]);
+  useEffect(() => { fetchNotifications(1, true); }, [activeTab]);
 
-  // Poll for new notifications every 30 seconds and play sound
   useEffect(() => {
     const interval = setInterval(async () => {
       try {
@@ -133,7 +118,6 @@ export default function Notifications() {
         const newCount = items.length;
         if (newCount > prevCountRef.current && prevCountRef.current !== undefined) {
           playNotificationSound();
-          // Refresh the list
           fetchNotifications(1, true);
         }
         prevCountRef.current = newCount;
@@ -144,13 +128,10 @@ export default function Notifications() {
 
   const fetchNotifications = async (pg = 1, reset = false) => {
     try {
-      if (reset) setLoading(true);
-      else setLoadingMore(true);
-
+      if (reset) setLoading(true); else setLoadingMore(true);
       const params = { page: pg, limit: PAGE_SIZE };
       if (activeTab === 'unread') params.read = 'false';
       else if (activeTab !== 'all') {
-        // Map tab to notification types
         const typeMap = {
           tasks: 'TASK_ASSIGNED,TASK_COMPLETED,TASK_OVERDUE,TASK_COMMENT',
           projects: 'LEAD_ASSIGNED',
@@ -159,74 +140,40 @@ export default function Notifications() {
         };
         if (typeMap[activeTab]) params.type = typeMap[activeTab];
       }
-
       const res = await notificationsApi.list(params);
       const rd = res.data;
       const data = rd?.notifications || rd?.data || rd || [];
       const items = Array.isArray(data) ? data : [];
-
-      if (reset) {
-        setNotifications(items);
-      } else {
-        setNotifications(prev => [...prev, ...items]);
-      }
+      if (reset) setNotifications(items); else setNotifications(prev => [...prev, ...items]);
       setHasMore(items.length >= PAGE_SIZE);
       setPage(pg);
-
-      if (reset && activeTab === 'all') {
-        dispatch({ type: 'NOTIFS_SET', payload: items });
-      }
-    } catch (err) {
-      toast.error('Failed to load notifications');
-    } finally {
-      setLoading(false);
-      setLoadingMore(false);
-    }
+      if (reset && activeTab === 'all') dispatch({ type: 'NOTIFS_SET', payload: items });
+    } catch (err) { toast.error('Failed to load notifications'); }
+    finally { setLoading(false); setLoadingMore(false); }
   };
 
   const handleMarkRead = async (notification) => {
     const nid = notification._id || notification.id;
-    if (notification.read) {
-      // If already read, just navigate
-      if (notification.linkUrl) navigate(notification.linkUrl);
-      return;
-    }
-
+    if (notification.read) { if (notification.linkUrl) navigate(notification.linkUrl); return; }
     setNotifications(prev => prev.map(n => (n._id || n.id) === nid ? { ...n, read: true } : n));
     dispatch({ type: 'NOTIFS_MARK_READ', payload: nid });
-
-    try {
-      await notificationsApi.markRead(nid);
-    } catch {
-      setNotifications(prev => prev.map(n => (n._id || n.id) === nid ? { ...n, read: false } : n));
-      toast.error('Failed to mark as read');
-    }
-
+    try { await notificationsApi.markRead(nid); }
+    catch { setNotifications(prev => prev.map(n => (n._id || n.id) === nid ? { ...n, read: false } : n)); toast.error('Failed to mark as read'); }
     if (notification.linkUrl) navigate(notification.linkUrl);
   };
 
   const handleMarkAllRead = async () => {
     const unread = notifications.filter(n => !n.read);
-    if (unread.length === 0) {
-      toast.info('All notifications are already read');
-      return;
-    }
-
+    if (unread.length === 0) { toast.info('All notifications are already read'); return; }
     setNotifications(prev => prev.map(n => ({ ...n, read: true })));
-
     try {
       await Promise.all(unread.map(n => notificationsApi.markRead(n._id || n.id)));
       dispatch({ type: 'NOTIFS_SET', payload: notifications.map(n => ({ ...n, read: true })) });
       toast.success(`Marked ${unread.length} notification(s) as read`);
-    } catch {
-      fetchNotifications(1, true);
-      toast.error('Failed to mark all as read');
-    }
+    } catch { fetchNotifications(1, true); toast.error('Failed to mark all as read'); }
   };
 
-  const handleLoadMore = () => {
-    fetchNotifications(page + 1, false);
-  };
+  const handleLoadMore = () => fetchNotifications(page + 1, false);
 
   const filteredNotifications = notifications.filter(n => {
     if (activeTab === 'all') return true;
@@ -239,60 +186,37 @@ export default function Notifications() {
 
   return (
     <div>
-      <div className="page-header">
+      <div className="flex items-center justify-between flex-wrap gap-4 mb-6">
         <div>
-          <h1>Notifications</h1>
-          <p>Stay updated with your latest alerts and activities</p>
+          <h1 className="text-[18px] font-semibold text-[var(--text-primary)] font-[Manrope]">Notifications</h1>
+          <p className="text-[13px] text-[var(--text-secondary)]">Stay updated with your latest alerts and activities</p>
         </div>
-        <div className="page-actions">
+        <div className="flex items-center gap-2">
           {unreadCount > 0 && (
-            <span className="kai-badge primary" style={{ fontSize: 12, padding: '4px 12px' }}>
-              {unreadCount} unread
-            </span>
+            <span className="text-[12px] bg-[#7C3AED]/10 text-[#7C3AED] px-3 py-1 rounded-full font-semibold">{unreadCount} unread</span>
           )}
-          <button className="kai-btn kai-btn-outline" onClick={handleMarkAllRead}>
-            <i className="bi bi-check2-all" style={{ marginRight: 6 }} />
+          <button className="bg-transparent border border-[var(--border-default)] text-[var(--text-secondary)] rounded-lg px-4 py-2 text-[13px] font-semibold hover:bg-[var(--bg-elevated)] transition-colors flex items-center gap-1.5"
+            onClick={handleMarkAllRead} data-testid="mark-all-read">
             Mark All Read
           </button>
         </div>
       </div>
 
       {/* Filter Tabs */}
-      <div style={{ display: 'flex', gap: 4, marginBottom: 20, background: 'var(--kai-surface)', padding: 4, borderRadius: 'var(--kai-radius)', border: '1px solid var(--kai-border)', width: 'fit-content', maxWidth: '100%', flexWrap: 'wrap' }}>
+      <div className="flex gap-1 mb-5 bg-[var(--bg-card)] p-1 rounded-lg border border-[var(--border-default)] w-fit max-w-full flex-wrap" data-testid="notification-tabs">
         {FILTER_TABS.map(tab => {
           const isActive = activeTab === tab.key;
           let count = 0;
           if (tab.key === 'unread') count = unreadCount;
           else if (tab.key === 'all') count = notifications.length;
           else count = notifications.filter(n => getTypeCategory(n.type) === tab.key).length;
-
           return (
-            <button
-              key={tab.key}
-              className={`kai-btn kai-btn-sm ${isActive ? 'kai-btn-primary' : ''}`}
-              onClick={() => setActiveTab(tab.key)}
-              style={{
-                background: isActive ? 'var(--kai-primary)' : 'transparent',
-                color: isActive ? '#fff' : 'var(--kai-text-muted)',
-                border: 'none',
-                display: 'flex',
-                alignItems: 'center',
-                gap: 6,
-              }}
-            >
-              <i className={tab.icon} style={{ fontSize: 13 }} />
+            <button key={tab.key} onClick={() => setActiveTab(tab.key)}
+              className={`px-3 py-1.5 text-[12px] font-semibold rounded-md transition-colors flex items-center gap-1.5 ${isActive ? 'bg-[#7C3AED] text-white' : 'text-[var(--text-muted)] hover:bg-[var(--bg-elevated)]'}`}
+              data-testid={`tab-${tab.key}`}>
               {tab.label}
               {count > 0 && (
-                <span style={{
-                  fontSize: 10,
-                  fontWeight: 700,
-                  background: isActive ? 'rgba(255,255,255,0.25)' : 'var(--kai-bg)',
-                  padding: '1px 6px',
-                  borderRadius: 'var(--kai-radius-pill)',
-                  marginLeft: 2,
-                }}>
-                  {count}
-                </span>
+                <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full ${isActive ? 'bg-white/25' : 'bg-[var(--bg-elevated)]'}`}>{count}</span>
               )}
             </button>
           );
@@ -300,174 +224,91 @@ export default function Notifications() {
       </div>
 
       {/* Notifications List */}
-      <div className="kai-card">
-        <div className="kai-card-body" style={{ padding: 0 }}>
-          {loading ? (
-            <div style={{ padding: 60, textAlign: 'center', color: 'var(--kai-text-muted)' }}>
-              <i className="bi bi-arrow-repeat" style={{ fontSize: 24, animation: 'spin 1s linear infinite', display: 'block', marginBottom: 8 }} />
-              Loading notifications...
-            </div>
-          ) : filteredNotifications.length === 0 ? (
-            <div style={{ padding: 60, textAlign: 'center', color: 'var(--kai-text-muted)' }}>
-              <i className="bi bi-bell-slash" style={{ fontSize: 48, display: 'block', marginBottom: 12, opacity: 0.3 }} />
-              <div style={{ fontSize: 15, fontWeight: 600, marginBottom: 4 }}>No notifications</div>
-              <div style={{ fontSize: 13 }}>
-                {activeTab === 'unread' ? 'You have read all your notifications' : 'No notifications to show'}
+      <div className="bg-[var(--bg-card)] border border-[var(--border-default)] rounded-xl overflow-hidden">
+        {loading ? (
+          <div className="py-16 text-center text-[var(--text-muted)]">
+            <div className="w-6 h-6 border-2 border-[#7C3AED] border-t-transparent rounded-full animate-spin mx-auto mb-2" />
+            Loading notifications...
+          </div>
+        ) : filteredNotifications.length === 0 ? (
+          <div className="py-16 text-center text-[var(--text-muted)]">
+            <div className="text-[48px] opacity-30 mb-3">&#128276;</div>
+            <div className="text-[15px] font-semibold mb-1">No notifications</div>
+            <div className="text-[13px]">{activeTab === 'unread' ? 'You have read all your notifications' : 'No notifications to show'}</div>
+          </div>
+        ) : (
+          grouped.map(([groupLabel, items]) => (
+            <div key={groupLabel}>
+              <div className="px-5 py-2.5 text-[11px] font-bold uppercase tracking-wider text-[var(--text-muted)] bg-[var(--bg-elevated)] border-b border-[var(--border-default)]">
+                {groupLabel}
               </div>
-            </div>
-          ) : (
-            grouped.map(([groupLabel, items]) => (
-              <div key={groupLabel}>
-                {/* Group Header */}
-                <div style={{
-                  padding: '10px 20px',
-                  fontSize: 11,
-                  fontWeight: 700,
-                  textTransform: 'uppercase',
-                  letterSpacing: 1,
-                  color: 'var(--kai-text-muted)',
-                  background: 'var(--kai-bg)',
-                  borderBottom: '1px solid var(--kai-border-light)',
-                  borderTop: '1px solid var(--kai-border-light)',
-                }}>
-                  {groupLabel}
-                </div>
+              {items.map(notification => {
+                const nid = notification._id || notification.id;
+                const type = notification.type || 'system';
+                const config = getTypeConfig(type);
+                const isUnread = !notification.read;
+                const isAnnouncement = type === 'ANNOUNCEMENT';
+                const priority = notification.metadata?.priority || notification.priority;
 
-                {/* Notification Items */}
-                {items.map(notification => {
-                  const nid = notification._id || notification.id;
-                  const type = notification.type || 'system';
-                  const config = getTypeConfig(type);
-                  const isUnread = !notification.read;
-                  const isAnnouncement = type === 'ANNOUNCEMENT';
-                  const priority = notification.metadata?.priority || notification.priority;
-
-                  return (
-                    <div
-                      key={nid}
-                      onClick={() => handleMarkRead(notification)}
-                      style={{
-                        display: 'flex',
-                        gap: 14,
-                        padding: '14px 20px',
-                        borderBottom: '1px solid var(--kai-border-light)',
-                        cursor: 'pointer',
-                        background: isUnread ? 'rgba(20, 109, 247, 0.02)' : 'transparent',
-                        borderLeft: isUnread ? '3px solid #146DF7' : '3px solid transparent',
-                        transition: 'var(--kai-transition)',
-                      }}
-                      onMouseEnter={e => e.currentTarget.style.background = 'var(--kai-surface-hover)'}
-                      onMouseLeave={e => e.currentTarget.style.background = isUnread ? 'rgba(20,109,247,0.02)' : 'transparent'}
-                    >
-                      {/* Icon */}
-                      <div style={{
-                        width: 40,
-                        height: 40,
-                        borderRadius: 'var(--kai-radius-lg)',
-                        background: config.bg,
-                        color: config.color,
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        flexShrink: 0,
-                        fontSize: 18,
-                      }}>
-                        <i className={config.icon} />
-                      </div>
-
-                      {/* Content */}
-                      <div style={{ flex: 1, minWidth: 0 }}>
-                        <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 12 }}>
-                          <div style={{ flex: 1, minWidth: 0 }}>
-                            <div style={{
-                              fontSize: 13.5,
-                              fontWeight: isUnread ? 600 : 400,
-                              color: 'var(--kai-text)',
-                              marginBottom: 2,
-                            }}>
-                              {notification.title || notification.message || 'Notification'}
+                return (
+                  <div key={nid} onClick={() => handleMarkRead(notification)}
+                    className={`flex gap-3.5 px-5 py-3.5 border-b border-[var(--border-default)] cursor-pointer transition-colors hover:bg-[var(--bg-elevated)] ${isUnread ? 'bg-[#7C3AED]/[0.02] border-l-[3px] border-l-[#7C3AED]' : 'border-l-[3px] border-l-transparent'}`}
+                    data-testid="notification-item">
+                    <div className={`w-10 h-10 rounded-xl ${config.bg} flex items-center justify-center shrink-0 text-[18px]`} style={{ color: config.color }}>
+                      &#9679;
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-start justify-between gap-3">
+                        <div className="flex-1 min-w-0">
+                          <div className={`text-[13.5px] text-[var(--text-primary)] mb-0.5 ${isUnread ? 'font-semibold' : 'font-normal'}`}>
+                            {notification.title || notification.message || 'Notification'}
+                          </div>
+                          {(notification.description || notification.body || notification.message) && (
+                            <div className="text-[12.5px] text-[var(--text-muted)] leading-snug">
+                              {notification.description || notification.body || (notification.title !== notification.message ? notification.message : '')}
                             </div>
-                            {(notification.description || notification.body || notification.message) && (
-                              <div style={{ fontSize: 12.5, color: 'var(--kai-text-muted)', lineHeight: 1.4 }}>
-                                {notification.description || notification.body || (notification.title !== notification.message ? notification.message : '')}
-                              </div>
-                            )}
-                          </div>
-                          <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexShrink: 0 }}>
-                            <span style={{ fontSize: 11, color: 'var(--kai-text-muted)', whiteSpace: 'nowrap' }}>
-                              {formatRelativeTime(notification.createdAt || notification.date || notification.timestamp)}
-                            </span>
-                            {isUnread && (
-                              <div style={{ width: 8, height: 8, borderRadius: '50%', background: 'var(--kai-primary)', flexShrink: 0 }} />
-                            )}
-                          </div>
+                          )}
                         </div>
-
-                        {/* Tags/metadata */}
-                        <div style={{ display: 'flex', gap: 6, marginTop: 6, flexWrap: 'wrap' }}>
-                          <span className="kai-badge" style={{ background: config.bg, color: config.color, fontSize: 10 }}>
-                            {type.replace(/_/g, ' ')}
+                        <div className="flex items-center gap-2 shrink-0">
+                          <span className="text-[11px] text-[var(--text-muted)] whitespace-nowrap">
+                            {formatRelativeTime(notification.createdAt || notification.date || notification.timestamp)}
                           </span>
-                          {isAnnouncement && priority && (
-                            <span className="kai-badge" style={{
-                              fontSize: 10,
-                              background: priority === 'URGENT' ? 'rgba(203, 57, 57, 0.1)' : priority === 'IMPORTANT' ? 'rgba(234, 88, 12, 0.1)' : 'var(--kai-bg)',
-                              color: priority === 'URGENT' ? '#CB3939' : priority === 'IMPORTANT' ? '#EA580C' : 'var(--kai-text-muted)',
-                            }}>
-                              {priority}
-                            </span>
-                          )}
-                          {notification.project && (
-                            <span className="kai-badge secondary" style={{ fontSize: 10 }}>{notification.project}</span>
-                          )}
-                          {notification.assignee && (
-                            <span className="kai-badge" style={{ fontSize: 10, background: 'var(--kai-bg)', color: 'var(--kai-text-muted)' }}>
-                              {notification.assignee}
-                            </span>
-                          )}
-                          {notification.linkUrl && (
-                            <span className="kai-badge" style={{ fontSize: 10, background: 'rgba(20,109,247,0.08)', color: '#146DF7' }}>
-                              <i className="bi bi-box-arrow-up-right" style={{ marginRight: 3, fontSize: 9 }} />
-                              View
-                            </span>
-                          )}
+                          {isUnread && <div className="w-2 h-2 rounded-full bg-[#7C3AED] shrink-0" />}
                         </div>
+                      </div>
+                      <div className="flex gap-1.5 mt-1.5 flex-wrap">
+                        <span className={`text-[10px] px-2 py-0.5 rounded-full font-semibold ${config.bg}`} style={{ color: config.color }}>
+                          {type.replace(/_/g, ' ')}
+                        </span>
+                        {isAnnouncement && priority && (
+                          <span className={`text-[10px] px-2 py-0.5 rounded-full font-semibold ${priority === 'URGENT' ? 'bg-red-500/10 text-red-400' : priority === 'IMPORTANT' ? 'bg-orange-500/10 text-orange-400' : 'bg-[var(--bg-elevated)] text-[var(--text-muted)]'}`}>
+                            {priority}
+                          </span>
+                        )}
+                        {notification.project && (
+                          <span className="text-[10px] px-2 py-0.5 rounded-full font-semibold bg-[var(--bg-elevated)] text-[var(--text-muted)]">{notification.project}</span>
+                        )}
+                        {notification.linkUrl && (
+                          <span className="text-[10px] px-2 py-0.5 rounded-full font-semibold bg-blue-500/10 text-blue-400">View</span>
+                        )}
                       </div>
                     </div>
-                  );
-                })}
-              </div>
-            ))
-          )}
-
-          {/* Load More */}
-          {hasMore && filteredNotifications.length > 0 && (
-            <div style={{ padding: 16, textAlign: 'center' }}>
-              <button
-                className="kai-btn kai-btn-outline"
-                onClick={handleLoadMore}
-                disabled={loadingMore}
-              >
-                {loadingMore ? (
-                  <>
-                    <i className="bi bi-arrow-repeat" style={{ animation: 'spin 1s linear infinite', marginRight: 6 }} />
-                    Loading...
-                  </>
-                ) : (
-                  'Load More'
-                )}
-              </button>
+                  </div>
+                );
+              })}
             </div>
-          )}
-        </div>
-      </div>
+          ))
+        )}
 
-      <style>{`
-        @keyframes spin {
-          from { transform: rotate(0deg); }
-          to { transform: rotate(360deg); }
-        }
-      `}</style>
+        {hasMore && filteredNotifications.length > 0 && (
+          <div className="p-4 text-center">
+            <button className="bg-transparent border border-[var(--border-default)] text-[var(--text-secondary)] rounded-lg px-4 py-2 text-[13px] font-semibold hover:bg-[var(--bg-elevated)] transition-colors disabled:opacity-50"
+              onClick={handleLoadMore} disabled={loadingMore} data-testid="load-more">
+              {loadingMore ? 'Loading...' : 'Load More'}
+            </button>
+          </div>
+        )}
+      </div>
     </div>
   );
 }

@@ -8,14 +8,14 @@ const FROM_EMAIL = process.env.EMAIL_FROM || "KnowAI ERP <noreply@knowai.biz>";
  * Send an email via Resend.
  * Falls back to console mock if RESEND_API_KEY is not set.
  */
-export async function sendEmail(to: string, subject: string, html: string) {
+export async function sendEmail(to: string, subject: string, html: string, fromOverride?: string) {
   if (!process.env.RESEND_API_KEY) {
-    console.log(`[EMAIL MOCK] To: ${to}, Subject: ${subject}`);
+    console.log(`[EMAIL MOCK] From: ${fromOverride || FROM_EMAIL}, To: ${to}, Subject: ${subject}`);
     return { messageId: "mock-" + Date.now() };
   }
 
   const { data, error } = await resend.emails.send({
-    from: FROM_EMAIL,
+    from: fromOverride || FROM_EMAIL,
     to,
     subject,
     html,

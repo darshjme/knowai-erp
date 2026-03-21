@@ -144,7 +144,7 @@ export default function DocumentViewer({ file, onClose }) {
                 style={{
                   display: 'flex', alignItems: 'center', gap: 8,
                   padding: '10px 20px', borderRadius: 8, border: 'none',
-                  background: '#146DF7', color: '#fff', fontWeight: 500,
+                  background: '#111827', color: '#fff', fontWeight: 500,
                   cursor: 'pointer', fontSize: 14,
                 }}
               >
@@ -191,7 +191,7 @@ export default function DocumentViewer({ file, onClose }) {
               style={{
                 display: 'flex', alignItems: 'center', gap: 8, margin: '0 auto',
                 padding: '10px 20px', borderRadius: 8, border: 'none',
-                background: '#146DF7', color: '#fff', fontWeight: 500,
+                background: '#111827', color: '#fff', fontWeight: 500,
                 cursor: 'pointer', fontSize: 14,
               }}
             >

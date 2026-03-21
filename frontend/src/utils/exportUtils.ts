@@ -34,7 +34,7 @@ export function exportPDF(title, data, columns, filename = 'export') {
   const printWindow = window.open('', '_blank');
   if (!printWindow) { alert('Please allow popups'); return; }
 
-  const headers = columns.map(c => `<th style="padding:8px 12px;text-align:left;border-bottom:2px solid #146DF7;font-size:11px;font-weight:700;text-transform:uppercase;color:#4C5963;letter-spacing:0.5px">${c.label || c.key}</th>`).join('');
+  const headers = columns.map(c => `<th style="padding:8px 12px;text-align:left;border-bottom:2px solid #111827;font-size:11px;font-weight:700;text-transform:uppercase;color:#4C5963;letter-spacing:0.5px">${c.label || c.key}</th>`).join('');
 
   const rows = data.map(row =>
     '<tr>' + columns.map(c => {
@@ -47,8 +47,8 @@ export function exportPDF(title, data, columns, filename = 'export') {
   printWindow.document.write(`<!DOCTYPE html><html><head><title>${title}</title>
     <style>
       body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; margin: 40px; color: #10222F; }
-      .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; padding-bottom: 16px; border-bottom: 2px solid #146DF7; }
-      .logo { font-size: 20px; font-weight: 800; color: #146DF7; }
+      .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; padding-bottom: 16px; border-bottom: 2px solid #111827; }
+      .logo { font-size: 20px; font-weight: 800; color: #111827; }
       .title { font-size: 22px; font-weight: 700; }
       .meta { font-size: 12px; color: #5B6B76; margin-bottom: 20px; }
       table { width: 100%; border-collapse: collapse; }

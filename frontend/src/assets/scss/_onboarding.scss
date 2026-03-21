@@ -1,5 +1,5 @@
-// Onboarding — Apple glassmorphism wizard
-// Follows DESIGN.md: SF Pro, #007AFF primary, glass surfaces, 8px grid
+// Onboarding — Clean flat wizard
+// Follows DESIGN.md: Inter/Manrope, #111827 primary, flat surfaces, 8px grid
 
 .onboarding-page {
   min-height: 100vh;
@@ -8,13 +8,13 @@
   flex-direction: column;
   align-items: center;
   padding: 48px 16px;
-  font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Geist', 'Helvetica Neue', sans-serif;
+  font-family: -apple-system, BlinkMacSystemFont, 'Inter', 'Helvetica Neue', sans-serif;
 }
 
 .onboarding-logo {
   width: 48px;
   height: 48px;
-  background: #007AFF;
+  background: #111827;
   border-radius: 14px;
   display: inline-flex;
   align-items: center;
@@ -74,7 +74,7 @@
 .onboarding-step-label {
   font-size: 15px;
   font-weight: 600;
-  color: #007AFF;
+  color: #111827;
   margin-bottom: 16px;
 }
 
@@ -131,8 +131,8 @@
   }
 
   &:focus {
-    border-color: #007AFF;
-    box-shadow: 0 0 0 3px rgba(0, 122, 255, 0.1);
+    border-color: #111827;
+    box-shadow: 0 0 0 3px rgba(17, 24, 39, 0.08);
   }
 }
 
@@ -157,8 +157,8 @@ textarea.onboarding-input {
   transition: all 0.2s;
 
   &:hover {
-    border-color: #007AFF;
-    background: rgba(0, 122, 255, 0.03) !important;
+    border-color: #111827;
+    background: rgba(17, 24, 39, 0.03) !important;
   }
 }
 

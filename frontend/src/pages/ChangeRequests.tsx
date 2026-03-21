@@ -2,10 +2,7 @@ import { useState, useEffect, useMemo } from 'react';
 import { useSelector } from 'react-redux';
 import { toast } from 'react-toastify';
 import { changeRequestApi } from '../services/api';
-
-/* ========================================================================
-   CONSTANTS
-   ======================================================================== */
+import { Plus, Eye, ArrowRight, Check, X as XIcon, Clock, Send, FileText, ShieldCheck, Loader2 } from 'lucide-react';
 
 const FIELD_OPTIONS = [
   { value: 'email', label: 'Email' },
@@ -14,100 +11,45 @@ const FIELD_OPTIONS = [
   { value: 'lastName', label: 'Last Name' },
 ];
 
-const FIELD_LABELS = {
-  email: 'Email',
-  companyEmail: 'Company Email',
-  firstName: 'First Name',
-  lastName: 'Last Name',
-};
-
-const FIELD_TYPE_STYLES = {
-  email:        { bg: '#DBEAFE', color: '#1D4ED8' },
-  companyEmail: { bg: '#EDE9FE', color: '#7C3AED' },
-  firstName:    { bg: '#D1FAE5', color: '#059669' },
-  lastName:     { bg: '#FEF3C7', color: '#92400E' },
-};
-
-const STATUS_STYLES = {
-  PENDING_HR:  { bg: '#FFF3CD', color: '#856404', label: 'Pending HR' },
-  PENDING_CTO: { bg: '#D1ECF1', color: '#0C5460', label: 'Pending CTO' },
-  APPROVED:    { bg: '#D4EDDA', color: '#155724', label: 'Approved' },
-  REJECTED:    { bg: '#F8D7DA', color: '#721C24', label: 'Rejected' },
-};
+const FIELD_LABELS = { email: 'Email', companyEmail: 'Company Email', firstName: 'First Name', lastName: 'Last Name' };
+const FIELD_TYPE_STYLES = { email: { bg: '#DBEAFE', color: '#1D4ED8' }, companyEmail: { bg: '#EDE9FE', color: '#7C3AED' }, firstName: { bg: '#D1FAE5', color: '#059669' }, lastName: { bg: '#FEF3C7', color: '#92400E' } };
+const STATUS_STYLES = { PENDING_HR: { bg: '#FFF3CD', color: '#856404', label: 'Pending HR' }, PENDING_CTO: { bg: '#D1ECF1', color: '#0C5460', label: 'Pending CTO' }, APPROVED: { bg: '#D4EDDA', color: '#155724', label: 'Approved' }, REJECTED: { bg: '#F8D7DA', color: '#721C24', label: 'Rejected' } };
 
 const HR_ROLES = ['HR', 'ADMIN', 'CEO'];
 const CTO_ROLES = ['CTO', 'CEO', 'ADMIN'];
-
-const FILTER_TABS = [
-  { key: 'All', label: 'All' },
-  { key: 'PENDING_HR', label: 'Pending HR' },
-  { key: 'PENDING_CTO', label: 'Pending CTO' },
-  { key: 'APPROVED', label: 'Approved' },
-  { key: 'REJECTED', label: 'Rejected' },
-];
+const FILTER_TABS = [{ key: 'All', label: 'All' }, { key: 'PENDING_HR', label: 'Pending HR' }, { key: 'PENDING_CTO', label: 'Pending CTO' }, { key: 'APPROVED', label: 'Approved' }, { key: 'REJECTED', label: 'Rejected' }];
 
 const formatDate = (d) => d ? new Date(d).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' }) : '-';
 const formatDateTime = (d) => d ? new Date(d).toLocaleString('en-IN', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' }) : '-';
+function initials(user) { if (!user) return '?'; return ((user.firstName || '')[0] || '') + ((user.lastName || '')[0] || '') || '?'; }
+function userName(user) { if (!user) return 'Unknown'; return `${user.firstName || ''} ${user.lastName || ''}`.trim() || 'Unknown'; }
 
-function initials(user) {
-  if (!user) return '?';
-  return ((user.firstName || '')[0] || '') + ((user.lastName || '')[0] || '') || '?';
-}
-
-function userName(user) {
-  if (!user) return 'Unknown';
-  return `${user.firstName || ''} ${user.lastName || ''}`.trim() || 'Unknown';
-}
-
-/* ========================================================================
-   STEP INDICATOR
-   ======================================================================== */
+const inputClass = "w-full bg-[var(--bg-elevated)] border border-[var(--border-default)] rounded-lg px-3 py-2 text-[var(--text-primary)] placeholder:text-[var(--text-muted)] focus:border-[#7C3AED] focus:ring-2 focus:ring-[#7C3AED]/20 outline-none text-[13px]";
 
 function StepIndicator({ status }) {
-  const steps = [
-    { key: 'PENDING_HR', label: 'HR Review' },
-    { key: 'PENDING_CTO', label: 'CTO Review' },
-    { key: 'APPROVED', label: 'Applied' },
-  ];
-
+  const steps = [{ key: 'PENDING_HR', label: 'HR Review' }, { key: 'PENDING_CTO', label: 'CTO Review' }, { key: 'APPROVED', label: 'Applied' }];
   const isRejected = status === 'REJECTED';
   const currentIdx = steps.findIndex(s => s.key === status);
   const activeIdx = isRejected ? -1 : currentIdx;
 
   return (
-    <div style={{ display: 'flex', alignItems: 'center', gap: 3, fontSize: 10 }}>
+    <div className="flex items-center gap-1 text-[10px]">
       {steps.map((step, i) => {
         const done = !isRejected && activeIdx >= i;
         const isCurrent = !isRejected && activeIdx === i;
         return (
-          <div key={step.key} style={{ display: 'flex', alignItems: 'center', gap: 3 }}>
-            <div title={step.label} style={{
-              width: 20, height: 20, borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center',
-              fontSize: 9, fontWeight: 700,
-              background: done ? '#146DF7' : 'var(--kai-border-light)',
-              color: done ? '#fff' : 'var(--kai-text-muted)',
-              border: isCurrent ? '2px solid #146DF7' : 'none',
-            }}>
-              {done ? <i className="bi bi-check" /> : i + 1}
+          <div key={step.key} className="flex items-center gap-1">
+            <div title={step.label} className={`w-5 h-5 rounded-full flex items-center justify-center text-[9px] font-bold ${done ? 'bg-[#7C3AED] text-white' : 'bg-[var(--border-default)] text-[var(--text-muted)]'} ${isCurrent ? 'ring-2 ring-[#7C3AED]' : ''}`}>
+              {done ? <Check size={10} /> : i + 1}
             </div>
-            {i < steps.length - 1 && (
-              <div style={{ width: 16, height: 2, background: done ? '#146DF7' : 'var(--kai-border-light)' }} />
-            )}
+            {i < steps.length - 1 && <div className={`w-4 h-0.5 ${done ? 'bg-[#7C3AED]' : 'bg-[var(--border-default)]'}`} />}
           </div>
         );
       })}
-      {isRejected && (
-        <span style={{ marginLeft: 4, color: '#991B1B', fontWeight: 700, fontSize: 10 }}>
-          <i className="bi bi-x-circle-fill" style={{ marginRight: 2 }} /> Rejected
-        </span>
-      )}
+      {isRejected && <span className="ml-1 text-red-700 font-bold text-[10px] flex items-center gap-0.5"><XIcon size={10} /> Rejected</span>}
     </div>
   );
 }
-
-/* ========================================================================
-   MAIN COMPONENT
-   ======================================================================== */
 
 export default function ChangeRequests() {
   const user = useSelector(s => s.auth?.user);
@@ -123,291 +65,131 @@ export default function ChangeRequests() {
   const [selectedRequest, setSelectedRequest] = useState(null);
   const [actionNote, setActionNote] = useState('');
   const [submitting, setSubmitting] = useState(false);
-  const [form, setForm] = useState({
-    fieldName: 'email', requestedValue: '', reason: '',
-  });
+  const [form, setForm] = useState({ fieldName: 'email', requestedValue: '', reason: '' });
 
   useEffect(() => { fetchRequests(); }, []);
 
   const fetchRequests = async () => {
-    try {
-      setLoading(true);
-      const res = await changeRequestApi.list();
-      const rd = res.data;
-      setRequests(Array.isArray(rd) ? rd : rd?.data || rd?.requests || []);
-    } catch (err) {
-      toast.error('Failed to load change requests');
-    } finally {
-      setLoading(false);
-    }
+    try { setLoading(true); const res = await changeRequestApi.list(); const rd = res.data; setRequests(Array.isArray(rd) ? rd : rd?.data || rd?.requests || []); }
+    catch { toast.error('Failed to load change requests'); }
+    finally { setLoading(false); }
   };
 
-  const filtered = useMemo(() => {
-    if (filter === 'All') return requests;
-    return requests.filter(r => r.status === filter);
-  }, [requests, filter]);
+  const filtered = useMemo(() => filter === 'All' ? requests : requests.filter(r => r.status === filter), [requests, filter]);
+  const stats = useMemo(() => ({ total: requests.length, pendingHR: requests.filter(r => r.status === 'PENDING_HR').length, pendingCTO: requests.filter(r => r.status === 'PENDING_CTO').length, approved: requests.filter(r => r.status === 'APPROVED').length, rejected: requests.filter(r => r.status === 'REJECTED').length }), [requests]);
 
-  const stats = useMemo(() => ({
-    total: requests.length,
-    pendingHR: requests.filter(r => r.status === 'PENDING_HR').length,
-    pendingCTO: requests.filter(r => r.status === 'PENDING_CTO').length,
-    approved: requests.filter(r => r.status === 'APPROVED').length,
-    rejected: requests.filter(r => r.status === 'REJECTED').length,
-  }), [requests]);
-
-  /* ── Current value for auto-fill ── */
   const getCurrentValue = (fieldName) => {
     if (!user) return '';
-    const map = {
-      email: user.email || '',
-      companyEmail: user.companyEmail || '',
-      firstName: user.firstName || '',
-      lastName: user.lastName || '',
-    };
-    return map[fieldName] || '';
+    return { email: user.email || '', companyEmail: user.companyEmail || '', firstName: user.firstName || '', lastName: user.lastName || '' }[fieldName] || '';
   };
-
-  /* ── Actions ── */
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!form.requestedValue) {
-      toast.error('Please enter the new value');
-      return;
-    }
-    try {
-      setSubmitting(true);
-      await changeRequestApi.submit({
-        fieldName: form.fieldName,
-        requestedValue: form.requestedValue,
-        reason: form.reason || undefined,
-      });
-      toast.success('Change request submitted');
-      setShowSubmitModal(false);
-      setForm({ fieldName: 'email', requestedValue: '', reason: '' });
-      fetchRequests();
-    } catch (err) {
-      toast.error(err.response?.data?.message || err.response?.data?.error || 'Failed to submit request');
-    } finally {
-      setSubmitting(false);
-    }
+    if (!form.requestedValue) { toast.error('Please enter the new value'); return; }
+    try { setSubmitting(true); await changeRequestApi.submit({ fieldName: form.fieldName, requestedValue: form.requestedValue, reason: form.reason || undefined }); toast.success('Change request submitted'); setShowSubmitModal(false); setForm({ fieldName: 'email', requestedValue: '', reason: '' }); fetchRequests(); }
+    catch (err) { toast.error(err.response?.data?.message || err.response?.data?.error || 'Failed to submit request'); }
+    finally { setSubmitting(false); }
   };
 
-  const handleHrApprove = async (req) => {
-    try {
-      await changeRequestApi.hrApprove(req._id || req.id, actionNote);
-      toast.success('Approved and sent to CTO');
-      setActionNote('');
-      fetchRequests();
-      if (selectedRequest) setShowDetailDrawer(false);
-    } catch (err) { toast.error(err.response?.data?.message || 'Failed to approve'); }
-  };
+  const handleHrApprove = async (req) => { try { await changeRequestApi.hrApprove(req._id || req.id, actionNote); toast.success('Approved and sent to CTO'); setActionNote(''); fetchRequests(); if (selectedRequest) setShowDetailDrawer(false); } catch (err) { toast.error(err.response?.data?.message || 'Failed to approve'); } };
+  const handleHrReject = async (req) => { try { await changeRequestApi.hrReject(req._id || req.id, actionNote); toast.warning('Request rejected'); setActionNote(''); fetchRequests(); if (selectedRequest) setShowDetailDrawer(false); } catch (err) { toast.error(err.response?.data?.message || 'Failed to reject'); } };
+  const handleCtoApprove = async (req) => { try { await changeRequestApi.ctoApprove(req._id || req.id, actionNote); toast.success('Change approved and applied'); setActionNote(''); fetchRequests(); if (selectedRequest) setShowDetailDrawer(false); } catch (err) { toast.error(err.response?.data?.message || 'Failed to approve'); } };
+  const handleCtoReject = async (req) => { try { await changeRequestApi.ctoReject(req._id || req.id, actionNote); toast.warning('Request rejected'); setActionNote(''); fetchRequests(); if (selectedRequest) setShowDetailDrawer(false); } catch (err) { toast.error(err.response?.data?.message || 'Failed to reject'); } };
 
-  const handleHrReject = async (req) => {
-    try {
-      await changeRequestApi.hrReject(req._id || req.id, actionNote);
-      toast.warning('Request rejected');
-      setActionNote('');
-      fetchRequests();
-      if (selectedRequest) setShowDetailDrawer(false);
-    } catch (err) { toast.error(err.response?.data?.message || 'Failed to reject'); }
-  };
-
-  const handleCtoApprove = async (req) => {
-    try {
-      await changeRequestApi.ctoApprove(req._id || req.id, actionNote);
-      toast.success('Change approved and applied');
-      setActionNote('');
-      fetchRequests();
-      if (selectedRequest) setShowDetailDrawer(false);
-    } catch (err) { toast.error(err.response?.data?.message || 'Failed to approve'); }
-  };
-
-  const handleCtoReject = async (req) => {
-    try {
-      await changeRequestApi.ctoReject(req._id || req.id, actionNote);
-      toast.warning('Request rejected');
-      setActionNote('');
-      fetchRequests();
-      if (selectedRequest) setShowDetailDrawer(false);
-    } catch (err) { toast.error(err.response?.data?.message || 'Failed to reject'); }
-  };
-
-  const openDetail = (req) => {
-    setSelectedRequest(req);
-    setActionNote('');
-    setShowDetailDrawer(true);
-  };
-
-  /* ── Render ── */
+  const openDetail = (req) => { setSelectedRequest(req); setActionNote(''); setShowDetailDrawer(true); };
 
   return (
     <div>
-      {/* Page Header */}
-      <div className="page-header">
+      <div className="flex items-center justify-between mb-6">
         <div>
-          <h1>Change Requests</h1>
-          <p>Request changes to your email, name, or profile information</p>
+          <h1 className="text-[22px] font-bold text-[var(--text-primary)] m-0">Change Requests</h1>
+          <p className="text-[13px] text-[var(--text-secondary)] mt-1">Request changes to your email, name, or profile information</p>
         </div>
-        <div className="page-actions">
-          <button className="kai-btn kai-btn-primary" onClick={() => setShowSubmitModal(true)}>
-            <i className="bi bi-plus-lg" style={{ marginRight: 6 }} />
-            New Request
-          </button>
-        </div>
+        <button data-testid="new-request" className="bg-[#7C3AED] text-white rounded-lg px-4 py-2 text-[13px] font-semibold hover:bg-[#7C3AED]/90 flex items-center gap-1.5" onClick={() => setShowSubmitModal(true)}>
+          <Plus size={14} /> New Request
+        </button>
       </div>
 
       {/* Stats */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))', gap: 16, marginBottom: 24 }}>
+      <div className="grid grid-cols-[repeat(auto-fit,minmax(160px,1fr))] gap-4 mb-6">
         {[
-          { label: 'Total', value: stats.total, color: '#146DF7', icon: 'bi-file-earmark-text' },
-          { label: 'Pending HR', value: stats.pendingHR, color: '#D97706', icon: 'bi-hourglass-split' },
-          { label: 'Pending CTO', value: stats.pendingCTO, color: '#0891B2', icon: 'bi-person-badge' },
-          { label: 'Approved', value: stats.approved, color: '#16A34A', icon: 'bi-check-circle' },
-          { label: 'Rejected', value: stats.rejected, color: '#DC2626', icon: 'bi-x-circle' },
+          { label: 'Total', value: stats.total, color: '#3B82F6' },
+          { label: 'Pending HR', value: stats.pendingHR, color: '#D97706' },
+          { label: 'Pending CTO', value: stats.pendingCTO, color: '#0891B2' },
+          { label: 'Approved', value: stats.approved, color: '#16A34A' },
+          { label: 'Rejected', value: stats.rejected, color: '#DC2626' },
         ].map((s, i) => (
-          <div className="stat-card" key={i}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-              <i className={`bi ${s.icon}`} style={{ fontSize: 20, color: s.color }} />
-              <div>
-                <div className="stat-value" style={{ color: s.color }}>{s.value}</div>
-                <div className="stat-label">{s.label}</div>
-              </div>
+          <div key={i} className="bg-[var(--bg-card)] border border-[var(--border-default)] rounded-xl p-4">
+            <div className="flex items-center gap-2.5">
+              <div className="text-[24px] font-bold" style={{ color: s.color }}>{s.value}</div>
+              <div className="text-[12px] text-[var(--text-secondary)]">{s.label}</div>
             </div>
           </div>
         ))}
       </div>
 
       {/* Filter Tabs */}
-      <div style={{ marginBottom: 16, display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+      <div className="mb-4 flex gap-2 flex-wrap">
         {FILTER_TABS.map(t => (
-          <button key={t.key}
-            className={`kai-btn kai-btn-sm ${filter === t.key ? 'kai-btn-primary' : 'kai-btn-outline'}`}
-            onClick={() => setFilter(t.key)}>
+          <button key={t.key} onClick={() => setFilter(t.key)}
+            className={`rounded-lg px-3 py-1.5 text-[13px] font-medium border ${filter === t.key ? 'bg-[#7C3AED] text-white border-[#7C3AED]' : 'bg-transparent border-[var(--border-default)] text-[var(--text-secondary)]'}`}>
             {t.label}
-            {t.key !== 'All' && (
-              <span style={{ marginLeft: 6, opacity: 0.7, fontSize: 11 }}>
-                {requests.filter(r => r.status === t.key).length}
-              </span>
-            )}
+            {t.key !== 'All' && <span className="ml-1.5 text-[11px] opacity-70">{requests.filter(r => r.status === t.key).length}</span>}
           </button>
         ))}
       </div>
 
       {/* Requests Table */}
-      <div className="kai-card">
-        <div className="kai-card-header">
-          <h6><i className="bi bi-arrow-left-right" style={{ marginRight: 8, color: '#146DF7' }} />Change Requests</h6>
-          <span className="kai-badge secondary">{filtered.length} items</span>
-        </div>
-        <div style={{ overflowX: 'auto' }}>
-          {loading ? (
-            <div style={{ padding: 60, textAlign: 'center', color: 'var(--kai-text-muted)' }}>
-              <i className="bi bi-arrow-repeat" style={{ fontSize: 24, display: 'block', marginBottom: 8 }} />
-              Loading change requests...
-            </div>
-          ) : filtered.length === 0 ? (
-            <div style={{ padding: 60, textAlign: 'center', color: 'var(--kai-text-muted)' }}>
-              <i className="bi bi-inbox" style={{ fontSize: 32, display: 'block', marginBottom: 8, opacity: 0.4 }} />
-              {requests.length === 0 ? 'No change requests yet.' : 'No requests match the selected filter.'}
-            </div>
-          ) : (
-            <table className="kai-table">
+      <div className="bg-[var(--bg-card)] border border-[var(--border-default)] rounded-xl overflow-hidden">
+        {loading ? (
+          <div className="p-16 text-center text-[var(--text-muted)]"><Loader2 size={24} className="mx-auto mb-2 animate-spin" /> Loading change requests...</div>
+        ) : filtered.length === 0 ? (
+          <div className="p-16 text-center text-[var(--text-muted)]">{requests.length === 0 ? 'No change requests yet.' : 'No requests match the selected filter.'}</div>
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="w-full border-collapse">
               <thead>
-                <tr>
-                  <th>Field Changed</th>
-                  <th>Current &rarr; New</th>
-                  <th>Requester</th>
-                  <th>Reason</th>
-                  <th>Status</th>
-                  <th>Progress</th>
-                  <th>Date</th>
-                  <th>Actions</th>
+                <tr className="bg-[var(--bg-elevated)]">
+                  {['Field Changed', 'Current → New', 'Requester', 'Reason', 'Status', 'Progress', 'Date', 'Actions'].map(h => (
+                    <th key={h} className="px-4 py-3 text-left text-[11px] font-semibold text-[var(--text-secondary)] uppercase tracking-wide border-b border-[var(--border-default)]">{h}</th>
+                  ))}
                 </tr>
               </thead>
               <tbody>
                 {filtered.map(req => {
                   const st = STATUS_STYLES[req.status] || STATUS_STYLES.PENDING_HR;
                   const ft = FIELD_TYPE_STYLES[req.fieldName] || FIELD_TYPE_STYLES.email;
-                  const isActive = selectedRequest && (selectedRequest._id || selectedRequest.id) === (req._id || req.id);
                   return (
-                    <tr key={req._id || req.id}
-                      style={{ background: isActive ? 'var(--kai-primary-light)' : undefined, cursor: 'pointer' }}
-                      onClick={() => openDetail(req)}>
-                      <td>
-                        <span className="kai-badge" style={{ background: ft.bg, color: ft.color, fontSize: 10, fontWeight: 600 }}>
-                          {FIELD_LABELS[req.fieldName] || req.fieldName}
-                        </span>
-                      </td>
-                      <td style={{ maxWidth: 220 }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 12 }}>
-                          <span style={{ color: 'var(--kai-text-muted)', textDecoration: 'line-through', maxWidth: 90 }} className="truncate" title={req.currentValue}>
-                            {req.currentValue || '(empty)'}
-                          </span>
-                          <i className="bi bi-arrow-right" style={{ fontSize: 10, color: 'var(--kai-text-muted)' }} />
-                          <span style={{ fontWeight: 600, color: '#146DF7', maxWidth: 90 }} className="truncate" title={req.requestedValue}>
-                            {req.requestedValue}
-                          </span>
+                    <tr key={req._id || req.id} className="border-b border-[var(--border-subtle)] hover:bg-[var(--bg-elevated)] cursor-pointer transition-colors" onClick={() => openDetail(req)}>
+                      <td className="px-4 py-3"><span className="text-[10px] font-semibold px-2 py-0.5 rounded" style={{ background: ft.bg, color: ft.color }}>{FIELD_LABELS[req.fieldName] || req.fieldName}</span></td>
+                      <td className="px-4 py-3 max-w-[220px]">
+                        <div className="flex items-center gap-1.5 text-[12px]">
+                          <span className="text-[var(--text-muted)] line-through truncate max-w-[90px]" title={req.currentValue}>{req.currentValue || '(empty)'}</span>
+                          <ArrowRight size={10} className="text-[var(--text-muted)] shrink-0" />
+                          <span className="font-semibold text-[#7C3AED] truncate max-w-[90px]" title={req.requestedValue}>{req.requestedValue}</span>
                         </div>
                       </td>
-                      <td>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                          <div style={{
-                            width: 26, height: 26, borderRadius: '50%', background: '#146DF7', color: '#fff',
-                            display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 10, fontWeight: 700,
-                          }}>
-                            {initials(req.requester)}
-                          </div>
-                          <div>
-                            <div style={{ fontSize: 13, fontWeight: 500 }}>{userName(req.requester)}</div>
-                            {req.requester?.role && (
-                              <div style={{ fontSize: 10, color: 'var(--kai-text-muted)' }}>{req.requester.role}</div>
-                            )}
-                          </div>
+                      <td className="px-4 py-3">
+                        <div className="flex items-center gap-2">
+                          <div className="w-[26px] h-[26px] rounded-full bg-[#7C3AED] text-white flex items-center justify-center text-[10px] font-bold shrink-0">{initials(req.requester)}</div>
+                          <div><div className="text-[13px] font-medium text-[var(--text-primary)]">{userName(req.requester)}</div>{req.requester?.role && <div className="text-[10px] text-[var(--text-muted)]">{req.requester.role}</div>}</div>
                         </div>
                       </td>
-                      <td style={{ fontSize: 12, color: 'var(--kai-text-secondary)', maxWidth: 160 }}>
-                        <div className="truncate" title={req.reason}>{req.reason || '-'}</div>
-                      </td>
-                      <td>
-                        <span className="kai-badge" style={{ background: st.bg, color: st.color }}>
-                          {st.label}
-                        </span>
-                      </td>
-                      <td>
-                        <StepIndicator status={req.status} />
-                      </td>
-                      <td style={{ fontSize: 12, whiteSpace: 'nowrap' }}>{formatDate(req.createdAt)}</td>
-                      <td>
-                        <div className="flex-gap-8" onClick={e => e.stopPropagation()}>
-                          {isHR && req.status === 'PENDING_HR' && (
-                            <>
-                              <button className="kai-btn kai-btn-success kai-btn-sm" style={{ fontSize: 11 }}
-                                onClick={() => handleHrApprove(req)} title="HR Approve">
-                                <i className="bi bi-check-lg" /> Approve
-                              </button>
-                              <button className="kai-btn kai-btn-danger kai-btn-sm" style={{ fontSize: 11 }}
-                                onClick={() => handleHrReject(req)} title="HR Reject">
-                                <i className="bi bi-x-lg" /> Reject
-                              </button>
-                            </>
-                          )}
-                          {isCTO && req.status === 'PENDING_CTO' && (
-                            <>
-                              <button className="kai-btn kai-btn-success kai-btn-sm" style={{ fontSize: 11 }}
-                                onClick={() => handleCtoApprove(req)} title="CTO Approve">
-                                <i className="bi bi-check-lg" /> Approve
-                              </button>
-                              <button className="kai-btn kai-btn-danger kai-btn-sm" style={{ fontSize: 11 }}
-                                onClick={() => handleCtoReject(req)} title="CTO Reject">
-                                <i className="bi bi-x-lg" /> Reject
-                              </button>
-                            </>
-                          )}
-                          <button className="kai-btn kai-btn-outline kai-btn-sm" style={{ fontSize: 11 }}
-                            onClick={() => openDetail(req)} title="View details">
-                            <i className="bi bi-eye" />
-                          </button>
+                      <td className="px-4 py-3 text-[12px] text-[var(--text-secondary)] max-w-[160px]"><div className="truncate" title={req.reason}>{req.reason || '-'}</div></td>
+                      <td className="px-4 py-3"><span className="text-[11px] font-semibold px-2 py-0.5 rounded" style={{ background: st.bg, color: st.color }}>{st.label}</span></td>
+                      <td className="px-4 py-3"><StepIndicator status={req.status} /></td>
+                      <td className="px-4 py-3 text-[12px] whitespace-nowrap text-[var(--text-secondary)]">{formatDate(req.createdAt)}</td>
+                      <td className="px-4 py-3">
+                        <div className="flex gap-1" onClick={e => e.stopPropagation()}>
+                          {isHR && req.status === 'PENDING_HR' && (<>
+                            <button className="bg-green-100 text-green-700 rounded px-2 py-1 text-[11px] font-semibold hover:bg-green-200" onClick={() => handleHrApprove(req)}>Approve</button>
+                            <button className="bg-red-100 text-red-700 rounded px-2 py-1 text-[11px] font-semibold hover:bg-red-200" onClick={() => handleHrReject(req)}>Reject</button>
+                          </>)}
+                          {isCTO && req.status === 'PENDING_CTO' && (<>
+                            <button className="bg-green-100 text-green-700 rounded px-2 py-1 text-[11px] font-semibold hover:bg-green-200" onClick={() => handleCtoApprove(req)}>Approve</button>
+                            <button className="bg-red-100 text-red-700 rounded px-2 py-1 text-[11px] font-semibold hover:bg-red-200" onClick={() => handleCtoReject(req)}>Reject</button>
+                          </>)}
+                          <button className="bg-transparent border border-[var(--border-default)] text-[var(--text-secondary)] rounded px-2 py-1 text-[11px]" onClick={() => openDetail(req)}><Eye size={12} /></button>
                         </div>
                       </td>
                     </tr>
@@ -415,75 +197,47 @@ export default function ChangeRequests() {
                 })}
               </tbody>
             </table>
-          )}
-        </div>
+          </div>
+        )}
       </div>
 
-      {/* Submit Change Request Modal */}
+      {/* Submit Modal */}
       {showSubmitModal && (
-        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', zIndex: 2000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20 }}
-          onClick={e => e.target === e.currentTarget && setShowSubmitModal(false)}>
-          <div className="kai-card" style={{ width: '100%', maxWidth: 500, maxHeight: '90vh', overflow: 'auto' }}>
-            <div className="kai-card-header">
-              <h5><i className="bi bi-pencil-square" style={{ marginRight: 8, color: '#146DF7' }} />Submit Change Request</h5>
-              <button className="kai-btn kai-btn-outline kai-btn-sm" onClick={() => setShowSubmitModal(false)}>&times;</button>
+        <div className="fixed inset-0 bg-black/50 z-[2000] flex items-center justify-center p-5" onClick={e => e.target === e.currentTarget && setShowSubmitModal(false)}>
+          <div className="bg-[var(--bg-card)] border border-[var(--border-default)] rounded-xl w-full max-w-[500px] max-h-[90vh] overflow-auto shadow-2xl">
+            <div className="px-5 py-4 border-b border-[var(--border-default)] flex justify-between items-center">
+              <h5 className="m-0 text-[16px] font-bold text-[var(--text-primary)]">Submit Change Request</h5>
+              <button className="bg-transparent border border-[var(--border-default)] text-[var(--text-secondary)] rounded-lg px-2 py-1 text-sm" onClick={() => setShowSubmitModal(false)}><XIcon size={14} /></button>
             </div>
             <form onSubmit={handleSubmit}>
-              <div className="kai-card-body" style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+              <div className="p-5 flex flex-col gap-4">
                 <div>
-                  <label className="kai-label">What do you want to change? *</label>
-                  <select className="kai-input" value={form.fieldName}
-                    onChange={e => setForm(p => ({ ...p, fieldName: e.target.value, requestedValue: '' }))}>
-                    {FIELD_OPTIONS.map(f => (
-                      <option key={f.value} value={f.value}>{f.label}</option>
-                    ))}
+                  <label className="block text-[12px] font-semibold text-[var(--text-secondary)] mb-1">What do you want to change? *</label>
+                  <select className={inputClass} value={form.fieldName} onChange={e => setForm(p => ({ ...p, fieldName: e.target.value, requestedValue: '' }))}>
+                    {FIELD_OPTIONS.map(f => <option key={f.value} value={f.value}>{f.label}</option>)}
                   </select>
                 </div>
-
-                <div style={{ padding: 12, background: 'var(--kai-bg)', borderRadius: 8 }}>
-                  <div style={{ fontSize: 11, fontWeight: 600, color: 'var(--kai-text-muted)', textTransform: 'uppercase', marginBottom: 4 }}>
-                    Current Value
-                  </div>
-                  <div style={{ fontSize: 14, fontWeight: 500 }}>
-                    {getCurrentValue(form.fieldName) || '(not set)'}
-                  </div>
+                <div className="p-3 bg-[var(--bg-elevated)] rounded-lg">
+                  <div className="text-[11px] font-semibold text-[var(--text-muted)] uppercase mb-1">Current Value</div>
+                  <div className="text-[14px] font-medium text-[var(--text-primary)]">{getCurrentValue(form.fieldName) || '(not set)'}</div>
                 </div>
-
                 <div>
-                  <label className="kai-label">New Value *</label>
-                  <input className="kai-input" required
-                    placeholder={form.fieldName.includes('mail') ? 'new.email@example.com' : 'New value'}
-                    type={form.fieldName.includes('mail') ? 'email' : 'text'}
-                    value={form.requestedValue}
-                    onChange={e => setForm(p => ({ ...p, requestedValue: e.target.value }))} />
+                  <label className="block text-[12px] font-semibold text-[var(--text-secondary)] mb-1">New Value *</label>
+                  <input className={inputClass} required placeholder={form.fieldName.includes('mail') ? 'new.email@example.com' : 'New value'} type={form.fieldName.includes('mail') ? 'email' : 'text'} value={form.requestedValue} onChange={e => setForm(p => ({ ...p, requestedValue: e.target.value }))} />
                 </div>
-
                 <div>
-                  <label className="kai-label">Reason (optional)</label>
-                  <textarea className="kai-input" rows={3} placeholder="Why do you need this change?"
-                    value={form.reason} onChange={e => setForm(p => ({ ...p, reason: e.target.value }))}
-                    style={{ resize: 'vertical', minHeight: 80 }} />
+                  <label className="block text-[12px] font-semibold text-[var(--text-secondary)] mb-1">Reason (optional)</label>
+                  <textarea className={`${inputClass} resize-y min-h-[80px]`} rows={3} placeholder="Why do you need this change?" value={form.reason} onChange={e => setForm(p => ({ ...p, reason: e.target.value }))} />
                 </div>
-
-                {/* Info box */}
-                <div style={{ padding: 12, background: '#EFF6FF', borderRadius: 8, border: '1px solid #BFDBFE' }}>
-                  <div style={{ fontSize: 12, color: '#1D4ED8', fontWeight: 600, marginBottom: 4 }}>
-                    <i className="bi bi-info-circle" style={{ marginRight: 6 }} />Approval Process
-                  </div>
-                  <div style={{ fontSize: 11, color: '#1E40AF', lineHeight: 1.6 }}>
-                    Your request will be reviewed by HR first, then forwarded to CTO for final approval.
-                    Once approved, the change will be applied automatically.
-                  </div>
+                <div className="p-3 bg-blue-50 rounded-lg border border-blue-200">
+                  <div className="text-[12px] text-blue-700 font-semibold mb-1">Approval Process</div>
+                  <div className="text-[11px] text-blue-600 leading-relaxed">Your request will be reviewed by HR first, then forwarded to CTO for final approval.</div>
                 </div>
               </div>
-              <div className="kai-card-footer" style={{ display: 'flex', justifyContent: 'flex-end', gap: 8 }}>
-                <button type="button" className="kai-btn kai-btn-outline" onClick={() => setShowSubmitModal(false)}>Cancel</button>
-                <button type="submit" className="kai-btn kai-btn-primary" disabled={submitting}>
-                  {submitting ? (
-                    <><i className="bi bi-arrow-repeat" style={{ marginRight: 6 }} />Submitting...</>
-                  ) : (
-                    <><i className="bi bi-send" style={{ marginRight: 6 }} />Submit Request</>
-                  )}
+              <div className="px-5 py-4 border-t border-[var(--border-default)] flex justify-end gap-2">
+                <button type="button" className="bg-transparent border border-[var(--border-default)] text-[var(--text-secondary)] rounded-lg px-4 py-2 text-[13px]" onClick={() => setShowSubmitModal(false)}>Cancel</button>
+                <button type="submit" className="bg-[#7C3AED] text-white rounded-lg px-4 py-2 text-[13px] font-semibold hover:bg-[#7C3AED]/90 disabled:opacity-70 flex items-center gap-1.5" disabled={submitting}>
+                  {submitting ? <><Loader2 size={14} className="animate-spin" /> Submitting...</> : <><Send size={14} /> Submit Request</>}
                 </button>
               </div>
             </form>
@@ -491,218 +245,83 @@ export default function ChangeRequests() {
         </div>
       )}
 
-      {/* Detail Offcanvas */}
+      {/* Detail Drawer */}
       {showDetailDrawer && selectedRequest && (
-        <div style={{ position: 'fixed', inset: 0, zIndex: 2000, display: 'flex' }}
-          onClick={e => e.target === e.currentTarget && setShowDetailDrawer(false)}>
-          <div style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.3)' }}
-            onClick={() => setShowDetailDrawer(false)} />
-          <div style={{
-            position: 'absolute', right: 0, top: 0, bottom: 0, width: '100%', maxWidth: 460,
-            background: 'var(--kai-card-bg, #fff)', boxShadow: '-4px 0 20px rgba(0,0,0,0.15)',
-            display: 'flex', flexDirection: 'column', overflow: 'hidden',
-          }}>
-            {/* Drawer Header */}
-            <div style={{ padding: '16px 20px', borderBottom: '1px solid var(--kai-border-light)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <h5 style={{ margin: 0, fontSize: 16 }}>
-                <i className="bi bi-file-earmark-text" style={{ marginRight: 8, color: '#146DF7' }} />
-                Change Request Details
-              </h5>
-              <button className="kai-btn kai-btn-outline kai-btn-sm" onClick={() => setShowDetailDrawer(false)}>
-                <i className="bi bi-x-lg" />
-              </button>
+        <div className="fixed inset-0 z-[2000] flex" onClick={e => e.target === e.currentTarget && setShowDetailDrawer(false)}>
+          <div className="absolute inset-0 bg-black/30" onClick={() => setShowDetailDrawer(false)} />
+          <div className="absolute right-0 top-0 bottom-0 w-full max-w-[460px] bg-[var(--bg-card)] shadow-2xl flex flex-col overflow-hidden">
+            <div className="px-5 py-4 border-b border-[var(--border-default)] flex justify-between items-center shrink-0">
+              <h5 className="m-0 text-[16px] font-bold text-[var(--text-primary)] flex items-center gap-2"><FileText size={16} className="text-[#7C3AED]" /> Change Request Details</h5>
+              <button className="bg-transparent border border-[var(--border-default)] text-[var(--text-secondary)] rounded-lg px-2 py-1" onClick={() => setShowDetailDrawer(false)}><XIcon size={14} /></button>
             </div>
-
-            {/* Drawer Body */}
-            <div style={{ flex: 1, overflow: 'auto', padding: 20 }}>
-              {/* Type Badge */}
-              <div style={{ marginBottom: 16, display: 'flex', gap: 8 }}>
-                <span className="kai-badge" style={{
-                  background: (FIELD_TYPE_STYLES[selectedRequest.fieldName] || FIELD_TYPE_STYLES.email).bg,
-                  color: (FIELD_TYPE_STYLES[selectedRequest.fieldName] || FIELD_TYPE_STYLES.email).color,
-                  fontSize: 11, fontWeight: 700,
-                }}>
-                  {FIELD_LABELS[selectedRequest.fieldName] || selectedRequest.fieldName}
-                </span>
-                <span className="kai-badge" style={{
-                  background: (STATUS_STYLES[selectedRequest.status] || STATUS_STYLES.PENDING_HR).bg,
-                  color: (STATUS_STYLES[selectedRequest.status] || STATUS_STYLES.PENDING_HR).color,
-                }}>
-                  {(STATUS_STYLES[selectedRequest.status] || STATUS_STYLES.PENDING_HR).label}
-                </span>
+            <div className="flex-1 overflow-auto p-5">
+              <div className="flex gap-2 mb-4">
+                <span className="text-[11px] font-bold px-2 py-0.5 rounded" style={{ background: (FIELD_TYPE_STYLES[selectedRequest.fieldName] || FIELD_TYPE_STYLES.email).bg, color: (FIELD_TYPE_STYLES[selectedRequest.fieldName] || FIELD_TYPE_STYLES.email).color }}>{FIELD_LABELS[selectedRequest.fieldName] || selectedRequest.fieldName}</span>
+                <span className="text-[11px] font-semibold px-2 py-0.5 rounded" style={{ background: (STATUS_STYLES[selectedRequest.status] || STATUS_STYLES.PENDING_HR).bg, color: (STATUS_STYLES[selectedRequest.status] || STATUS_STYLES.PENDING_HR).color }}>{(STATUS_STYLES[selectedRequest.status] || STATUS_STYLES.PENDING_HR).label}</span>
               </div>
-
-              {/* Status Pipeline */}
-              <div style={{ marginBottom: 20, padding: 14, background: 'var(--kai-bg)', borderRadius: 8 }}>
-                <div style={{ fontSize: 11, fontWeight: 600, color: 'var(--kai-text-muted)', textTransform: 'uppercase', marginBottom: 10 }}>Approval Pipeline</div>
+              <div className="mb-5 p-3.5 bg-[var(--bg-elevated)] rounded-lg">
+                <div className="text-[11px] font-semibold text-[var(--text-muted)] uppercase mb-2">Approval Pipeline</div>
                 <StepIndicator status={selectedRequest.status} />
               </div>
-
-              {/* Change Details */}
-              <div style={{ marginBottom: 20, padding: 16, background: 'var(--kai-bg)', borderRadius: 8 }}>
-                <div style={{ fontSize: 11, fontWeight: 600, color: 'var(--kai-text-muted)', textTransform: 'uppercase', marginBottom: 10 }}>Requested Change</div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                  <div style={{ flex: 1 }}>
-                    <div style={{ fontSize: 10, color: 'var(--kai-text-muted)', marginBottom: 2 }}>CURRENT</div>
-                    <div style={{ fontSize: 14, padding: 8, background: 'var(--kai-card-bg, #fff)', borderRadius: 6, border: '1px solid var(--kai-border-light)', color: 'var(--kai-text-muted)', textDecoration: 'line-through' }}>
-                      {selectedRequest.currentValue || '(empty)'}
-                    </div>
+              <div className="mb-5 p-4 bg-[var(--bg-elevated)] rounded-lg">
+                <div className="text-[11px] font-semibold text-[var(--text-muted)] uppercase mb-2">Requested Change</div>
+                <div className="flex items-center gap-3">
+                  <div className="flex-1">
+                    <div className="text-[10px] text-[var(--text-muted)] mb-1">CURRENT</div>
+                    <div className="text-[14px] p-2 bg-[var(--bg-card)] rounded-md border border-[var(--border-default)] text-[var(--text-muted)] line-through">{selectedRequest.currentValue || '(empty)'}</div>
                   </div>
-                  <i className="bi bi-arrow-right" style={{ fontSize: 18, color: '#146DF7', marginTop: 14 }} />
-                  <div style={{ flex: 1 }}>
-                    <div style={{ fontSize: 10, color: 'var(--kai-text-muted)', marginBottom: 2 }}>NEW</div>
-                    <div style={{ fontSize: 14, padding: 8, background: '#EFF6FF', borderRadius: 6, border: '1px solid #BFDBFE', color: '#1D4ED8', fontWeight: 600 }}>
-                      {selectedRequest.requestedValue}
-                    </div>
+                  <ArrowRight size={18} className="text-[#7C3AED] mt-3.5 shrink-0" />
+                  <div className="flex-1">
+                    <div className="text-[10px] text-[var(--text-muted)] mb-1">NEW</div>
+                    <div className="text-[14px] p-2 bg-blue-50 rounded-md border border-blue-200 text-blue-700 font-semibold">{selectedRequest.requestedValue}</div>
                   </div>
                 </div>
               </div>
-
-              {/* Requester */}
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14, marginBottom: 20 }}>
+              <div className="grid grid-cols-2 gap-3.5 mb-5">
                 <div>
-                  <div style={{ fontSize: 11, fontWeight: 600, color: 'var(--kai-text-muted)', textTransform: 'uppercase', marginBottom: 4 }}>Requester</div>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                    <div style={{
-                      width: 28, height: 28, borderRadius: '50%', background: '#146DF7', color: '#fff',
-                      display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 10, fontWeight: 700,
-                    }}>
-                      {initials(selectedRequest.requester)}
-                    </div>
-                    <span style={{ fontSize: 13, fontWeight: 500 }}>{userName(selectedRequest.requester)}</span>
+                  <div className="text-[11px] font-semibold text-[var(--text-muted)] uppercase mb-1">Requester</div>
+                  <div className="flex items-center gap-2">
+                    <div className="w-7 h-7 rounded-full bg-[#7C3AED] text-white flex items-center justify-center text-[10px] font-bold">{initials(selectedRequest.requester)}</div>
+                    <span className="text-[13px] font-medium text-[var(--text-primary)]">{userName(selectedRequest.requester)}</span>
                   </div>
                 </div>
                 <div>
-                  <div style={{ fontSize: 11, fontWeight: 600, color: 'var(--kai-text-muted)', textTransform: 'uppercase', marginBottom: 4 }}>Submitted</div>
-                  <div style={{ fontSize: 13 }}>{formatDateTime(selectedRequest.createdAt)}</div>
+                  <div className="text-[11px] font-semibold text-[var(--text-muted)] uppercase mb-1">Submitted</div>
+                  <div className="text-[13px] text-[var(--text-primary)]">{formatDateTime(selectedRequest.createdAt)}</div>
                 </div>
               </div>
-
-              {/* Reason */}
               {selectedRequest.reason && (
-                <div style={{ marginBottom: 20 }}>
-                  <div style={{ fontSize: 11, fontWeight: 600, color: 'var(--kai-text-muted)', textTransform: 'uppercase', marginBottom: 6 }}>Reason</div>
-                  <div style={{ fontSize: 13, padding: 12, background: 'var(--kai-bg)', borderRadius: 8, lineHeight: 1.6 }}>
-                    {selectedRequest.reason}
-                  </div>
+                <div className="mb-5">
+                  <div className="text-[11px] font-semibold text-[var(--text-muted)] uppercase mb-1.5">Reason</div>
+                  <div className="text-[13px] p-3 bg-[var(--bg-elevated)] rounded-lg leading-relaxed text-[var(--text-primary)]">{selectedRequest.reason}</div>
                 </div>
               )}
-
-              {/* Review Timeline */}
-              <div style={{ marginBottom: 20 }}>
-                <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--kai-text-muted)', textTransform: 'uppercase', letterSpacing: 0.8, marginBottom: 12 }}>
-                  <i className="bi bi-clock-history" style={{ marginRight: 6 }} />Review Timeline
-                </div>
-
-                {/* Submitted event */}
-                <div style={{ display: 'flex', gap: 12, marginBottom: 14 }}>
-                  <div style={{ width: 10, height: 10, borderRadius: '50%', background: '#146DF7', marginTop: 4, flexShrink: 0 }} />
-                  <div>
-                    <div style={{ fontWeight: 600, fontSize: 13 }}>
-                      <i className="bi bi-send-check" style={{ marginRight: 4, color: '#146DF7' }} />Request Submitted
-                    </div>
-                    <div style={{ fontSize: 12, color: 'var(--kai-text-muted)' }}>{formatDateTime(selectedRequest.createdAt)}</div>
-                  </div>
-                </div>
-
-                {selectedRequest.hrApprovalAt && (
-                  <div style={{ display: 'flex', gap: 12, marginBottom: 14 }}>
-                    <div style={{
-                      width: 10, height: 10, borderRadius: '50%', flexShrink: 0, marginTop: 4,
-                      background: (selectedRequest.status === 'REJECTED' && !selectedRequest.ctoApprovalAt) ? '#DC2626' : '#16A34A',
-                    }} />
-                    <div>
-                      <div style={{ fontWeight: 600, fontSize: 13 }}>
-                        <i className={`bi ${(selectedRequest.status === 'REJECTED' && !selectedRequest.ctoApprovalAt) ? 'bi-x-circle' : 'bi-check-circle'}`}
-                          style={{ marginRight: 4, color: (selectedRequest.status === 'REJECTED' && !selectedRequest.ctoApprovalAt) ? '#DC2626' : '#16A34A' }} />
-                        HR Review
-                      </div>
-                      <div style={{ fontSize: 12, color: 'var(--kai-text-muted)' }}>{formatDateTime(selectedRequest.hrApprovalAt)}</div>
-                      {selectedRequest.hrNote && (
-                        <div style={{ fontSize: 12, color: 'var(--kai-text-secondary)', marginTop: 4, padding: 8, background: 'var(--kai-bg)', borderRadius: 6 }}>
-                          {selectedRequest.hrNote}
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                )}
-
-                {selectedRequest.ctoApprovalAt && (
-                  <div style={{ display: 'flex', gap: 12, marginBottom: 14 }}>
-                    <div style={{
-                      width: 10, height: 10, borderRadius: '50%', flexShrink: 0, marginTop: 4,
-                      background: selectedRequest.status === 'REJECTED' ? '#DC2626' : '#16A34A',
-                    }} />
-                    <div>
-                      <div style={{ fontWeight: 600, fontSize: 13 }}>
-                        <i className={`bi ${selectedRequest.status === 'REJECTED' ? 'bi-x-circle' : 'bi-check-circle'}`}
-                          style={{ marginRight: 4, color: selectedRequest.status === 'REJECTED' ? '#DC2626' : '#16A34A' }} />
-                        CTO Review
-                      </div>
-                      <div style={{ fontSize: 12, color: 'var(--kai-text-muted)' }}>{formatDateTime(selectedRequest.ctoApprovalAt)}</div>
-                      {selectedRequest.ctoNote && (
-                        <div style={{ fontSize: 12, color: 'var(--kai-text-secondary)', marginTop: 4, padding: 8, background: 'var(--kai-bg)', borderRadius: 6 }}>
-                          {selectedRequest.ctoNote}
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                )}
-
-                {selectedRequest.appliedAt && (
-                  <div style={{ display: 'flex', gap: 12, marginBottom: 14 }}>
-                    <div style={{ width: 10, height: 10, borderRadius: '50%', background: '#7C3AED', marginTop: 4, flexShrink: 0 }} />
-                    <div>
-                      <div style={{ fontWeight: 600, fontSize: 13 }}>
-                        <i className="bi bi-patch-check-fill" style={{ marginRight: 4, color: '#7C3AED' }} />Change Applied
-                      </div>
-                      <div style={{ fontSize: 12, color: 'var(--kai-text-muted)' }}>{formatDateTime(selectedRequest.appliedAt)}</div>
-                    </div>
-                  </div>
-                )}
-
-                {!selectedRequest.hrApprovalAt && !selectedRequest.ctoApprovalAt && (
-                  <div style={{ padding: 16, textAlign: 'center', color: 'var(--kai-text-muted)', fontSize: 12 }}>
-                    <i className="bi bi-hourglass-split" style={{ marginRight: 4 }} />Awaiting HR review...
-                  </div>
-                )}
+              {/* Timeline */}
+              <div className="mb-5">
+                <div className="text-[11px] font-bold text-[var(--text-muted)] uppercase tracking-wide mb-3 flex items-center gap-1.5"><Clock size={12} /> Review Timeline</div>
+                <div className="flex gap-3 mb-3.5"><div className="w-2.5 h-2.5 rounded-full bg-[#7C3AED] mt-1 shrink-0" /><div><div className="font-semibold text-[13px] text-[var(--text-primary)]">Request Submitted</div><div className="text-[12px] text-[var(--text-muted)]">{formatDateTime(selectedRequest.createdAt)}</div></div></div>
+                {selectedRequest.hrApprovalAt && <div className="flex gap-3 mb-3.5"><div className="w-2.5 h-2.5 rounded-full mt-1 shrink-0" style={{ background: (selectedRequest.status === 'REJECTED' && !selectedRequest.ctoApprovalAt) ? '#DC2626' : '#16A34A' }} /><div><div className="font-semibold text-[13px] text-[var(--text-primary)]">HR Review</div><div className="text-[12px] text-[var(--text-muted)]">{formatDateTime(selectedRequest.hrApprovalAt)}</div>{selectedRequest.hrNote && <div className="text-[12px] text-[var(--text-secondary)] mt-1 p-2 bg-[var(--bg-elevated)] rounded-md">{selectedRequest.hrNote}</div>}</div></div>}
+                {selectedRequest.ctoApprovalAt && <div className="flex gap-3 mb-3.5"><div className="w-2.5 h-2.5 rounded-full mt-1 shrink-0" style={{ background: selectedRequest.status === 'REJECTED' ? '#DC2626' : '#16A34A' }} /><div><div className="font-semibold text-[13px] text-[var(--text-primary)]">CTO Review</div><div className="text-[12px] text-[var(--text-muted)]">{formatDateTime(selectedRequest.ctoApprovalAt)}</div>{selectedRequest.ctoNote && <div className="text-[12px] text-[var(--text-secondary)] mt-1 p-2 bg-[var(--bg-elevated)] rounded-md">{selectedRequest.ctoNote}</div>}</div></div>}
+                {selectedRequest.appliedAt && <div className="flex gap-3 mb-3.5"><div className="w-2.5 h-2.5 rounded-full bg-[#7C3AED] mt-1 shrink-0" /><div><div className="font-semibold text-[13px] text-[var(--text-primary)]">Change Applied</div><div className="text-[12px] text-[var(--text-muted)]">{formatDateTime(selectedRequest.appliedAt)}</div></div></div>}
+                {!selectedRequest.hrApprovalAt && !selectedRequest.ctoApprovalAt && <div className="p-4 text-center text-[var(--text-muted)] text-[12px]"><Clock size={14} className="inline mr-1" /> Awaiting HR review...</div>}
               </div>
-
               {/* Action Area */}
-              {((isHR && selectedRequest.status === 'PENDING_HR') ||
-                (isCTO && selectedRequest.status === 'PENDING_CTO')) && (
-                <div style={{ borderTop: '1px solid var(--kai-border-light)', paddingTop: 16 }}>
-                  <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--kai-text-muted)', textTransform: 'uppercase', letterSpacing: 0.8, marginBottom: 10 }}>
-                    <i className="bi bi-shield-check" style={{ marginRight: 4 }} />Take Action
+              {((isHR && selectedRequest.status === 'PENDING_HR') || (isCTO && selectedRequest.status === 'PENDING_CTO')) && (
+                <div className="border-t border-[var(--border-default)] pt-4">
+                  <div className="text-[11px] font-bold text-[var(--text-muted)] uppercase tracking-wide mb-2.5 flex items-center gap-1"><ShieldCheck size={12} /> Take Action</div>
+                  <div className="mb-3">
+                    <label className="block text-[12px] font-semibold text-[var(--text-secondary)] mb-1">Note (optional)</label>
+                    <textarea className={`${inputClass} resize-y`} rows={2} placeholder="Add a note..." value={actionNote} onChange={e => setActionNote(e.target.value)} />
                   </div>
-
-                  <div style={{ marginBottom: 12 }}>
-                    <label className="kai-label">Note (optional)</label>
-                    <textarea className="kai-input" rows={2} placeholder="Add a note..." value={actionNote}
-                      onChange={e => setActionNote(e.target.value)} style={{ resize: 'vertical' }} />
-                  </div>
-
-                  <div style={{ display: 'flex', gap: 8 }}>
-                    {isHR && selectedRequest.status === 'PENDING_HR' && (
-                      <>
-                        <button className="kai-btn kai-btn-success kai-btn-sm" style={{ flex: 1 }} onClick={() => handleHrApprove(selectedRequest)}>
-                          <i className="bi bi-check-circle" style={{ marginRight: 4 }} /> Approve (Send to CTO)
-                        </button>
-                        <button className="kai-btn kai-btn-danger kai-btn-sm" style={{ flex: 1 }} onClick={() => handleHrReject(selectedRequest)}>
-                          <i className="bi bi-x-circle" style={{ marginRight: 4 }} /> Reject
-                        </button>
-                      </>
-                    )}
-                    {isCTO && selectedRequest.status === 'PENDING_CTO' && (
-                      <>
-                        <button className="kai-btn kai-btn-success kai-btn-sm" style={{ flex: 1 }} onClick={() => handleCtoApprove(selectedRequest)}>
-                          <i className="bi bi-check-circle" style={{ marginRight: 4 }} /> Approve & Apply
-                        </button>
-                        <button className="kai-btn kai-btn-danger kai-btn-sm" style={{ flex: 1 }} onClick={() => handleCtoReject(selectedRequest)}>
-                          <i className="bi bi-x-circle" style={{ marginRight: 4 }} /> Reject
-                        </button>
-                      </>
-                    )}
+                  <div className="flex gap-2">
+                    {isHR && selectedRequest.status === 'PENDING_HR' && (<>
+                      <button className="flex-1 bg-green-100 text-green-700 rounded-lg py-2 text-[13px] font-semibold hover:bg-green-200 flex items-center justify-center gap-1" onClick={() => handleHrApprove(selectedRequest)}><Check size={14} /> Approve (Send to CTO)</button>
+                      <button className="flex-1 bg-red-100 text-red-700 rounded-lg py-2 text-[13px] font-semibold hover:bg-red-200 flex items-center justify-center gap-1" onClick={() => handleHrReject(selectedRequest)}><XIcon size={14} /> Reject</button>
+                    </>)}
+                    {isCTO && selectedRequest.status === 'PENDING_CTO' && (<>
+                      <button className="flex-1 bg-green-100 text-green-700 rounded-lg py-2 text-[13px] font-semibold hover:bg-green-200 flex items-center justify-center gap-1" onClick={() => handleCtoApprove(selectedRequest)}><Check size={14} /> Approve & Apply</button>
+                      <button className="flex-1 bg-red-100 text-red-700 rounded-lg py-2 text-[13px] font-semibold hover:bg-red-200 flex items-center justify-center gap-1" onClick={() => handleCtoReject(selectedRequest)}><XIcon size={14} /> Reject</button>
+                    </>)}
                   </div>
                 </div>
               )}
