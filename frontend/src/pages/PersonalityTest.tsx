@@ -1,6 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import { Spinner, Alert } from 'react-bootstrap';
 import { Brain, ArrowRight, ArrowLeft, RotateCcw, CheckCircle2, AlertCircle, Sparkles } from 'lucide-react';
 import api from '../services/api';
 
@@ -11,12 +10,7 @@ const AXIS_LABELS = {
   JP: { A: 'Judging (J)', B: 'Perceiving (P)' },
 };
 
-const AXIS_COLORS = {
-  EI: '#3B82F6',
-  SN: '#8B3FE9',
-  TF: '#16A34A',
-  JP: '#EA580C',
-};
+const AXIS_COLORS = { EI: '#3B82F6', SN: '#8B3FE9', TF: '#16A34A', JP: '#EA580C' };
 
 export default function PersonalityTest() {
   const dispatch = useDispatch();
@@ -25,193 +19,90 @@ export default function PersonalityTest() {
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState(null);
-
   const [testTaken, setTestTaken] = useState(false);
   const [questions, setQuestions] = useState([]);
   const [result, setResult] = useState(null);
-
-  // Test state
   const [started, setStarted] = useState(false);
   const [currentQ, setCurrentQ] = useState(0);
   const [answers, setAnswers] = useState([]);
   const [animDir, setAnimDir] = useState('right');
 
-  useEffect(() => {
-    dispatch({ type: 'UI_SET_PAGE_TITLE', payload: 'Personality Test' });
-    fetchTestData();
-  }, [dispatch]);
+  useEffect(() => { dispatch({ type: 'UI_SET_PAGE_TITLE', payload: 'Personality Test' }); fetchTestData(); }, [dispatch]);
 
   const fetchTestData = useCallback(async () => {
-    setLoading(true);
-    setError(null);
+    setLoading(true); setError(null);
     try {
       const { data } = await api.get('/personality-test');
       const d = data?.data || data;
       setQuestions(d.questions || []);
-      if (d.taken) {
-        setTestTaken(true);
-        setResult({
-          personalityType: d.personalityType,
-          typeInfo: d.typeInfo,
-          testDate: d.testDate,
-          testData: d.testData,
-        });
-      }
-    } catch (err) {
-      setError(err.message || 'Failed to load personality test');
-    } finally {
-      setLoading(false);
-    }
+      if (d.taken) { setTestTaken(true); setResult({ personalityType: d.personalityType, typeInfo: d.typeInfo, testDate: d.testDate, testData: d.testData }); }
+    } catch (err) { setError(err.message || 'Failed to load personality test'); }
+    finally { setLoading(false); }
   }, []);
 
   const handleAnswer = (choice) => {
-    const newAnswers = [...answers];
-    newAnswers[currentQ] = choice;
-    setAnswers(newAnswers);
-
-    // Auto-advance after a short delay
-    if (currentQ < questions.length - 1) {
-      setTimeout(() => {
-        setAnimDir('right');
-        setCurrentQ(currentQ + 1);
-      }, 300);
-    }
+    const newAnswers = [...answers]; newAnswers[currentQ] = choice; setAnswers(newAnswers);
+    if (currentQ < questions.length - 1) { setTimeout(() => { setAnimDir('right'); setCurrentQ(currentQ + 1); }, 300); }
   };
 
-  const goNext = () => {
-    if (currentQ < questions.length - 1) {
-      setAnimDir('right');
-      setCurrentQ(currentQ + 1);
-    }
-  };
-
-  const goPrev = () => {
-    if (currentQ > 0) {
-      setAnimDir('left');
-      setCurrentQ(currentQ - 1);
-    }
-  };
+  const goNext = () => { if (currentQ < questions.length - 1) { setAnimDir('right'); setCurrentQ(currentQ + 1); } };
+  const goPrev = () => { if (currentQ > 0) { setAnimDir('left'); setCurrentQ(currentQ - 1); } };
 
   const handleSubmit = async () => {
-    if (answers.length !== questions.length || answers.some((a) => !a)) {
-      setError('Please answer all 20 questions before submitting.');
-      return;
-    }
-    setSubmitting(true);
-    setError(null);
+    if (answers.length !== questions.length || answers.some((a) => !a)) { setError('Please answer all 20 questions before submitting.'); return; }
+    setSubmitting(true); setError(null);
     try {
       const { data } = await api.post('/personality-test', { answers });
       const d = data?.data || data;
-      setResult({
-        personalityType: d.personalityType,
-        typeInfo: d.typeInfo,
-        scores: d.scores,
-        testDate: new Date().toISOString(),
-      });
+      setResult({ personalityType: d.personalityType, typeInfo: d.typeInfo, scores: d.scores, testDate: new Date().toISOString() });
       setTestTaken(true);
-
-      // Update user in local storage
       const saved = localStorage.getItem('knowai-user');
-      if (saved) {
-        try {
-          const u = JSON.parse(saved);
-          u.personalityTestTaken = true;
-          u.personalityType = d.personalityType;
-          localStorage.setItem('knowai-user', JSON.stringify(u));
-          dispatch({ type: 'AUTH_SUCCESS', payload: u });
-        } catch {}
-      }
-    } catch (err) {
-      setError(err.message || 'Failed to submit test');
-    } finally {
-      setSubmitting(false);
-    }
+      if (saved) { try { const u = JSON.parse(saved); u.personalityTestTaken = true; u.personalityType = d.personalityType; localStorage.setItem('knowai-user', JSON.stringify(u)); dispatch({ type: 'AUTH_SUCCESS', payload: u }); } catch {} }
+    } catch (err) { setError(err.message || 'Failed to submit test'); }
+    finally { setSubmitting(false); }
   };
 
-  const handleRetake = () => {
-    setTestTaken(false);
-    setResult(null);
-    setStarted(false);
-    setCurrentQ(0);
-    setAnswers([]);
-    setError(null);
-  };
+  const handleRetake = () => { setTestTaken(false); setResult(null); setStarted(false); setCurrentQ(0); setAnswers([]); setError(null); };
 
   if (loading) {
     return (
-      <div className="flex-center" style={{ minHeight: 400 }}>
-        <Spinner animation="border" style={{ color: '#111827' }} />
+      <div className="flex items-center justify-center min-h-[400px]">
+        <div className="w-6 h-6 border-2 border-[#7C3AED] border-t-transparent rounded-full animate-spin" />
       </div>
     );
   }
 
-  // ── Result Screen ─────────────────────────────────────────────────────
-
+  // Result Screen
   if (testTaken && result) {
     const { personalityType, typeInfo, scores, testDate } = result;
     return (
       <div>
-        <div className="page-header">
+        <div className="flex items-center justify-between flex-wrap gap-4 mb-6">
           <div>
-            <h1>Your Personality Profile</h1>
-            <p>Carl Jung / MBTI Assessment Result</p>
+            <h1 className="text-[18px] font-semibold text-[var(--text-primary)] font-[Manrope]">Your Personality Profile</h1>
+            <p className="text-[13px] text-[var(--text-secondary)]">Carl Jung / MBTI Assessment Result</p>
           </div>
-          <div className="page-actions">
-            <button className="kai-btn kai-btn-outline kai-btn-sm" onClick={handleRetake}>
-              <RotateCcw size={14} /> Retake Test
-            </button>
-          </div>
+          <button className="bg-transparent border border-[var(--border-default)] text-[var(--text-secondary)] rounded-lg px-3 py-1.5 text-[12px] font-semibold hover:bg-[var(--bg-elevated)] transition-colors flex items-center gap-1" onClick={handleRetake} data-testid="retake-test">
+            <RotateCcw size={14} /> Retake Test
+          </button>
         </div>
 
         {/* Type Badge */}
-        <div
-          style={{
-            display: 'flex',
-            flexDirection: 'column',
-            alignItems: 'center',
-            padding: '48px 24px',
-            background: 'linear-gradient(135deg, #3B82F620 0%, #8B3FE920 100%)',
-            borderRadius: 16,
-            marginBottom: 24,
-            textAlign: 'center',
-          }}
-        >
-          <div
-            style={{
-              width: 120,
-              height: 120,
-              borderRadius: '50%',
-              background: 'linear-gradient(135deg, #3B82F6, #8B3FE9)',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              marginBottom: 24,
-              boxShadow: '0 8px 32px rgba(59,130,246,0.3)',
-            }}
-          >
-            <span style={{ fontSize: 36, fontWeight: 800, color: '#fff', letterSpacing: 2 }}>{personalityType}</span>
+        <div className="flex flex-col items-center py-12 px-6 rounded-2xl mb-6 text-center" style={{ background: 'linear-gradient(135deg, rgba(59,130,246,0.12) 0%, rgba(139,63,233,0.12) 100%)' }}>
+          <div className="w-[120px] h-[120px] rounded-full flex items-center justify-center mb-6" style={{ background: 'linear-gradient(135deg, #3B82F6, #8B3FE9)', boxShadow: '0 8px 32px rgba(59,130,246,0.3)' }}>
+            <span className="text-[36px] font-extrabold text-white tracking-widest">{personalityType}</span>
           </div>
-          <h2 style={{ fontSize: 28, fontWeight: 700, color: '#10222F', marginBottom: 8 }}>
-            {typeInfo?.title || personalityType}
-          </h2>
-          <p style={{ fontSize: 16, color: '#5B6B76', maxWidth: 640, lineHeight: 1.7 }}>
-            {typeInfo?.description || ''}
-          </p>
-          {testDate && (
-            <p style={{ fontSize: 12, color: '#9CA3AF', marginTop: 12 }}>
-              Test taken: {new Date(testDate).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}
-            </p>
-          )}
+          <h2 className="text-[28px] font-bold text-[var(--text-primary)] mb-2">{typeInfo?.title || personalityType}</h2>
+          <p className="text-[16px] text-[var(--text-secondary)] max-w-[640px] leading-relaxed">{typeInfo?.description || ''}</p>
+          {testDate && <p className="text-[12px] text-[var(--text-muted)] mt-3">Test taken: {new Date(testDate).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}</p>}
         </div>
 
         {/* Axis Scores */}
         {scores && (
-          <div className="kai-card" style={{ marginBottom: 24 }}>
-            <div className="kai-card-header">
-              <h6>Your Axis Scores</h6>
-            </div>
-            <div className="kai-card-body">
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: 20 }}>
+          <div className="bg-[var(--bg-card)] border border-[var(--border-default)] rounded-xl mb-6 overflow-hidden">
+            <div className="px-4 py-3 border-b border-[var(--border-default)]"><h6 className="text-[14px] font-semibold text-[var(--text-primary)]">Your Axis Scores</h6></div>
+            <div className="p-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                 {Object.entries(scores).map(([axis, data]) => {
                   const labels = AXIS_LABELS[axis];
                   const total = data.scoreA + data.scoreB;
@@ -219,17 +110,17 @@ export default function PersonalityTest() {
                   const pctB = 100 - pctA;
                   const color = AXIS_COLORS[axis];
                   return (
-                    <div key={axis} style={{ padding: 16, background: '#FAFAFA', borderRadius: 12 }}>
-                      <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 8 }}>
-                        <span style={{ fontSize: 13, fontWeight: 600, color }}>{labels.A}</span>
-                        <span style={{ fontSize: 13, fontWeight: 600, color: '#5B6B76' }}>{labels.B}</span>
+                    <div key={axis} className="p-4 bg-[var(--bg-elevated)] rounded-xl">
+                      <div className="flex justify-between mb-2">
+                        <span className="text-[13px] font-semibold" style={{ color }}>{labels.A}</span>
+                        <span className="text-[13px] font-semibold text-[var(--text-muted)]">{labels.B}</span>
                       </div>
-                      <div style={{ display: 'flex', height: 10, borderRadius: 5, overflow: 'hidden', background: '#E5E7EB' }}>
-                        <div style={{ width: `${pctA}%`, background: color, transition: 'width 0.5s ease' }} />
+                      <div className="flex h-2.5 rounded-full overflow-hidden bg-[var(--border-default)]">
+                        <div className="transition-all duration-500" style={{ width: `${pctA}%`, background: color }} />
                       </div>
-                      <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 4 }}>
-                        <span style={{ fontSize: 12, fontWeight: 700, color }}>{pctA}%</span>
-                        <span style={{ fontSize: 12, fontWeight: 700, color: '#5B6B76' }}>{pctB}%</span>
+                      <div className="flex justify-between mt-1">
+                        <span className="text-[12px] font-bold" style={{ color }}>{pctA}%</span>
+                        <span className="text-[12px] font-bold text-[var(--text-muted)]">{pctB}%</span>
                       </div>
                     </div>
                   );
@@ -239,42 +130,22 @@ export default function PersonalityTest() {
           </div>
         )}
 
-        {/* Strengths & Growth Areas */}
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 24, marginBottom: 24 }}>
-          <div className="kai-card">
-            <div className="kai-card-header">
-              <h6 style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                <CheckCircle2 size={18} style={{ color: '#16A34A' }} /> Strengths
-              </h6>
-            </div>
-            <div className="kai-card-body">
+        {/* Strengths & Growth */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+          <div className="bg-[var(--bg-card)] border border-[var(--border-default)] rounded-xl overflow-hidden">
+            <div className="px-4 py-3 border-b border-[var(--border-default)]"><h6 className="text-[14px] font-semibold text-[var(--text-primary)] flex items-center gap-2"><CheckCircle2 size={18} className="text-green-400" /> Strengths</h6></div>
+            <div className="p-4">
               {typeInfo?.strengths?.length > 0 ? (
-                <ul style={{ margin: 0, paddingLeft: 20, display: 'flex', flexDirection: 'column', gap: 10 }}>
-                  {typeInfo.strengths.map((s, i) => (
-                    <li key={i} style={{ fontSize: 14, color: '#10222F', lineHeight: 1.6 }}>{s}</li>
-                  ))}
-                </ul>
-              ) : (
-                <p className="text-muted">No strength data available</p>
-              )}
+                <ul className="list-disc pl-5 flex flex-col gap-2.5">{typeInfo.strengths.map((s, i) => <li key={i} className="text-[14px] text-[var(--text-primary)] leading-relaxed">{s}</li>)}</ul>
+              ) : <p className="text-[var(--text-muted)]">No strength data available</p>}
             </div>
           </div>
-          <div className="kai-card">
-            <div className="kai-card-header">
-              <h6 style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                <Sparkles size={18} style={{ color: '#EA580C' }} /> Growth Areas
-              </h6>
-            </div>
-            <div className="kai-card-body">
+          <div className="bg-[var(--bg-card)] border border-[var(--border-default)] rounded-xl overflow-hidden">
+            <div className="px-4 py-3 border-b border-[var(--border-default)]"><h6 className="text-[14px] font-semibold text-[var(--text-primary)] flex items-center gap-2"><Sparkles size={18} className="text-orange-400" /> Growth Areas</h6></div>
+            <div className="p-4">
               {typeInfo?.growthAreas?.length > 0 ? (
-                <ul style={{ margin: 0, paddingLeft: 20, display: 'flex', flexDirection: 'column', gap: 10 }}>
-                  {typeInfo.growthAreas.map((g, i) => (
-                    <li key={i} style={{ fontSize: 14, color: '#10222F', lineHeight: 1.6 }}>{g}</li>
-                  ))}
-                </ul>
-              ) : (
-                <p className="text-muted">No growth area data available</p>
-              )}
+                <ul className="list-disc pl-5 flex flex-col gap-2.5">{typeInfo.growthAreas.map((g, i) => <li key={i} className="text-[14px] text-[var(--text-primary)] leading-relaxed">{g}</li>)}</ul>
+              ) : <p className="text-[var(--text-muted)]">No growth area data available</p>}
             </div>
           </div>
         </div>
@@ -282,97 +153,45 @@ export default function PersonalityTest() {
     );
   }
 
-  // ── Welcome Screen ────────────────────────────────────────────────────
-
+  // Welcome Screen
   if (!started) {
     return (
       <div>
-        <div className="page-header">
+        <div className="flex items-center justify-between flex-wrap gap-4 mb-6">
           <div>
-            <h1>Personality Assessment</h1>
-            <p>Discover your Carl Jung / MBTI personality type</p>
+            <h1 className="text-[18px] font-semibold text-[var(--text-primary)] font-[Manrope]">Personality Assessment</h1>
+            <p className="text-[13px] text-[var(--text-secondary)]">Discover your Carl Jung / MBTI personality type</p>
           </div>
         </div>
 
-        <div
-          style={{
-            maxWidth: 720,
-            margin: '0 auto',
-            textAlign: 'center',
-            padding: '48px 32px',
-            background: 'linear-gradient(135deg, #3B82F610 0%, #8B3FE910 100%)',
-            borderRadius: 20,
-          }}
-        >
-          <div
-            style={{
-              width: 80,
-              height: 80,
-              borderRadius: '50%',
-              background: 'linear-gradient(135deg, #3B82F6, #8B3FE9)',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              margin: '0 auto 24px',
-            }}
-          >
+        <div className="max-w-[720px] mx-auto text-center py-12 px-8 rounded-2xl" style={{ background: 'linear-gradient(135deg, rgba(59,130,246,0.06) 0%, rgba(139,63,233,0.06) 100%)' }}>
+          <div className="w-20 h-20 rounded-full mx-auto mb-6 flex items-center justify-center" style={{ background: 'linear-gradient(135deg, #3B82F6, #8B3FE9)' }}>
             <Brain size={40} color="#fff" />
           </div>
-
-          <h2 style={{ fontSize: 24, fontWeight: 700, color: '#10222F', marginBottom: 16 }}>
-            Carl Jung Personality Assessment
-          </h2>
-
-          <p style={{ fontSize: 15, color: '#5B6B76', lineHeight: 1.8, maxWidth: 560, margin: '0 auto 24px' }}>
-            This assessment is based on Carl Jung's theory of psychological types, the foundation of the
-            Myers-Briggs Type Indicator (MBTI). It measures your preferences across four dimensions:
+          <h2 className="text-[24px] font-bold text-[var(--text-primary)] mb-4">Carl Jung Personality Assessment</h2>
+          <p className="text-[15px] text-[var(--text-secondary)] leading-relaxed max-w-[560px] mx-auto mb-6">
+            This assessment is based on Carl Jung's theory of psychological types, the foundation of the Myers-Briggs Type Indicator (MBTI). It measures your preferences across four dimensions:
           </p>
-
-          <div
-            style={{
-              display: 'grid',
-              gridTemplateColumns: '1fr 1fr',
-              gap: 16,
-              maxWidth: 480,
-              margin: '0 auto 32px',
-              textAlign: 'left',
-            }}
-          >
+          <div className="grid grid-cols-2 gap-4 max-w-[480px] mx-auto mb-8 text-left">
             {[
               { axis: 'E / I', label: 'Extraversion vs Introversion', desc: 'Where you focus your energy', color: '#3B82F6' },
               { axis: 'S / N', label: 'Sensing vs iNtuition', desc: 'How you take in information', color: '#8B3FE9' },
               { axis: 'T / F', label: 'Thinking vs Feeling', desc: 'How you make decisions', color: '#16A34A' },
               { axis: 'J / P', label: 'Judging vs Perceiving', desc: 'How you organize your life', color: '#EA580C' },
             ].map((item) => (
-              <div
-                key={item.axis}
-                style={{
-                  padding: '14px 16px',
-                  background: '#fff',
-                  borderRadius: 12,
-                  borderLeft: `4px solid ${item.color}`,
-                }}
-              >
-                <div style={{ fontSize: 14, fontWeight: 700, color: item.color, marginBottom: 2 }}>{item.axis}</div>
-                <div style={{ fontSize: 13, fontWeight: 600, color: '#10222F' }}>{item.label}</div>
-                <div style={{ fontSize: 11, color: '#9CA3AF' }}>{item.desc}</div>
+              <div key={item.axis} className="p-3.5 bg-[var(--bg-card)] rounded-xl border-l-4" style={{ borderLeftColor: item.color }}>
+                <div className="text-[14px] font-bold mb-0.5" style={{ color: item.color }}>{item.axis}</div>
+                <div className="text-[13px] font-semibold text-[var(--text-primary)]">{item.label}</div>
+                <div className="text-[11px] text-[var(--text-muted)]">{item.desc}</div>
               </div>
             ))}
           </div>
-
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 8, alignItems: 'center', marginBottom: 32 }}>
-            <span style={{ fontSize: 13, color: '#5B6B76' }}>20 questions &middot; Approximately 5 minutes</span>
-            <span style={{ fontSize: 12, color: '#9CA3AF' }}>There are no right or wrong answers. Choose what feels most natural to you.</span>
+          <div className="flex flex-col gap-2 items-center mb-8">
+            <span className="text-[13px] text-[var(--text-secondary)]">20 questions &middot; Approximately 5 minutes</span>
+            <span className="text-[12px] text-[var(--text-muted)]">There are no right or wrong answers. Choose what feels most natural to you.</span>
           </div>
-
-          <button
-            className="kai-btn kai-btn-primary"
-            style={{ padding: '12px 48px', fontSize: 16, fontWeight: 600, borderRadius: 12 }}
-            onClick={() => {
-              setStarted(true);
-              setAnswers(new Array(questions.length).fill(null));
-            }}
-          >
+          <button className="bg-[#7C3AED] text-white rounded-xl px-12 py-3 text-[16px] font-semibold hover:bg-[#7C3AED]/90 transition-colors inline-flex items-center gap-2"
+            onClick={() => { setStarted(true); setAnswers(new Array(questions.length).fill(null)); }} data-testid="start-assessment">
             Start Assessment <ArrowRight size={18} />
           </button>
         </div>
@@ -380,8 +199,7 @@ export default function PersonalityTest() {
     );
   }
 
-  // ── Question Screen ───────────────────────────────────────────────────
-
+  // Question Screen
   const q = questions[currentQ];
   const progress = ((currentQ + 1) / questions.length) * 100;
   const answeredCount = answers.filter(Boolean).length;
@@ -391,198 +209,83 @@ export default function PersonalityTest() {
 
   return (
     <div>
-      <div className="page-header">
+      <div className="flex items-center justify-between flex-wrap gap-4 mb-6">
         <div>
-          <h1>Personality Assessment</h1>
-          <p>Question {currentQ + 1} of {questions.length}</p>
+          <h1 className="text-[18px] font-semibold text-[var(--text-primary)] font-[Manrope]">Personality Assessment</h1>
+          <p className="text-[13px] text-[var(--text-secondary)]">Question {currentQ + 1} of {questions.length}</p>
         </div>
       </div>
 
       {error && (
-        <Alert variant="danger" className="d-flex align-items-center gap-2 mb-3" dismissible onClose={() => setError(null)}>
+        <div className="bg-red-500/10 text-red-400 px-4 py-3 rounded-lg mb-4 text-[13px] flex items-center gap-2" data-testid="error-alert">
           <AlertCircle size={16} /> {error}
-        </Alert>
+          <button onClick={() => setError(null)} className="ml-auto text-red-400 hover:text-red-300">&times;</button>
+        </div>
       )}
 
-      {/* Progress Bar */}
-      <div style={{ marginBottom: 32 }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 8 }}>
-          <span style={{ fontSize: 12, fontWeight: 600, color: axisColor }}>
-            {AXIS_LABELS[currentAxis]?.A} vs {AXIS_LABELS[currentAxis]?.B}
-          </span>
-          <span style={{ fontSize: 12, color: '#9CA3AF' }}>{answeredCount}/{questions.length} answered</span>
+      {/* Progress */}
+      <div className="mb-8">
+        <div className="flex justify-between mb-2">
+          <span className="text-[12px] font-semibold" style={{ color: axisColor }}>{AXIS_LABELS[currentAxis]?.A} vs {AXIS_LABELS[currentAxis]?.B}</span>
+          <span className="text-[12px] text-[var(--text-muted)]">{answeredCount}/{questions.length} answered</span>
         </div>
-        <div style={{ height: 6, background: '#E5E7EB', borderRadius: 3, overflow: 'hidden' }}>
-          <div
-            style={{
-              width: `${progress}%`,
-              height: '100%',
-              background: `linear-gradient(90deg, #3B82F6, ${axisColor})`,
-              borderRadius: 3,
-              transition: 'width 0.3s ease',
-            }}
-          />
+        <div className="h-1.5 bg-[var(--border-default)] rounded-full overflow-hidden">
+          <div className="h-full rounded-full transition-all duration-300" style={{ width: `${progress}%`, background: `linear-gradient(90deg, #3B82F6, ${axisColor})` }} />
         </div>
       </div>
 
       {/* Question Card */}
-      <div
-        key={currentQ}
-        style={{
-          maxWidth: 720,
-          margin: '0 auto',
-          animation: `slideIn${animDir === 'right' ? 'Right' : 'Left'} 0.3s ease`,
-        }}
-      >
-        <div
-          className="kai-card"
-          style={{
-            padding: 32,
-            borderTop: `4px solid ${axisColor}`,
-            marginBottom: 24,
-          }}
-        >
-          <div style={{ fontSize: 13, fontWeight: 600, color: axisColor, marginBottom: 16 }}>
-            Question {currentQ + 1}
-          </div>
-          <h3 style={{ fontSize: 20, fontWeight: 600, color: '#10222F', lineHeight: 1.6, marginBottom: 28 }}>
-            {q?.text}
-          </h3>
-
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
-            {/* Option A */}
-            <button
-              onClick={() => handleAnswer('A')}
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: 16,
-                padding: '18px 20px',
-                background: answers[currentQ] === 'A' ? `${axisColor}10` : '#FAFAFA',
-                border: `2px solid ${answers[currentQ] === 'A' ? axisColor : '#E5E7EB'}`,
-                borderRadius: 12,
-                cursor: 'pointer',
-                textAlign: 'left',
-                transition: 'all 0.2s ease',
-                width: '100%',
-              }}
-            >
-              <div
-                style={{
-                  width: 36,
-                  height: 36,
-                  borderRadius: '50%',
-                  background: answers[currentQ] === 'A' ? axisColor : '#E5E7EB',
-                  color: answers[currentQ] === 'A' ? '#fff' : '#5B6B76',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  fontWeight: 700,
-                  fontSize: 14,
-                  flexShrink: 0,
-                  transition: 'all 0.2s ease',
-                }}
-              >
-                A
-              </div>
-              <span style={{ fontSize: 15, color: '#10222F', lineHeight: 1.5 }}>{q?.optionA}</span>
-            </button>
-
-            {/* Option B */}
-            <button
-              onClick={() => handleAnswer('B')}
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: 16,
-                padding: '18px 20px',
-                background: answers[currentQ] === 'B' ? `${axisColor}10` : '#FAFAFA',
-                border: `2px solid ${answers[currentQ] === 'B' ? axisColor : '#E5E7EB'}`,
-                borderRadius: 12,
-                cursor: 'pointer',
-                textAlign: 'left',
-                transition: 'all 0.2s ease',
-                width: '100%',
-              }}
-            >
-              <div
-                style={{
-                  width: 36,
-                  height: 36,
-                  borderRadius: '50%',
-                  background: answers[currentQ] === 'B' ? axisColor : '#E5E7EB',
-                  color: answers[currentQ] === 'B' ? '#fff' : '#5B6B76',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  fontWeight: 700,
-                  fontSize: 14,
-                  flexShrink: 0,
-                  transition: 'all 0.2s ease',
-                }}
-              >
-                B
-              </div>
-              <span style={{ fontSize: 15, color: '#10222F', lineHeight: 1.5 }}>{q?.optionB}</span>
-            </button>
+      <div key={currentQ} className="max-w-[720px] mx-auto" style={{ animation: `slideIn${animDir === 'right' ? 'Right' : 'Left'} 0.3s ease` }}>
+        <div className="bg-[var(--bg-card)] border border-[var(--border-default)] rounded-xl p-8 mb-6" style={{ borderTop: `4px solid ${axisColor}` }}>
+          <div className="text-[13px] font-semibold mb-4" style={{ color: axisColor }}>Question {currentQ + 1}</div>
+          <h3 className="text-[20px] font-semibold text-[var(--text-primary)] leading-relaxed mb-7">{q?.text}</h3>
+          <div className="flex flex-col gap-3.5">
+            {['A', 'B'].map(opt => (
+              <button key={opt} onClick={() => handleAnswer(opt)} data-testid={`option-${opt}`}
+                className={`flex items-center gap-4 py-4 px-5 rounded-xl cursor-pointer text-left w-full transition-all duration-200 border-2 ${answers[currentQ] === opt ? 'border-current' : 'border-[var(--border-default)]'}`}
+                style={{ background: answers[currentQ] === opt ? `${axisColor}10` : 'var(--bg-elevated)', borderColor: answers[currentQ] === opt ? axisColor : undefined }}>
+                <div className="w-9 h-9 rounded-full flex items-center justify-center font-bold text-[14px] shrink-0 transition-all"
+                  style={{ background: answers[currentQ] === opt ? axisColor : 'var(--border-default)', color: answers[currentQ] === opt ? '#fff' : 'var(--text-muted)' }}>
+                  {opt}
+                </div>
+                <span className="text-[15px] text-[var(--text-primary)] leading-snug">{opt === 'A' ? q?.optionA : q?.optionB}</span>
+              </button>
+            ))}
           </div>
         </div>
 
         {/* Navigation */}
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <button
-            className="kai-btn kai-btn-outline kai-btn-sm"
-            onClick={goPrev}
-            disabled={currentQ === 0}
-            style={{ opacity: currentQ === 0 ? 0.4 : 1 }}
-          >
+        <div className="flex justify-between items-center">
+          <button className="bg-transparent border border-[var(--border-default)] text-[var(--text-secondary)] rounded-lg px-3 py-1.5 text-[12px] font-semibold hover:bg-[var(--bg-elevated)] transition-colors flex items-center gap-1 disabled:opacity-40"
+            onClick={goPrev} disabled={currentQ === 0} data-testid="prev-btn">
             <ArrowLeft size={14} /> Previous
           </button>
 
-          <div style={{ display: 'flex', gap: 4 }}>
+          <div className="flex gap-1">
             {questions.map((_, i) => (
-              <div
-                key={i}
-                onClick={() => { setAnimDir(i > currentQ ? 'right' : 'left'); setCurrentQ(i); }}
-                style={{
-                  width: i === currentQ ? 24 : 8,
-                  height: 8,
-                  borderRadius: 4,
-                  background: answers[i] ? axisColor : i === currentQ ? '#9CA3AF' : '#E5E7EB',
-                  cursor: 'pointer',
-                  transition: 'all 0.2s ease',
-                }}
-              />
+              <div key={i} onClick={() => { setAnimDir(i > currentQ ? 'right' : 'left'); setCurrentQ(i); }}
+                className="rounded-full cursor-pointer transition-all"
+                style={{ width: i === currentQ ? 24 : 8, height: 8, background: answers[i] ? axisColor : i === currentQ ? 'var(--text-muted)' : 'var(--border-default)' }} />
             ))}
           </div>
 
           {currentQ === questions.length - 1 ? (
-            <button
-              className="kai-btn kai-btn-primary kai-btn-sm"
-              onClick={handleSubmit}
-              disabled={!allAnswered || submitting}
-              style={{ opacity: !allAnswered ? 0.5 : 1 }}
-            >
-              {submitting ? <Spinner size="sm" animation="border" /> : <><CheckCircle2 size={14} /> Submit</>}
+            <button className="bg-[#7C3AED] text-white rounded-lg px-3 py-1.5 text-[12px] font-semibold hover:bg-[#7C3AED]/90 transition-colors flex items-center gap-1 disabled:opacity-50"
+              onClick={handleSubmit} disabled={!allAnswered || submitting} data-testid="submit-test">
+              {submitting ? <div className="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin" /> : <><CheckCircle2 size={14} /> Submit</>}
             </button>
           ) : (
-            <button className="kai-btn kai-btn-outline kai-btn-sm" onClick={goNext}>
+            <button className="bg-transparent border border-[var(--border-default)] text-[var(--text-secondary)] rounded-lg px-3 py-1.5 text-[12px] font-semibold hover:bg-[var(--bg-elevated)] transition-colors flex items-center gap-1"
+              onClick={goNext} data-testid="next-btn">
               Next <ArrowRight size={14} />
             </button>
           )}
         </div>
       </div>
 
-      {/* Inline animation styles */}
       <style>{`
-        @keyframes slideInRight {
-          from { opacity: 0; transform: translateX(40px); }
-          to { opacity: 1; transform: translateX(0); }
-        }
-        @keyframes slideInLeft {
-          from { opacity: 0; transform: translateX(-40px); }
-          to { opacity: 1; transform: translateX(0); }
-        }
+        @keyframes slideInRight { from { opacity: 0; transform: translateX(40px); } to { opacity: 1; transform: translateX(0); } }
+        @keyframes slideInLeft { from { opacity: 0; transform: translateX(-40px); } to { opacity: 1; transform: translateX(0); } }
       `}</style>
     </div>
   );

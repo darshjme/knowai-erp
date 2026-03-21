@@ -345,7 +345,7 @@ export default function Files() {
         style={{
           border: `2px dashed ${dragOver ? '#3B82F6' : '#E8EBED'}`, borderRadius: 12,
           padding: dragOver ? 40 : 24, textAlign: 'center', marginBottom: 20,
-          background: dragOver ? 'var(--kai-primary-light, #EBF3FE)' : '#FAFAFA', transition: 'all 0.2s', cursor: 'pointer',
+          background: dragOver ? 'rgba(124, 58, 237, 0.1)' : '#FAFAFA', transition: 'all 0.2s', cursor: 'pointer',
         }}
         onClick={() => fileInputRef.current?.click()}>
         {uploading ? (

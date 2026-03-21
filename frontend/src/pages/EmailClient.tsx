@@ -192,9 +192,9 @@ export default function EmailClient() {
         </div>
       </div>
 
-      <div className="email-layout" style={{ display: 'flex', height: 'calc(100vh - 180px)', border: '1px solid var(--kai-border)', borderRadius: 'var(--kai-radius-lg)', overflow: 'hidden', background: 'var(--kai-surface)' }}>
+      <div className="email-layout" style={{ display: 'flex', height: 'calc(100vh - 180px)', border: '1px solid var(--border-default)', borderRadius: '12px', overflow: 'hidden', background: 'var(--bg-card)' }}>
         {/* Folder List */}
-        <div className="email-sidebar" style={{ width: 200, borderRight: '1px solid var(--kai-border)', display: 'flex', flexDirection: 'column', flexShrink: 0, padding: '12px 8px' }}>
+        <div className="email-sidebar" style={{ width: 200, borderRight: '1px solid var(--border-default)', display: 'flex', flexDirection: 'column', flexShrink: 0, padding: '12px 8px' }}>
           {FOLDERS.map(folder => {
             const count = folderCounts[folder.key] || 0;
             const isActive = activeFolder === folder.key;
@@ -207,24 +207,24 @@ export default function EmailClient() {
                   alignItems: 'center',
                   gap: 10,
                   padding: '10px 12px',
-                  borderRadius: 'var(--kai-radius)',
+                  borderRadius: '8px',
                   cursor: 'pointer',
-                  background: isActive ? 'var(--kai-primary-light, rgba(17,24,39,0.06))' : 'transparent',
-                  color: isActive ? 'var(--kai-primary)' : 'var(--kai-text)',
+                  background: isActive ? 'rgba(124, 58, 237, 0.1)' : 'transparent',
+                  color: isActive ? '#7C3AED' : 'var(--text-primary)',
                   fontWeight: isActive ? 600 : 500,
                   fontSize: 13.5,
-                  transition: 'var(--kai-transition)',
+                  transition: 'all 0.15s ease',
                   marginBottom: 2,
                 }}
-                onMouseEnter={e => { if (!isActive) e.currentTarget.style.background = 'var(--kai-surface-hover)'; }}
-                onMouseLeave={e => { if (!isActive) e.currentTarget.style.background = isActive ? 'var(--kai-primary-light, rgba(17,24,39,0.06))' : 'transparent'; }}
+                onMouseEnter={e => { if (!isActive) e.currentTarget.style.background = 'var(--bg-elevated)'; }}
+                onMouseLeave={e => { if (!isActive) e.currentTarget.style.background = isActive ? 'rgba(124, 58, 237, 0.1)' : 'transparent'; }}
               >
                 {folder.icon}
                 <span style={{ flex: 1 }}>{folder.label}</span>
                 {count > 0 && (
                   <span style={{
-                    fontSize: 11, fontWeight: 700, background: isActive ? 'var(--kai-primary)' : 'var(--kai-bg)',
-                    color: isActive ? '#fff' : 'var(--kai-text-muted)', padding: '2px 8px', borderRadius: 'var(--kai-radius-pill)',
+                    fontSize: 11, fontWeight: 700, background: isActive ? '#7C3AED' : 'var(--bg-primary)',
+                    color: isActive ? '#fff' : 'var(--text-muted)', padding: '2px 8px', borderRadius: 'var(--kai-radius-pill)',
                   }}>
                     {count}
                   </span>
@@ -235,20 +235,20 @@ export default function EmailClient() {
         </div>
 
         {/* Email List */}
-        <div style={{ width: 350, borderRight: '1px solid var(--kai-border)', display: 'flex', flexDirection: 'column', flexShrink: 0 }}>
+        <div style={{ width: 350, borderRight: '1px solid var(--border-default)', display: 'flex', flexDirection: 'column', flexShrink: 0 }}>
           {/* Search + Bulk Actions */}
-          <div style={{ padding: 12, borderBottom: '1px solid var(--kai-border)' }}>
+          <div style={{ padding: 12, borderBottom: '1px solid var(--border-default)' }}>
             <div className="kai-search" style={{ marginBottom: 8 }}>
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
               <input placeholder="Search emails..." value={search} onChange={e => setSearch(e.target.value)} />
             </div>
             <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-              <label style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 12, color: 'var(--kai-text-muted)', cursor: 'pointer' }}>
+              <label style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 12, color: 'var(--text-muted)', cursor: 'pointer' }}>
                 <input
                   type="checkbox"
                   checked={selectedIds.length > 0 && selectedIds.length === emails.length}
                   onChange={toggleSelectAll}
-                  style={{ accentColor: 'var(--kai-primary)' }}
+                  style={{ accentColor: '#7C3AED' }}
                 />
                 All
               </label>
@@ -270,10 +270,10 @@ export default function EmailClient() {
           {/* Email Items */}
           <div style={{ flex: 1, overflowY: 'auto' }}>
             {loading ? (
-              <div style={{ padding: 40, textAlign: 'center', color: 'var(--kai-text-muted)' }}>Loading emails...</div>
+              <div style={{ padding: 40, textAlign: 'center', color: 'var(--text-muted)' }}>Loading emails...</div>
             ) : filteredEmails.length === 0 ? (
-              <div style={{ padding: 40, textAlign: 'center', color: 'var(--kai-text-muted)' }}>
-                <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="var(--kai-border)" strokeWidth="1.5" style={{ marginBottom: 12 }}>
+              <div style={{ padding: 40, textAlign: 'center', color: 'var(--text-muted)' }}>
+                <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="var(--border-default)" strokeWidth="1.5" style={{ marginBottom: 12 }}>
                   <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/>
                   <polyline points="22,6 12,13 2,6"/>
                 </svg>
@@ -294,39 +294,39 @@ export default function EmailClient() {
                       padding: '12px 16px',
                       cursor: 'pointer',
                       borderBottom: '1px solid var(--kai-border-light)',
-                      background: isActive ? 'var(--kai-primary-light, rgba(17,24,39,0.05))' : isUnread ? 'rgba(17,24,39,0.02)' : 'transparent',
-                      borderLeft: isActive ? '3px solid var(--kai-primary)' : '3px solid transparent',
-                      transition: 'var(--kai-transition)',
+                      background: isActive ? 'rgba(124, 58, 237, 0.1)' : isUnread ? 'rgba(17,24,39,0.02)' : 'transparent',
+                      borderLeft: isActive ? '3px solid #7C3AED' : '3px solid transparent',
+                      transition: 'all 0.15s ease',
                     }}
                     onClick={() => handleSelectEmail(email)}
-                    onMouseEnter={e => { if (!isActive) e.currentTarget.style.background = 'var(--kai-surface-hover)'; }}
-                    onMouseLeave={e => { if (!isActive) e.currentTarget.style.background = isActive ? 'var(--kai-primary-light, rgba(17,24,39,0.05))' : isUnread ? 'rgba(17,24,39,0.02)' : 'transparent'; }}
+                    onMouseEnter={e => { if (!isActive) e.currentTarget.style.background = 'var(--bg-elevated)'; }}
+                    onMouseLeave={e => { if (!isActive) e.currentTarget.style.background = isActive ? 'rgba(124, 58, 237, 0.1)' : isUnread ? 'rgba(17,24,39,0.02)' : 'transparent'; }}
                   >
                     <input
                       type="checkbox"
                       checked={isSelected}
                       onChange={e => { e.stopPropagation(); toggleSelect(eid); }}
                       onClick={e => e.stopPropagation()}
-                      style={{ accentColor: 'var(--kai-primary)', marginTop: 2 }}
+                      style={{ accentColor: '#7C3AED', marginTop: 2 }}
                     />
                     <div style={{ flex: 1, minWidth: 0 }}>
                       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 2 }}>
-                        <span style={{ fontWeight: isUnread ? 700 : 500, fontSize: 13, color: 'var(--kai-text)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                        <span style={{ fontWeight: isUnread ? 700 : 500, fontSize: 13, color: 'var(--text-primary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                           {activeFolder === 'sent' ? (email.to || email.recipient || '') : (email.from || email.sender || '')}
                         </span>
-                        <span style={{ fontSize: 11, color: 'var(--kai-text-muted)', flexShrink: 0, marginLeft: 8 }}>
+                        <span style={{ fontSize: 11, color: 'var(--text-muted)', flexShrink: 0, marginLeft: 8 }}>
                           {formatEmailDate(email.date || email.createdAt)}
                         </span>
                       </div>
-                      <div style={{ fontSize: 13, fontWeight: isUnread ? 600 : 400, color: 'var(--kai-text)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', marginBottom: 2 }}>
+                      <div style={{ fontSize: 13, fontWeight: isUnread ? 600 : 400, color: 'var(--text-primary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', marginBottom: 2 }}>
                         {email.subject || '(No Subject)'}
                       </div>
-                      <div className="truncate" style={{ fontSize: 12, color: 'var(--kai-text-muted)' }}>
+                      <div className="truncate" style={{ fontSize: 12, color: 'var(--text-muted)' }}>
                         {email.preview || email.snippet || (email.body || email.text || '').slice(0, 100)}
                       </div>
                     </div>
                     {isUnread && (
-                      <div style={{ width: 8, height: 8, borderRadius: '50%', background: 'var(--kai-primary)', flexShrink: 0, marginTop: 6 }} />
+                      <div style={{ width: 8, height: 8, borderRadius: '50%', background: '#7C3AED', flexShrink: 0, marginTop: 6 }} />
                     )}
                   </div>
                 );
@@ -340,7 +340,7 @@ export default function EmailClient() {
           {selectedEmail ? (
             <>
               {/* Preview Header */}
-              <div style={{ padding: '16px 24px', borderBottom: '1px solid var(--kai-border)', flexShrink: 0 }}>
+              <div style={{ padding: '16px 24px', borderBottom: '1px solid var(--border-default)', flexShrink: 0 }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 12 }}>
                   <h2 style={{ margin: 0, fontSize: 18, fontWeight: 700, lineHeight: 1.3 }}>{selectedEmail.subject || '(No Subject)'}</h2>
                   <div style={{ display: 'flex', gap: 6, flexShrink: 0 }}>
@@ -360,12 +360,12 @@ export default function EmailClient() {
                   </div>
                   <div style={{ flex: 1 }}>
                     <div style={{ fontSize: 14, fontWeight: 600 }}>{selectedEmail.from || selectedEmail.sender}</div>
-                    <div style={{ fontSize: 12, color: 'var(--kai-text-muted)' }}>
+                    <div style={{ fontSize: 12, color: 'var(--text-muted)' }}>
                       To: {selectedEmail.to || selectedEmail.recipient || 'me'}
                       {selectedEmail.cc && <span> | CC: {selectedEmail.cc}</span>}
                     </div>
                   </div>
-                  <div style={{ fontSize: 12, color: 'var(--kai-text-muted)' }}>
+                  <div style={{ fontSize: 12, color: 'var(--text-muted)' }}>
                     {formatFullDate(selectedEmail.date || selectedEmail.createdAt)}
                   </div>
                 </div>
@@ -374,25 +374,25 @@ export default function EmailClient() {
               {/* Email Body */}
               <div style={{ flex: 1, overflowY: 'auto', padding: 24 }}>
                 <div
-                  style={{ fontSize: 14, lineHeight: 1.7, color: 'var(--kai-text)', whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}
+                  style={{ fontSize: 14, lineHeight: 1.7, color: 'var(--text-primary)', whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}
                   dangerouslySetInnerHTML={{ __html: selectedEmail.body || selectedEmail.html || selectedEmail.text || '' }}
                 />
 
                 {/* Attachments */}
                 {selectedEmail.attachments && selectedEmail.attachments.length > 0 && (
-                  <div style={{ marginTop: 24, paddingTop: 16, borderTop: '1px solid var(--kai-border)' }}>
-                    <div style={{ fontSize: 12, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.8, color: 'var(--kai-text-muted)', marginBottom: 10 }}>
+                  <div style={{ marginTop: 24, paddingTop: 16, borderTop: '1px solid var(--border-default)' }}>
+                    <div style={{ fontSize: 12, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.8, color: 'var(--text-muted)', marginBottom: 10 }}>
                       Attachments ({selectedEmail.attachments.length})
                     </div>
                     <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
                       {selectedEmail.attachments.map((att, i) => (
                         <div key={i} style={{
                           display: 'flex', alignItems: 'center', gap: 8, padding: '8px 12px',
-                          border: '1px solid var(--kai-border)', borderRadius: 'var(--kai-radius)', fontSize: 13,
+                          border: '1px solid var(--border-default)', borderRadius: '8px', fontSize: 13,
                         }}>
                           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"/><polyline points="13 2 13 9 20 9"/></svg>
                           <span>{typeof att === 'string' ? att : att.name || att.filename || `File ${i + 1}`}</span>
-                          <span style={{ fontSize: 11, color: 'var(--kai-text-muted)' }}>
+                          <span style={{ fontSize: 11, color: 'var(--text-muted)' }}>
                             {att.size ? `(${(att.size / 1024).toFixed(1)} KB)` : ''}
                           </span>
                         </div>
@@ -403,8 +403,8 @@ export default function EmailClient() {
               </div>
             </>
           ) : (
-            <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', flexDirection: 'column', gap: 12, color: 'var(--kai-text-muted)' }}>
-              <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="var(--kai-border)" strokeWidth="1.5">
+            <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', flexDirection: 'column', gap: 12, color: 'var(--text-muted)' }}>
+              <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="var(--border-default)" strokeWidth="1.5">
                 <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/>
                 <polyline points="22,6 12,13 2,6"/>
               </svg>
@@ -427,9 +427,9 @@ export default function EmailClient() {
               </button>
             </div>
             <form onSubmit={handleSend} style={{ display: 'flex', flexDirection: 'column', flex: 1, overflow: 'hidden' }}>
-              <div style={{ padding: '16px 20px', display: 'flex', flexDirection: 'column', gap: 10, borderBottom: '1px solid var(--kai-border)' }}>
+              <div style={{ padding: '16px 20px', display: 'flex', flexDirection: 'column', gap: 10, borderBottom: '1px solid var(--border-default)' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                  <label style={{ fontSize: 13, fontWeight: 600, color: 'var(--kai-text-muted)', width: 50 }}>To</label>
+                  <label style={{ fontSize: 13, fontWeight: 600, color: 'var(--text-muted)', width: 50 }}>To</label>
                   <input
                     className="kai-input"
                     placeholder="recipient@example.com"
@@ -444,7 +444,7 @@ export default function EmailClient() {
                 {showCcBcc && (
                   <>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                      <label style={{ fontSize: 13, fontWeight: 600, color: 'var(--kai-text-muted)', width: 50 }}>CC</label>
+                      <label style={{ fontSize: 13, fontWeight: 600, color: 'var(--text-muted)', width: 50 }}>CC</label>
                       <input
                         className="kai-input"
                         placeholder="cc@example.com"
@@ -454,7 +454,7 @@ export default function EmailClient() {
                       />
                     </div>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                      <label style={{ fontSize: 13, fontWeight: 600, color: 'var(--kai-text-muted)', width: 50 }}>BCC</label>
+                      <label style={{ fontSize: 13, fontWeight: 600, color: 'var(--text-muted)', width: 50 }}>BCC</label>
                       <input
                         className="kai-input"
                         placeholder="bcc@example.com"
@@ -466,7 +466,7 @@ export default function EmailClient() {
                   </>
                 )}
                 <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                  <label style={{ fontSize: 13, fontWeight: 600, color: 'var(--kai-text-muted)', width: 50 }}>Subject</label>
+                  <label style={{ fontSize: 13, fontWeight: 600, color: 'var(--text-muted)', width: 50 }}>Subject</label>
                   <input
                     className="kai-input"
                     placeholder="Email subject"
@@ -495,7 +495,7 @@ export default function EmailClient() {
                     {btn.icon}
                   </button>
                 ))}
-                <div style={{ width: 1, background: 'var(--kai-border)', margin: '0 4px' }} />
+                <div style={{ width: 1, background: 'var(--border-default)', margin: '0 4px' }} />
                 <button type="button" className="kai-btn kai-btn-outline kai-btn-sm" onClick={() => document.execCommand('insertUnorderedList')}>
                   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
                 </button>
@@ -519,7 +519,7 @@ export default function EmailClient() {
                   outline: 'none',
                   fontSize: 14,
                   lineHeight: 1.6,
-                  color: 'var(--kai-text)',
+                  color: 'var(--text-primary)',
                   whiteSpace: 'pre-wrap',
                 }}
               />
@@ -535,7 +535,7 @@ export default function EmailClient() {
                     setCompose(p => ({ ...p, attachments: [...p.attachments, ...files] }));
                   }} />
                   {compose.attachments.length > 0 && (
-                    <span style={{ fontSize: 12, color: 'var(--kai-text-muted)', alignSelf: 'center' }}>
+                    <span style={{ fontSize: 12, color: 'var(--text-muted)', alignSelf: 'center' }}>
                       {compose.attachments.length} file(s)
                     </span>
                   )}

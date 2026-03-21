@@ -1,49 +1,53 @@
 // Know AI Enterprise ERP - Main Stylesheet
 // Clean flat design system (Figma-based)
 
-// ── Variables — Clean Flat Design ──────
+// ── Variables — Design System V2 (Dark default) ──────
+// Legacy --kai-* aliases map to new --bg-*, --text-*, --border-* tokens
+// for backward compatibility during Tailwind migration.
 :root {
-  // Brand — Dark primary (Figma)
-  --kai-primary: #111827;
-  --kai-primary-hover: #1F2937;
-  --kai-primary-light: rgba(17, 24, 39, 0.06);
-  --kai-primary-dark: #030712;
-  --kai-accent: #3B82F6;        // blue accent for links/info
+  // New design system tokens are defined in globals.css
+  // These --kai-* aliases exist only for unreplaced references
+
+  --kai-primary: #7C3AED;
+  --kai-primary-hover: #6D28D9;
+  --kai-primary-light: rgba(124, 58, 237, 0.1);
+  --kai-primary-dark: #5B21B6;
+  --kai-accent: #3B82F6;
   --kai-accent-light: rgba(59, 130, 246, 0.1);
-  --kai-success: #16A34A;
+  --kai-success: #10B981;
   --kai-warning: #F59E0B;
-  --kai-danger: #DC2626;
-  --kai-info: #0EA5E9;
+  --kai-danger: #EF4444;
+  --kai-info: #3B82F6;
 
-  // Surfaces — Flat, no glass
-  --kai-bg: #F9FAFB;
-  --kai-surface: #FFFFFF;
-  --kai-surface-hover: #F3F4F6;
-  --kai-surface-solid: #FFFFFF;
-  --kai-sidebar-bg: #FFFFFF;
-  --kai-sidebar-text: #111827;
-  --kai-sidebar-active: rgba(17, 24, 39, 0.06);
-  --kai-header-bg: #FFFFFF;
+  // Surfaces — mapped to new tokens
+  --kai-bg: var(--bg-primary);
+  --kai-surface: var(--bg-card);
+  --kai-surface-hover: var(--bg-elevated);
+  --kai-surface-solid: var(--bg-card);
+  --kai-sidebar-bg: var(--bg-card);
+  --kai-sidebar-text: var(--text-secondary);
+  --kai-sidebar-active: rgba(124, 58, 237, 0.15);
+  --kai-header-bg: var(--bg-card);
 
-  // Text — Neutral scale
-  --kai-text: #111827;
-  --kai-text-secondary: #6B7280;
-  --kai-text-muted: #9CA3AF;
+  // Text
+  --kai-text: var(--text-primary);
+  --kai-text-secondary: var(--text-secondary);
+  --kai-text-muted: var(--text-muted);
 
-  // Borders — solid, visible
-  --kai-border: #E5E7EB;
-  --kai-border-light: #F3F4F6;
+  // Borders
+  --kai-border: var(--border-default);
+  --kai-border-light: var(--border-subtle);
 
-  // Shadows — subtle
-  --kai-shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.05);
-  --kai-shadow: 0 1px 3px rgba(0, 0, 0, 0.1), 0 1px 2px rgba(0, 0, 0, 0.06);
-  --kai-shadow-lg: 0 4px 6px rgba(0, 0, 0, 0.07), 0 10px 15px rgba(0, 0, 0, 0.1);
+  // Shadows
+  --kai-shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.1);
+  --kai-shadow: 0 4px 12px rgba(124, 58, 237, 0.15);
+  --kai-shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.2);
 
-  // Radius — tighter, Figma-based
+  // Radius
   --kai-radius-xs: 4px;
   --kai-radius-sm: 6px;
   --kai-radius: 8px;
-  --kai-radius-lg: 10px;
+  --kai-radius-lg: 12px;
   --kai-radius-xl: 16px;
   --kai-radius-pill: 100px;
 
@@ -55,28 +59,16 @@
   --kai-sidebar-collapsed-width: 64px;
   --kai-header-height: 56px;
 
-  // Component aliases (used by inline-styled components)
-  --kai-card-bg: #FFFFFF;
-  --kai-canvas: #F9FAFB;
-  --kai-near-black: #111827;
-  --kai-silver: #6B7280;
+  // Component aliases
+  --kai-card-bg: var(--bg-card);
+  --kai-canvas: var(--bg-elevated);
+  --kai-near-black: var(--text-primary);
+  --kai-silver: var(--text-secondary);
 }
 
-// Dark theme
+// Dark theme — no-op since dark is default via globals.css
+// Keep for backward compatibility with data-theme="dark" attribute
 [data-theme="dark"] {
-  --kai-bg: #0F172A;
-  --kai-surface: #1E293B;
-  --kai-surface-hover: #334155;
-  --kai-surface-solid: #1E293B;
-  --kai-sidebar-bg: #1E293B;
-  --kai-sidebar-text: #F1F5F9;
-  --kai-sidebar-active: rgba(255, 255, 255, 0.08);
-  --kai-header-bg: #1E293B;
-  --kai-text: #F1F5F9;
-  --kai-text-secondary: #94A3B8;
-  --kai-text-muted: #64748B;
-  --kai-border: #334155;
-  --kai-border-light: #1E293B;
   --kai-shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.3);
   --kai-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
   --kai-shadow-lg: 0 12px 40px rgba(0, 0, 0, 0.5);
