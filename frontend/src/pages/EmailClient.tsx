@@ -23,6 +23,13 @@ function formatEmailDate(dateStr) {
   return d.toLocaleDateString([], { month: 'short', day: 'numeric', year: d.getFullYear() !== now.getFullYear() ? 'numeric' : undefined });
 }
 
+function displayName(val) {
+  if (!val) return '';
+  if (typeof val === 'string') return val;
+  if (typeof val === 'object') return val.firstName ? `${val.firstName} ${val.lastName || ''}`.trim() : val.email || val.name || JSON.stringify(val);
+  return String(val);
+}
+
 function formatFullDate(dateStr) {
   if (!dateStr) return '';
   return new Date(dateStr).toLocaleString([], { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit' });
@@ -318,7 +325,7 @@ export default function EmailClient() {
                     <div style={{ flex: 1, minWidth: 0 }}>
                       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 2 }}>
                         <span style={{ fontWeight: isUnread ? 700 : 500, fontSize: 13, color: 'var(--text-primary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                          {activeFolder === 'sent' ? (email.to || email.recipient || '') : (email.from || email.sender || '')}
+                          {activeFolder === 'sent' ? displayName(email.to || email.recipient) : displayName(email.from || email.sender)}
                         </span>
                         <span style={{ fontSize: 11, color: 'var(--text-muted)', flexShrink: 0, marginLeft: 8 }}>
                           {formatEmailDate(email.date || email.createdAt)}
@@ -362,13 +369,13 @@ export default function EmailClient() {
                 </div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
                   <div className="w-9 h-9 rounded-full flex items-center justify-center text-white font-bold text-[12px]" style={{ background: '#111827' }}>
-                    {(selectedEmail.from || selectedEmail.sender || '?')[0]?.toUpperCase()}
+                    {displayName(selectedEmail.from || selectedEmail.sender)[0]?.toUpperCase() || '?'}
                   </div>
                   <div style={{ flex: 1 }}>
-                    <div style={{ fontSize: 14, fontWeight: 600 }}>{selectedEmail.from || selectedEmail.sender}</div>
+                    <div style={{ fontSize: 14, fontWeight: 600 }}>{displayName(selectedEmail.from || selectedEmail.sender)}</div>
                     <div style={{ fontSize: 12, color: 'var(--text-muted)' }}>
-                      To: {selectedEmail.to || selectedEmail.recipient || 'me'}
-                      {selectedEmail.cc && <span> | CC: {selectedEmail.cc}</span>}
+                      To: {displayName(selectedEmail.to || selectedEmail.recipient) || 'me'}
+                      {selectedEmail.cc && <span> | CC: {displayName(selectedEmail.cc)}</span>}
                     </div>
                   </div>
                   <div style={{ fontSize: 12, color: 'var(--text-muted)' }}>
